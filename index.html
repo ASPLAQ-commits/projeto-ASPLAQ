@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Votação - Encontro Institucional COREN-PE</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; }
+        .container { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 800px; margin: auto; }
+        h2 { color: #333; margin-top: 30px; border-bottom: 2px solid #0056b3; padding-bottom: 5px; }
+        h3 { color: #666; margin-top: 20px; }
+        
+        /* Estilos para identificação do eleitor */
+        .identificacao-eleitor { background: #eef2f5; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+        .identificacao-eleitor label { font-weight: bold; display: block; margin-top: 10px; margin-bottom: 5px; }
+        .identificacao-eleitor input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        
+        /* Grid de Cartões de Votação */
+        .grid-candidatos { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        
+        /* Ocultar o Radio Button Padrão */
+        .grid-candidatos input[type="radio"] { display: none; }
+        
+        /* Estilizar o Label como Cartão */
+        .card-candidato { border: 2px solid #ddd; border-radius: 8px; padding: 15px; text-align: center; cursor: pointer; transition: all 0.3s ease; background: #fff; }
+        .card-candidato:hover { border-color: #0056b3; box-shadow: 0 4px 8px rgba(0,86,179,0.2); }
+        .card-candidato img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 2px solid #eee; }
+        .card-candidato p { margin: 0; font-weight: bold; color: #333; }
+        
+        /* Estado Selecionado */
+        .grid-candidatos input[type="radio"]:checked + .card-candidato { border-color: #0056b3; background-color: #e6f0fa; box-shadow: 0 0 10px rgba(0,86,179,0.3); }
+        
+        button[type="submit"] { margin-top: 30px; width: 100%; padding: 15px; background-color: #0056b3; color: white; border: none; border-radius: 4px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        button[type="submit"]:hover { background-color: #004494; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 style="text-align: center; color: #0056b3;">Premiação Destaques 2026</h1>
+    
+    <form id="form-votacao">
+        <div class="identificacao-eleitor">
+            <label for="nome">Seu Nome Completo</label>
+            <input type="text" id="nome" required placeholder="Digite seu nome completo">
+
+            <label for="email">Seu E-mail Institucional</label>
+            <input type="email" id="email" required placeholder="nome.sobrenome@coren-pe.gov.br" pattern=".+@coren-pe\.gov\.br" title="Utilize apenas o e-mail @coren-pe.gov.br">
+        </div>
+
+        <!-- O JavaScript injetará as categorias, setores e cartões aqui -->
+        <div id="secoes-votacao"></div>
+
+        <button type="submit">Confirmar Votos</button>
+    </form>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
