@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,52 +7,55 @@
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; }
         .container { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 800px; margin: auto; }
-        h2 { color: #333; margin-top: 30px; border-bottom: 2px solid #0056b3; padding-bottom: 5px; }
-        h3 { color: #666; margin-top: 20px; }
+        h1, h2 { color: #0056b3; text-align: center; }
+        h3 { color: #666; margin-top: 20px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
         
-        /* Estilos para identificação do eleitor */
-        .identificacao-eleitor { background: #eef2f5; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
-        .identificacao-eleitor label { font-weight: bold; display: block; margin-top: 10px; margin-bottom: 5px; }
-        .identificacao-eleitor input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        /* Formulários e Inputs */
+        label { font-weight: bold; display: block; margin-top: 15px; margin-bottom: 5px; color: #333; }
+        input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+        button { margin-top: 25px; width: 100%; padding: 15px; background-color: #0056b3; color: white; border: none; border-radius: 4px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        button:hover { background-color: #004494; }
         
         /* Grid de Cartões de Votação */
-        .grid-candidatos { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
-        
-        /* Ocultar o Radio Button Padrão */
+        .grid-candidatos { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; margin-top: 15px; }
         .grid-candidatos input[type="radio"] { display: none; }
-        
-        /* Estilizar o Label como Cartão */
         .card-candidato { border: 2px solid #ddd; border-radius: 8px; padding: 15px; text-align: center; cursor: pointer; transition: all 0.3s ease; background: #fff; }
         .card-candidato:hover { border-color: #0056b3; box-shadow: 0 4px 8px rgba(0,86,179,0.2); }
-        .card-candidato img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 2px solid #eee; }
-        .card-candidato p { margin: 0; font-weight: bold; color: #333; }
-        
-        /* Estado Selecionado */
+        .card-candidato img { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 2px solid #eee; }
+        .card-candidato p { margin: 0; font-weight: bold; color: #333; font-size: 14px; }
         .grid-candidatos input[type="radio"]:checked + .card-candidato { border-color: #0056b3; background-color: #e6f0fa; box-shadow: 0 0 10px rgba(0,86,179,0.3); }
         
-        button[type="submit"] { margin-top: 30px; width: 100%; padding: 15px; background-color: #0056b3; color: white; border: none; border-radius: 4px; font-size: 18px; font-weight: bold; cursor: pointer; }
-        button[type="submit"]:hover { background-color: #004494; }
+        /* Controlo de Visibilidade */
+        #votacao-section { display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1 style="text-align: center; color: #0056b3;">Premiação Destaques 2026</h1>
+    <h1>Premiação Destaques 2026</h1>
     
-    <form id="form-votacao">
-        <div class="identificacao-eleitor">
-            <label for="nome">Seu Nome Completo</label>
-            <input type="text" id="nome" required placeholder="Digite seu nome completo">
+    <!-- Ecrã de Login -->
+    <div id="login-section">
+        <h2>Acesso à Votação</h2>
+        <form id="form-login">
+            <label for="nome-login">Nome Completo</label>
+            <input type="text" id="nome-login" required placeholder="Digite o seu nome completo">
 
-            <label for="email">Seu E-mail Institucional</label>
-            <input type="email" id="email" required placeholder="nome.sobrenome@coren-pe.gov.br" pattern=".+@coren-pe\.gov\.br" title="Utilize apenas o e-mail @coren-pe.gov.br">
-        </div>
+            <label for="cpf-login">CPF</label>
+            <input type="text" id="cpf-login" required placeholder="000.000.000-00" maxlength="14">
 
-        <!-- O JavaScript injetará as categorias, setores e cartões aqui -->
-        <div id="secoes-votacao"></div>
+            <button type="submit">Entrar</button>
+        </form>
+    </div>
 
-        <button type="submit">Confirmar Votos</button>
-    </form>
+    <!-- Ecrã de Votação -->
+    <div id="votacao-section">
+        <p style="text-align: center; color: #555;">Bem-vindo(a), <strong id="nome-exibicao"></strong>. Selecione os seus indicados:</p>
+        <form id="form-votacao">
+            <div id="secoes-votacao"></div>
+            <button type="submit">Confirmar Votos</button>
+        </form>
+    </div>
 </div>
 
 <script src="app.js"></script>
