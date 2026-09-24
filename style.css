@@ -1,0 +1,323 @@
+/* Importação de Fonte Moderna do Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+/* Variáveis de Cores e Estilos */
+:root {
+    --primary-color: #0056b3;
+    --primary-hover: #003d82;
+    --primary-light: #e6f0fa;
+    --bg-gradient: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+    --card-bg: #ffffff;
+    --text-dark: #102a43;
+    --text-muted: #486581;
+    --border-color: #bcccdc;
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 10px 15px rgba(0,0,0,0.1);
+    --shadow-hover: 0 10px 25px rgba(0,86,179,0.15);
+    --radius-lg: 16px;
+    --radius-md: 8px;
+    --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Reset e Configurações Globais */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-gradient);
+    color: var(--text-dark);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px 20px;
+}
+
+/* Container Principal */
+.container {
+    background: var(--card-bg);
+    width: 100%;
+    max-width: 900px;
+    padding: 40px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+}
+
+.container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 6px;
+    background: var(--primary-color);
+}
+
+/* Títulos */
+h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--primary-color);
+    text-align: center;
+    margin-bottom: 30px;
+    letter-spacing: -0.5px;
+}
+
+h2 {
+    font-size: 22px;
+    color: var(--text-dark);
+    margin: 40px 0 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--primary-light);
+}
+
+h3 {
+    font-size: 16px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 20px 0 15px;
+}
+
+/* Secções de Acesso e Votação */
+#votacao-section { display: none; }
+#login-section { max-width: 400px; margin: 0 auto; }
+#login-section h2 { text-align: center; border-bottom: none; margin-top: 0; }
+
+/* Formulários e Inputs */
+label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 8px;
+    margin-top: 20px;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 16px;
+    font-family: inherit;
+    color: var(--text-dark);
+    background-color: #f8fafc;
+    transition: var(--transition);
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.15);
+}
+
+/* Botões */
+button {
+    width: 100%;
+    padding: 16px;
+    margin-top: 30px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 4px 6px rgba(0, 86, 179, 0.2);
+}
+
+button:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 86, 179, 0.3);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+/* Grid de Cartões de Votação */
+.grid-candidatos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 10px;
+}
+
+/* Oculta os Checkboxes nativos */
+.grid-candidatos input[type="checkbox"] {
+    display: none;
+}
+
+.card-candidato {
+    background: var(--card-bg);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 20px 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.card-candidato:hover {
+    border-color: #82b1ff;
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-3px);
+}
+
+.card-candidato img {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 15px;
+    box-shadow: var(--shadow-sm);
+    border: 3px solid #fff;
+    transition: var(--transition);
+}
+
+.card-candidato p {
+    margin: 0;
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 15px;
+    line-height: 1.4;
+}
+
+/* Quando marcado, altera o cartão */
+.grid-candidatos input[type="checkbox"]:checked + .card-candidato {
+    border-color: var(--primary-color);
+    background-color: var(--primary-light);
+    box-shadow: 0 0 0 1px var(--primary-color), var(--shadow-hover);
+}
+
+.grid-candidatos input[type="checkbox"]:checked + .card-candidato img {
+    border-color: var(--primary-color);
+    transform: scale(1.05);
+}
+
+/* Adiciona o ícone de Check */
+.grid-candidatos input[type="checkbox"]:checked + .card-candidato::after {
+    content: '✓';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--primary-color);
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* --- Estilos do Passo a Passo (Wizard) --- */
+.progress-wrapper {
+    margin-bottom: 30px;
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+}
+
+.progress-bar-bg {
+    background: #e2e8f0;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    background: var(--primary-color);
+    height: 100%;
+    width: 20%;
+    transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.etapa-votacao {
+    animation: slideIn 0.4s ease forwards;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.navegacao-botoes {
+    display: flex;
+    gap: 15px;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.navegacao-botoes button {
+    margin-top: 0;
+    flex: 1;
+}
+
+.btn-secundario {
+    background-color: transparent;
+    border: 2px solid var(--border-color);
+    color: var(--text-muted);
+    box-shadow: none;
+}
+
+.btn-secundario:hover {
+    background-color: #f1f5f9;
+    color: var(--text-dark);
+    border-color: var(--text-muted);
+    box-shadow: none;
+}
+
+.cargo-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.cargo-header h2 {
+    border: none;
+    margin: 0;
+    font-size: 26px;
+    color: var(--primary-color);
+}
+
+.cargo-header p {
+    color: var(--text-muted);
+    font-size: 15px;
+    margin-top: 5px;
+}
+
+@media (max-width: 600px) {
+    .container { padding: 25px 15px; }
+    .grid-candidatos { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
+    .card-candidato img { width: 75px; height: 75px; }
+    .navegacao-botoes { flex-direction: column; gap: 10px; }
+}
