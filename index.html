@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Votação - Encontro Institucional COREN-PE</title>
-    <!-- Ligação para o ficheiro CSS -->
+    <title>Votação - MEETING COREN-PE</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="container">
-    <h1>Premiação Destaques 2026</h1>
+    <h1>Premiação Quem Faz a Diferença 2026</h1>
     
     <!-- Ecrã de Login -->
     <div id="login-section">
@@ -19,20 +18,19 @@
             <label for="nome-login">Nome Completo</label>
             <input type="text" id="nome-login" required placeholder="Digite o seu nome completo">
 
-            <label for="cpf-login">CPF</label>
-            <input type="text" id="cpf-login" required placeholder="000.000.000-00" maxlength="14">
+            <label for="email-login">E-mail Institucional</label>
+            <input type="email" id="email-login" required placeholder="nome.sobrenome@coren-pe.gov.br" style="width: 100%; padding: 14px 16px; border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 16px; background-color: #f8fafc;">
 
-            <button type="submit">Entrar</button>
+            <button type="submit" id="btn-login">Entrar</button>
         </form>
     </div>
 
     <!-- Ecrã de Votação (Passo a Passo) -->
     <div id="votacao-section">
-        <!-- Barra de Progresso -->
         <div class="progress-wrapper">
             <div class="progress-info">
                 <span id="progresso-texto">Passo 1 de 5</span>
-                <span style="font-weight: normal;">Eleitor: <strong id="nome-exibicao" style="color: var(--primary-color);"></strong></span>
+                <span style="font-weight: normal;">Eleitor: <strong class="nome-exibicao" style="color: var(--primary-color);"></strong></span>
             </div>
             <div class="progress-bar-bg">
                 <div class="progress-bar-fill" id="progresso-barra"></div>
@@ -40,16 +38,33 @@
         </div>
 
         <form id="form-votacao">
-            <!-- As etapas dos cargos serão injetadas aqui pelo JavaScript -->
             <div id="secoes-votacao"></div>
-            
-            <!-- Botões de Navegação -->
             <div class="navegacao-botoes">
                 <button type="button" id="btn-anterior" class="btn-secundario" style="display: none;">Voltar</button>
                 <button type="button" id="btn-proximo">Avançar para o Próximo Cargo</button>
-                <button type="submit" id="btn-confirmar" style="display: none;">Finalizar e Enviar Votos</button>
+                <button type="button" id="btn-revisar" style="display: none;">Revisar Meus Votos</button>
             </div>
         </form>
+    </div>
+
+    <!-- Ecrã de Resumo / Recibo -->
+    <div id="resumo-section" style="display: none;">
+        <div class="cargo-header" id="header-resumo">
+            <h2>Resumo das Suas Escolhas</h2>
+            <p>Por favor, confira os seus indicados antes de confirmar.</p>
+        </div>
+        
+        <div id="lista-resumo" class="resumo-grid"></div>
+
+        <div id="botoes-resumo" class="navegacao-botoes">
+            <button type="button" id="btn-voltar-edicao" class="btn-secundario">Alterar Votos</button>
+            <button type="button" id="btn-confirmar-final">Confirmar e Enviar</button>
+        </div>
+
+        <div id="mensagem-sucesso" style="display: none; text-align: center; padding: 20px; background: #e6ffed; border: 1px solid #b7ebc5; border-radius: 8px; margin-top: 20px;">
+            <h3 style="color: #1a7f37; margin: 0 0 10px 0;">Votos Registados com Sucesso!</h3>
+            <p style="color: #333; margin: 0; font-size: 15px;">Agradecemos a sua participação. As suas escolhas já estão seguras no nosso sistema.</p>
+        </div>
     </div>
 </div>
 

@@ -1,21 +1,31 @@
-/* Importação de Fonte Moderna do Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+/* Importação de Fontes — combinação moderna: display geométrico + texto neutro */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 /* Variáveis de Cores e Estilos */
 :root {
-    --primary-color: #0056b3;
-    --primary-hover: #003d82;
-    --primary-light: #e6f0fa;
-    --bg-gradient: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+    --primary-color: #6D4CE0;
+    --primary-hover: #4F35B0;
+    --primary-light: #EFEAFC;
+    --accent-color: #FF6B49;
+    --gold-color: #F5A623;
+    --gold-light: #FFF6E6;
+    --mint-color: #14B892;
+    --bg-gradient:
+        radial-gradient(circle at 12% 18%, #F1ECFC 0%, transparent 45%),
+        radial-gradient(circle at 88% 82%, #FFF8EC 0%, transparent 50%),
+        radial-gradient(circle, rgba(109,76,224,0.05) 1.6px, transparent 1.7px) 0 0 / 26px 26px,
+        radial-gradient(circle, rgba(245,166,35,0.045) 1.6px, transparent 1.7px) 13px 13px / 26px 26px,
+        #FBFAFE;
     --card-bg: #ffffff;
-    --text-dark: #102a43;
-    --text-muted: #486581;
-    --border-color: #bcccdc;
-    --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
-    --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 10px 15px rgba(0,0,0,0.1);
-    --shadow-hover: 0 10px 25px rgba(0,86,179,0.15);
-    --radius-lg: 16px;
-    --radius-md: 8px;
+    --text-dark: #17122B;
+    --text-muted: #6D6483;
+    --border-color: #E3DDF3;
+    --shadow-sm: 0 2px 6px rgba(23,18,43,0.06);
+    --shadow-md: 0 10px 30px rgba(109,76,224,0.12), 0 4px 10px rgba(23,18,43,0.05);
+    --shadow-hover: 0 14px 28px rgba(109,76,224,0.18);
+    --radius-lg: 20px;
+    --radius-md: 12px;
+    --radius-pill: 999px;
     --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
@@ -42,53 +52,110 @@ body {
     background: var(--card-bg);
     width: 100%;
     max-width: 900px;
-    padding: 40px;
-    border-radius: var(--radius-lg);
+    padding: 56px 40px 40px;
+    border-radius: 28px;
     box-shadow: var(--shadow-md);
     position: relative;
-    overflow: hidden;
+    overflow: visible;
 }
 
+/* Faixa superior tipo "bandeirinha de festa" */
 .container::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: 6px;
-    background: var(--primary-color);
+    height: 10px;
+    border-radius: 28px 28px 0 0;
+    background: repeating-linear-gradient(
+        135deg,
+        var(--primary-color) 0 20px,
+        var(--accent-color) 20px 40px,
+        var(--gold-color) 40px 60px,
+        var(--mint-color) 60px 80px
+    );
+}
+
+/* Medalha de identidade — reforça o tema de premiação, com "confete" ao redor */
+.container::after {
+    content: '★';
+    position: absolute;
+    top: -26px;
+    left: 50%;
+    width: 54px;
+    height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, #FFD36E 0%, var(--gold-color) 100%);
+    color: #8A5A00;
+    border-radius: 50%;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    z-index: 2;
+    transform: translateX(-50%) rotate(-8deg);
+    box-shadow:
+        0 8px 16px rgba(245,166,35,0.35),
+        0 0 0 4px #fff,
+        -42px -14px 0 -21px var(--primary-color),
+        38px -18px 0 -22px var(--accent-color),
+        -30px 20px 0 -23px var(--mint-color),
+        34px 22px 0 -22px var(--gold-color);
+    animation: medalPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+}
+
+@keyframes medalPop {
+    0%   { transform: translateX(-50%) scale(0) rotate(-40deg); opacity: 0; }
+    60%  { transform: translateX(-50%) scale(1.15) rotate(6deg); opacity: 1; }
+    100% { transform: translateX(-50%) scale(1) rotate(-8deg); opacity: 1; }
 }
 
 /* Títulos */
 h1 {
+    font-family: 'Space Grotesk', sans-serif;
     font-size: 28px;
     font-weight: 700;
-    color: var(--primary-color);
+    color: var(--text-dark);
     text-align: center;
     margin-bottom: 30px;
-    letter-spacing: -0.5px;
+    letter-spacing: -0.3px;
 }
 
 h2 {
-    font-size: 22px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 21px;
+    font-weight: 600;
     color: var(--text-dark);
     margin: 40px 0 20px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--primary-light);
+    padding-bottom: 14px;
+    position: relative;
+}
+
+h2::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 44px;
+    height: 4px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color), var(--gold-color));
 }
 
 h3 {
-    font-size: 16px;
+    font-size: 15px;
+    font-weight: 600;
     color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin: 20px 0 15px;
+    margin: 20px 0 12px;
 }
 
 /* Secções de Acesso e Votação */
 #votacao-section { display: none; }
 #login-section { max-width: 400px; margin: 0 auto; }
-#login-section h2 { text-align: center; border-bottom: none; margin-top: 0; }
+#login-section h2 { text-align: center; padding-bottom: 12px; margin-top: 0; }
+#login-section h2::after { left: 50%; transform: translateX(-50%); }
 
 /* Formulários e Inputs */
 label {
@@ -100,23 +167,23 @@ label {
     margin-top: 20px;
 }
 
-input[type="text"] {
+input[type="text"], input[type="email"] {
     width: 100%;
     padding: 14px 16px;
-    border: 1px solid var(--border-color);
+    border: 1.5px solid var(--border-color);
     border-radius: var(--radius-md);
     font-size: 16px;
     font-family: inherit;
     color: var(--text-dark);
-    background-color: #f8fafc;
+    background-color: #FBFAFE;
     transition: var(--transition);
 }
 
-input[type="text"]:focus {
+input[type="text"]:focus, input[type="email"]:focus {
     outline: none;
     border-color: var(--primary-color);
     background-color: #fff;
-    box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.15);
+    box-shadow: 0 0 0 4px var(--primary-light);
 }
 
 /* Botões */
@@ -127,23 +194,26 @@ button {
     background-color: var(--primary-color);
     color: white;
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-pill);
     font-size: 16px;
     font-weight: 600;
+    font-family: inherit;
     cursor: pointer;
     transition: var(--transition);
-    box-shadow: 0 4px 6px rgba(0, 86, 179, 0.2);
+    box-shadow: 0 10px 20px rgba(109,76,224,0.25);
 }
 
 button:hover {
     background-color: var(--primary-hover);
     transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0, 86, 179, 0.3);
+    box-shadow: 0 14px 24px rgba(109,76,224,0.32);
 }
 
 button:active {
     transform: translateY(0);
 }
+
+button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: none; box-shadow: none; }
 
 /* Grid de Cartões de Votação */
 .grid-candidatos {
@@ -153,8 +223,7 @@ button:active {
     margin-bottom: 10px;
 }
 
-/* Oculta os Checkboxes nativos */
-.grid-candidatos input[type="checkbox"] {
+.grid-candidatos input[type="radio"] {
     display: none;
 }
 
@@ -162,7 +231,7 @@ button:active {
     background: var(--card-bg);
     border: 2px solid var(--border-color);
     border-radius: var(--radius-lg);
-    padding: 20px 15px;
+    padding: 22px 15px;
     text-align: center;
     cursor: pointer;
     transition: var(--transition);
@@ -175,14 +244,14 @@ button:active {
 }
 
 .card-candidato:hover {
-    border-color: #82b1ff;
+    border-color: #C9B8F5;
     box-shadow: var(--shadow-hover);
     transform: translateY(-3px);
 }
 
 .card-candidato img {
-    width: 90px;
-    height: 90px;
+    width: 88px;
+    height: 88px;
     border-radius: 50%;
     object-fit: cover;
     margin-bottom: 15px;
@@ -199,65 +268,75 @@ button:active {
     line-height: 1.4;
 }
 
-/* Quando marcado, altera o cartão */
-.grid-candidatos input[type="checkbox"]:checked + .card-candidato {
-    border-color: var(--primary-color);
-    background-color: var(--primary-light);
-    box-shadow: 0 0 0 1px var(--primary-color), var(--shadow-hover);
-}
-
-.grid-candidatos input[type="checkbox"]:checked + .card-candidato img {
-    border-color: var(--primary-color);
-    transform: scale(1.05);
-}
-
-/* Adiciona o ícone de Check */
-.grid-candidatos input[type="checkbox"]:checked + .card-candidato::after {
-    content: '✓';
+/* Selo de "vencedor" */
+.card-candidato::after {
+    content: '★';
     position: absolute;
     top: 10px;
     right: 10px;
-    background: var(--primary-color);
-    color: white;
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: bold;
+    color: #8A5A00;
+    background: linear-gradient(145deg, #FFD36E 0%, var(--gold-color) 100%);
+    opacity: 0;
+    transform: scale(0) rotate(-20deg);
+    transition: var(--transition);
+    pointer-events: none;
+}
+
+.grid-candidatos input[type="radio"]:checked + .card-candidato {
+    border-color: var(--gold-color);
+    background-color: var(--gold-light);
+    box-shadow: 0 0 0 1px var(--gold-color), var(--shadow-hover);
+}
+
+.grid-candidatos input[type="radio"]:checked + .card-candidato img {
+    border-color: var(--gold-color);
+    transform: scale(1.06);
+}
+
+.grid-candidatos input[type="radio"]:checked + .card-candidato::after {
+    opacity: 1;
+    transform: scale(1) rotate(10deg);
+    box-shadow: 0 4px 10px rgba(245,166,35,0.45);
 }
 
 /* --- Estilos do Passo a Passo (Wizard) --- */
 .progress-wrapper {
     margin-bottom: 30px;
-    background: #f8fafc;
-    padding: 15px;
+    background: var(--primary-light);
+    padding: 16px 18px;
     border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
 }
 
 .progress-info {
     display: flex;
     justify-content: space-between;
+    font-family: 'Space Grotesk', sans-serif;
     font-size: 14px;
-    font-weight: 700;
-    color: var(--text-muted);
+    font-weight: 600;
+    color: var(--text-dark);
     margin-bottom: 10px;
 }
 
 .progress-bar-bg {
-    background: #e2e8f0;
-    height: 8px;
-    border-radius: 4px;
+    background: #ffffff;
+    height: 10px;
+    border-radius: var(--radius-pill);
     overflow: hidden;
 }
 
 .progress-bar-fill {
-    background: var(--primary-color);
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color), var(--gold-color));
     height: 100%;
     width: 20%;
+    border-radius: var(--radius-pill);
     transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
@@ -291,10 +370,11 @@ button:active {
 }
 
 .btn-secundario:hover {
-    background-color: #f1f5f9;
-    color: var(--text-dark);
-    border-color: var(--text-muted);
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
     box-shadow: none;
+    transform: translateY(-2px);
 }
 
 .cargo-header {
@@ -305,18 +385,131 @@ button:active {
 .cargo-header h2 {
     border: none;
     margin: 0;
-    font-size: 26px;
+    font-size: 25px;
     color: var(--primary-color);
+    padding-bottom: 10px;
+}
+
+.cargo-header h2::after {
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--gold-color);
+    width: 36px;
 }
 
 .cargo-header p {
     color: var(--text-muted);
     font-size: 15px;
+    margin-top: 6px;
+}
+
+/* -------------------------------------------------------------
+   SEÇÃO ADICIONADA: ESTILOS DO RESUMO / RECIBO DE VOTAÇÃO
+-------------------------------------------------------------- */
+
+.resumo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 35px;
+    margin-top: 20px;
+}
+
+.resumo-card {
+    background: #FBFAFE;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 24px 15px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    transition: var(--transition);
+}
+
+.resumo-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-light);
+}
+
+.resumo-card img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 12px 0;
+    border: 3px solid #fff;
+    box-shadow: var(--shadow-sm);
+    object-fit: cover;
+}
+
+.cargo-label {
+    font-size: 12px;
+    color: var(--primary-color);
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    background: var(--primary-light);
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+}
+
+.nome-label {
+    font-size: 16px;
+    color: var(--text-dark);
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
     margin-top: 5px;
 }
 
+/* Mensagem de Sucesso alinhada ao design */
+#mensagem-sucesso {
+    text-align: center;
+    padding: 24px;
+    background: rgba(20, 184, 146, 0.1);
+    border: 1.5px solid rgba(20, 184, 146, 0.3);
+    border-radius: var(--radius-md);
+    margin-top: 25px;
+}
+
+#mensagem-sucesso h3 {
+    color: var(--mint-color);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px;
+    margin: 0 0 8px 0;
+}
+
+#mensagem-sucesso p {
+    color: var(--text-dark);
+    margin: 0;
+    font-size: 15px;
+}
+
+/* -------------------------------------------------------------
+   ACESSIBILIDADE E RESPONSIVIDADE
+-------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+    .container::after { animation: none; }
+    .etapa-votacao { animation: none; }
+    .card-candidato::after { transition: none; }
+}
+
 @media (max-width: 600px) {
-    .container { padding: 25px 15px; }
+    .container { padding: 48px 20px 25px; }
+    .container::after {
+        width: 46px;
+        height: 46px;
+        font-size: 18px;
+        top: -22px;
+        box-shadow:
+            0 6px 12px rgba(245,166,35,0.3),
+            0 0 0 3px #fff,
+            -30px -10px 0 -17px var(--primary-color),
+            28px -13px 0 -18px var(--accent-color),
+            -22px 15px 0 -19px var(--mint-color),
+            26px 16px 0 -18px var(--gold-color);
+    }
     .grid-candidatos { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
     .card-candidato img { width: 75px; height: 75px; }
     .navegacao-botoes { flex-direction: column; gap: 10px; }
