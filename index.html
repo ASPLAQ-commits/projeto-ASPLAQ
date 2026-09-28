@@ -3,71 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Votação - MEETING COREN-PE</title>
+    <title>Votação Destaques 2026 - COREN-PE</title>
+    
+    <!-- Link para o seu CSS -->
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Biblioteca do Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<div class="container">
-    <h1>Premiação Quem Faz a Diferença 2026</h1>
-    
-    <!-- Ecrã de Login -->
-    <div id="login-section">
-        <h2>Acesso à Votação</h2>
-        <form id="form-login">
-            <label for="nome-login">Nome Completo</label>
-            <input type="text" id="nome-login" required placeholder="Digite o seu nome completo">
-
-            <label for="email-login">E-mail Institucional</label>
-            <input type="email" id="email-login" required placeholder="nome.sobrenome@coren-pe.gov.br" style="width: 100%; padding: 14px 16px; border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 16px; background-color: #f8fafc;">
-
-            <button type="submit" id="btn-login">Entrar</button>
-        </form>
-    </div>
-
-    <!-- Ecrã de Votação (Passo a Passo) -->
-    <div id="votacao-section">
-        <div class="progress-wrapper">
-            <div class="progress-info">
-                <span id="progresso-texto">Passo 1 de 5</span>
-                <span style="font-weight: normal;">Eleitor: <strong class="nome-exibicao" style="color: var(--primary-color);"></strong></span>
-            </div>
-            <div class="progress-bar-bg">
-                <div class="progress-bar-fill" id="progresso-barra"></div>
-            </div>
-        </div>
-
-        <form id="form-votacao">
-            <div id="secoes-votacao"></div>
-            <div class="navegacao-botoes">
-                <button type="button" id="btn-anterior" class="btn-secundario" style="display: none;">Voltar</button>
-                <button type="button" id="btn-proximo">Avançar para o Próximo Cargo</button>
-                <button type="button" id="btn-revisar" style="display: none;">Revisar Meus Votos</button>
-            </div>
-        </form>
-    </div>
-
-    <!-- Ecrã de Resumo / Recibo -->
-    <div id="resumo-section" style="display: none;">
-        <div class="cargo-header" id="header-resumo">
-            <h2>Resumo das Suas Escolhas</h2>
-            <p>Por favor, confira os seus indicados antes de confirmar.</p>
-        </div>
+    <!-- ========================================== -->
+    <!-- TELA 1: LOGIN (Validação do Funcionário)   -->
+    <!-- ========================================== -->
+    <div id="tela-login" class="container">
+        <!-- A sua logo adicionada aqui -->
+        <img src="coren_logo.png" alt="Logo COREN-PE" class="logo-institucional">
         
-        <div id="lista-resumo" class="resumo-grid"></div>
-
-        <div id="botoes-resumo" class="navegacao-botoes">
-            <button type="button" id="btn-voltar-edicao" class="btn-secundario">Alterar Votos</button>
-            <button type="button" id="btn-confirmar-final">Confirmar e Enviar</button>
-        </div>
-
-        <div id="mensagem-sucesso" style="display: none; text-align: center; padding: 20px; background: #e6ffed; border: 1px solid #b7ebc5; border-radius: 8px; margin-top: 20px;">
-            <h3 style="color: #1a7f37; margin: 0 0 10px 0;">Votos Registados com Sucesso!</h3>
-            <p style="color: #333; margin: 0; font-size: 15px;">Agradecemos a sua participação. As suas escolhas já estão seguras no nosso sistema.</p>
-        </div>
+        <h2>Votação Destaques 2026</h2>
+        <p>Insira seu e-mail institucional para acessar a urna.</p>
+        
+        <input type="email" id="input-email" placeholder="E-mail (@coren-pe.gov.br)" required>
+        <button onclick="validarAcesso()" id="btn-entrar">Acessar Urna</button>
+        
+        <div id="msg-erro" class="mensagem-erro" style="display: none;"></div>
     </div>
-</div>
 
-<script src="app.js"></script>
+    <!-- ========================================== -->
+    <!-- TELA 2: URNA (Oculta até validar o acesso) -->
+    <!-- ========================================== -->
+    <div id="tela-urna" class="container" style="display: none;">
+        
+        <!-- Cabeçalho Personalizado -->
+        <div class="cabecalho-usuario">
+            <h2 id="saudacao-usuario">Olá, Colaborador!</h2>
+            <p id="cargo-usuario" class="badge-setor"></p>
+            <hr>
+        </div>
+
+        <form id="form-voto" onsubmit="enviarVoto(event)">
+            
+            <!-- COLOQUE AQUI OS SEUS CANDIDATOS -->
+            <!-- Exemplo: Setor ASPLAQ -->
+            <div class="sessao-voto">
+                <h3>Destaque ASPLAQ</h3>
+                <label>
+                    <input type="radio" name="voto_asplaq" value="Candidato 1" required> Candidato 1
+                </label>
+                <label>
+                    <input type="radio" name="voto_asplaq" value="Candidato 2"> Candidato 2
+                </label>
+            </div>
+
+            <!-- Exemplo: Setor TI -->
+            <div class="sessao-voto">
+                <h3>Destaque TI</h3>
+                <label>
+                    <input type="radio" name="voto_ti" value="Candidato 3" required> Candidato 3
+                </label>
+                <label>
+                    <input type="radio" name="voto_ti" value="Candidato 4"> Candidato 4
+                </label>
+            </div>
+            
+            <!-- Adicione as outras categorias (Comunicação, DLCC, PROGER) seguindo o mesmo padrão -->
+
+            <button type="submit" id="btn-votar" class="btn-confirmar">Confirmar Meu Voto</button>
+        </form>
+    </div>
+
+    <!-- Link para o seu arquivo JavaScript -->
+    <script src="script.js"></script>
 </body>
 </html>

@@ -485,6 +485,14 @@ button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: non
     font-size: 15px;
 }
 
+.logo-institucional {
+    display: block;
+    margin: 0 auto 30px auto; /* Centraliza e dá um espaço de 30px para baixo */
+    max-width: 250px; /* Tamanho seguro para computadores e telemóveis */
+    height: auto;
+    object-fit: contain;
+}
+
 /* -------------------------------------------------------------
    ACESSIBILIDADE E RESPONSIVIDADE
 -------------------------------------------------------------- */
