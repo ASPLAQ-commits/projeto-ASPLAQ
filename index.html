@@ -38,15 +38,36 @@
             <div class="progress-bar-bg"><div class="progress-bar-fill" id="progresso-barra"></div></div>
         </div>
 
-        <form id="form-voto" onsubmit="enviarVoto(event)">
+        <form id="form-voto" onsubmit="revisarVoto(event)">
             <div id="secoes-votacao"></div>
 
             <div class="navegacao-botoes">
                 <button type="button" id="btn-anterior" class="btn-secundario">Voltar</button>
                 <button type="button" id="btn-proximo">Próxima categoria</button>
-                <button type="submit" id="btn-votar" class="btn-confirmar">Confirmar Meu Voto</button>
+                <button type="submit" id="btn-votar" class="btn-confirmar">Revisar meus votos</button>
             </div>
         </form>
+    </div>
+
+    <!-- TELA 3: REVISÃO E COMPROVANTE -->
+    <div id="tela-resumo" class="container" style="display: none;">
+        <div class="cargo-header" id="header-resumo">
+            <h2>Revise seus votos</h2>
+            <p>Confira as escolhas abaixo. Depois de confirmado, o voto não poderá ser alterado.</p>
+        </div>
+
+        <div class="resumo-grid" id="lista-resumo"></div>
+
+        <div id="mensagem-sucesso" style="display: none;">
+            <h3>Voto confirmado com sucesso!</h3>
+            <p>Obrigado por participar da Votação Destaques 2026.</p>
+            <button type="button" onclick="window.location.reload()">Encerrar</button>
+        </div>
+
+        <div class="navegacao-botoes" id="botoes-resumo">
+            <button type="button" id="btn-voltar-edicao" class="btn-secundario">Voltar e editar</button>
+            <button type="button" id="btn-confirmar-final">Confirmar voto</button>
+        </div>
     </div>
 
     <script src="script.js"></script>

@@ -189,11 +189,16 @@ document.getElementById('btn-proximo').addEventListener('click', () => {
 document.getElementById('btn-anterior').addEventListener('click', () => irParaEtapa(etapaAtual - 1));
 
 // ==========================================
-// 6. ENVIO DO VOTO
+// 6. REVISÃO E CONFIRMAÇÃO DO VOTO
 // ==========================================
-async function enviarVoto(event) {
+function fotoDoCandidato(nome) {
+    const c = candidatos.find(x => x.nome === nome);
+    return (c && c.foto) || avatarIniciais(nome);
+}
+
+// Passo 1: mostra todas as escolhas antes de enviar
+function revisarVoto(event) {
     event.preventDefault();
-    const btnVotar = document.getElementById('btn-votar');
 
     const faltando = etapas.find(c => !categoriaMarcada(c));
     if (faltando) {
@@ -201,25 +206,57 @@ async function enviarVoto(event) {
         return;
     }
 
-    if (!confirm("Confirmar seus votos? Depois de enviados, não será possível alterar.")) return;
+    const lista = document.getElementById('lista-resumo');
+    lista.innerHTML = etapas.map(cargo => {
+        const nome = categoriaMarcada(cargo).value;
+        return `<div class="resumo-card">
+            <span class="cargo-label">${cargo}</span>
+            <img src="${esc(fotoDoCandidato(nome))}" alt="${esc(nome)}">
+            <span class="nome-label">${esc(nome)}</span>
+        </div>`;
+    }).join('');
+    lista.querySelectorAll('img').forEach(img =>
+        img.addEventListener('error', () => { img.src = avatarIniciais(img.alt); }, { once: true }));
+
+    document.getElementById('tela-urna').style.display = 'none';
+    document.getElementById('tela-resumo').style.display = 'block';
+    window.scrollTo(0, 0);
+}
+
+document.getElementById('btn-voltar-edicao').addEventListener('click', () => {
+    document.getElementById('tela-resumo').style.display = 'none';
+    document.getElementById('tela-urna').style.display = 'block';
+    window.scrollTo(0, 0);
+});
+
+// Passo 2: grava o voto e mostra a confirmação
+document.getElementById('btn-confirmar-final').addEventListener('click', async function () {
+    const btnVoltar = document.getElementById('btn-voltar-edicao');
 
     // Colunas iguais às que o painel admin lê: estagiario, terceirizado, comissionado, conselheiro, funcionario
     const dadosVoto = { nome_completo: window.nomeUsuarioValido, email: window.emailUsuarioValido };
     etapas.forEach(cargo => { dadosVoto[chave(cargo)] = categoriaMarcada(cargo).value; });
 
-    btnVotar.innerText = "Registrando voto...";
-    btnVotar.disabled = true;
+    this.innerText = "Enviando...";
+    this.disabled = true;
+    btnVoltar.disabled = true;
 
     try {
         const { error } = await clienteSupabase.from('votos').insert([dadosVoto]);
         if (error) throw error;
 
-        alert("Voto registrado com sucesso! Obrigado pela participação.");
-        window.location.reload();
+        document.getElementById('header-resumo').innerHTML =
+            `<h2>Comprovante de votação</h2><p>Votos registrados por <strong>${esc(window.nomeUsuarioValido)}</strong>.</p>`;
+        document.getElementById('botoes-resumo').style.display = 'none';
+        document.getElementById('mensagem-sucesso').style.display = 'block';
+        window.scrollTo(0, 0);
     } catch (err) {
         console.error(err);
-        alert("Erro ao registrar o voto. Verifique sua conexão e tente novamente.");
-        btnVotar.innerText = "Confirmar Meu Voto";
-        btnVotar.disabled = false;
+        alert(err.code === '23505'
+            ? "Este e-mail já registrou um voto."
+            : "Erro ao registrar o voto. Verifique sua conexão e tente novamente.");
+        this.innerText = "Confirmar voto";
+        this.disabled = false;
+        btnVoltar.disabled = false;
     }
-}
+});
