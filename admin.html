@@ -53,6 +53,27 @@
             border-radius: var(--radius-md); cursor: pointer; box-shadow: none; margin: 0; width: auto; transition: var(--transition);
         }
         .btn-excluir:hover { background-color: #c53030; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(229, 62, 62, 0.3); }
+
+        /* Ranking com fotos */
+        .rank-lideres { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-bottom: 14px; }
+        .rank-lider { flex: 1 1 150px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; background: var(--gold-light); border: 1.5px solid var(--gold-color); border-radius: var(--radius-md); padding: 16px 10px; }
+        .rank-foto-wrap { position: relative; margin-bottom: 8px; }
+        .rank-foto-grande { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; border: 3px solid var(--gold-color); background: #fff; }
+        .rank-trofeu { position: absolute; right: -8px; bottom: -4px; font-size: 22px; }
+        .rank-setor { font-size: 12px; color: var(--text-muted); }
+        .rank-votos { margin-top: 4px; font-weight: 700; color: var(--primary-color); font-size: 14px; }
+        .rank-empate { text-align: center; font-size: 12px; color: var(--text-muted); margin: -4px 0 12px; }
+        .rank-lista { list-style: none; padding: 0; margin: 0; }
+        .rank-lista li { display: flex; align-items: center; gap: 10px; padding: 8px 4px; border-bottom: 1px solid var(--border-color); }
+        .rank-pos { width: 26px; font-weight: 600; color: var(--text-muted); font-size: 13px; }
+        .rank-foto-peq { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: #fff; }
+        .rank-info { flex: 1; display: flex; flex-direction: column; min-width: 0; font-size: 14px; }
+        .rank-info small { color: var(--text-muted); font-size: 12px; }
+        .rank-total { font-size: 13px; color: var(--text-muted); white-space: nowrap; }
+        .rank-mais summary { cursor: pointer; color: var(--primary-color); font-size: 13px; font-weight: 600; padding: 10px 4px; }
+        .rank-vazio { color: #999; text-align: center; }
+        .chart-wrap { position: relative; }
+        .grid-largo { grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); }
     </style>
 </head>
 <body>
@@ -118,11 +139,11 @@
                 </div>
             </div>
             <h3 style="text-align: center; color: var(--text-dark); margin-bottom: 20px;">Setores Mais Votados por Categoria</h3>
-            <div class="dashboard-grid">
-                <div class="chart-box"><h3>Estagiários</h3><canvas id="chart-setor-estagiario"></canvas></div>
-                <div class="chart-box"><h3>Terceirizados</h3><canvas id="chart-setor-terceirizado"></canvas></div>
-                <div class="chart-box"><h3>Comissionados</h3><canvas id="chart-setor-comissionado"></canvas></div>
-                <div class="chart-box"><h3>Funcionários</h3><canvas id="chart-setor-funcionario"></canvas></div>
+            <div class="dashboard-grid grid-largo">
+                <div class="chart-box"><h3>Estagiários</h3><div class="chart-wrap"><canvas id="chart-setor-estagiario"></canvas></div></div>
+                <div class="chart-box"><h3>Terceirizados</h3><div class="chart-wrap"><canvas id="chart-setor-terceirizado"></canvas></div></div>
+                <div class="chart-box"><h3>Comissionados</h3><div class="chart-wrap"><canvas id="chart-setor-comissionado"></canvas></div></div>
+                <div class="chart-box"><h3>Funcionários</h3><div class="chart-wrap"><canvas id="chart-setor-funcionario"></canvas></div></div>
             </div>
         </div>
 
@@ -195,35 +216,21 @@
     let adminLogado = null;
     let trocaObrigatoria = false;
 
-    const candidatosData = [
-        { nome: "Mariana Costa", setor: "ASPLAQ" }, { nome: "João Vítor", setor: "ASPLAQ" }, { nome: "Beatriz Souza", setor: "ASPLAQ" },
-        { nome: "João Pedro Silva", setor: "ASPLAQ" }, { nome: "Carla Dias", setor: "ASPLAQ" }, { nome: "Rodrigo Alves", setor: "ASPLAQ" },
-        { nome: "Carlos Eduardo", setor: "ASPLAQ" }, { nome: "Amanda Nogueira", setor: "ASPLAQ" }, { nome: "Felipe Rocha", setor: "ASPLAQ" },
-        { nome: "Roberto Alves", setor: "ASPLAQ" }, { nome: "Camila Fernandes", setor: "ASPLAQ" }, { nome: "Tiago Ribeiro", setor: "ASPLAQ" },
-        
-        { nome: "Luiz Gabriel Sarmento", setor: "Tecnologia da Informação" }, { nome: "Paulo Barroca", setor: "Tecnologia da Informação" }, { nome: "Ana Clara", setor: "Tecnologia da Informação" },
-        { nome: "Marcos Vinícius", setor: "Tecnologia da Informação" }, { nome: "Letícia Gomes", setor: "Tecnologia da Informação" }, { nome: "Bruno Henrique", setor: "Tecnologia da Informação" },
-        { nome: "Felipe Costa", setor: "Tecnologia da Informação" }, { nome: "Juliana Almeida", setor: "Tecnologia da Informação" }, { nome: "Ricardo Fontes", setor: "Tecnologia da Informação" },
-        { nome: "Ricardo Silva", setor: "Tecnologia da Informação" }, { nome: "Vanessa Martins", setor: "Tecnologia da Informação" }, { nome: "André Castro", setor: "Tecnologia da Informação" },
+    let colaboradores = [];
+    let mapaSetores = {};
+    let mapaFotos = {};
 
-        { nome: "Sofia Almeida", setor: "Comunicação" }, { nome: "Pedro Lucas", setor: "Comunicação" }, { nome: "Laura Monteiro", setor: "Comunicação" },
-        { nome: "Lucas Mendes", setor: "Comunicação" }, { nome: "Thaís Pereira", setor: "Comunicação" }, { nome: "Renato Góes", setor: "Comunicação" },
-        { nome: "Fernanda Lima", setor: "Comunicação" }, { nome: "Diego Souza", setor: "Comunicação" }, { nome: "Bianca Castro", setor: "Comunicação" },
-        { nome: "Thiago Martins", setor: "Comunicação" }, { nome: "Natália Ribeiro", setor: "Comunicação" }, { nome: "Gustavo Lima", setor: "Comunicação" },
+    const norm = t => (t || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const esc = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-        { nome: "Pedro Henrique", setor: "DLCC" }, { nome: "Alice Farias", setor: "DLCC" }, { nome: "Mateus Costa", setor: "DLCC" },
-        { nome: "Gabriela Nunes", setor: "DLCC" }, { nome: "Rafael Almeida", setor: "DLCC" }, { nome: "Mariana Barros", setor: "DLCC" },
-        { nome: "Rafael Gomes", setor: "DLCC" }, { nome: "Carolina Mendes", setor: "DLCC" }, { nome: "Fernando Souza", setor: "DLCC" },
-        { nome: "Amanda Freitas", setor: "DLCC" }, { nome: "Leandro Carvalho", setor: "DLCC" }, { nome: "Priscila Rocha", setor: "DLCC" },
-
-        { nome: "Letícia Carvalho", setor: "PROGER" }, { nome: "Cauã Silva", setor: "PROGER" }, { nome: "Isadora Martins", setor: "PROGER" },
-        { nome: "Diego Monteiro", setor: "PROGER" }, { nome: "Renata Alves", setor: "PROGER" }, { nome: "Samuel Costa", setor: "PROGER" },
-        { nome: "Patrícia Santos", setor: "PROGER" }, { nome: "Vinícius Rocha", setor: "PROGER" }, { nome: "Tatiana Lima", setor: "PROGER" },
-        { nome: "Luciana Dias", setor: "PROGER" }, { nome: "Márcio Silva", setor: "PROGER" }, { nome: "Eliane Costa", setor: "PROGER" }
-    ];
-
-    const mapaSetores = {};
-    candidatosData.forEach(c => mapaSetores[c.nome] = c.setor);
+    // Sem foto, mostra um círculo com as iniciais
+    function avatarIniciais(nome) {
+        const ini = String(nome).replace(/^Dra?\.\s*/, '').split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#EFEAFC"/><text x="50" y="50" dy=".35em" text-anchor="middle" font-family="Arial" font-size="38" font-weight="700" fill="#6D4CE0">${ini}</text></svg>`;
+        return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    }
+    const fotoDe = nome => mapaFotos[nome] || avatarIniciais(nome);
+    const imgErro = `onerror="this.onerror=null;this.src=avatarIniciais(this.alt)"`;
 
     function abrirAba(idAba) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -322,25 +329,42 @@
         finally { btnSalvar.innerText = "Salvar Nova Senha"; btnSalvar.disabled = false; }
     });
 
+    async function buscarColaboradores() {
+        const h = { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` };
+        // "foto" é opcional: se a coluna ainda não existe, busca sem ela
+        let r = await fetch(`${supabaseUrl}/rest/v1/colaboradores?select=nome,setor,cargo,foto`, { headers: h });
+        if (!r.ok) r = await fetch(`${supabaseUrl}/rest/v1/colaboradores?select=nome,setor,cargo`, { headers: h });
+        if (!r.ok) throw new Error('Falha ao buscar colaboradores');
+        return r.json();
+    }
+
     async function carregarApuracao() {
         const btnAtualizar = document.getElementById('btn-atualizar');
         btnAtualizar.innerText = "A atualizar...";
         try {
-            // Busca votos e logs simultaneamente
-            const [respVotos, respLogs] = await Promise.all([
-                fetch(`${supabaseUrl}/rest/v1/votos?select=*`, { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }),
-                fetch(`${supabaseUrl}/rest/v1/audit_logs?select=*`, { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } })
+            const h = { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` };
+            const [respVotos, respLogs, listaColab] = await Promise.all([
+                fetch(`${supabaseUrl}/rest/v1/votos?select=*`, { headers: h }),
+                fetch(`${supabaseUrl}/rest/v1/audit_logs?select=*`, { headers: h }),
+                buscarColaboradores()
             ]);
 
             const votos = await respVotos.json();
             const logs = await respLogs.json();
 
+            colaboradores = listaColab;
+            mapaSetores = {}; mapaFotos = {};
+            colaboradores.forEach(c => {
+                mapaSetores[c.nome] = c.setor || 'Sem setor';
+                if (c.foto) mapaFotos[c.nome] = c.foto;
+            });
+
             document.getElementById('total-votos').innerText = votos.length;
-            renderizarListasCandidatos(votos); 
+            renderizarListasCandidatos(votos);
             processarMetricasSetores(votos);
             renderizarTabelaEleitores(votos);
             renderizarTabelaLogs(logs);
-        } catch (erro) { alert("Erro ao buscar dados do servidor."); } 
+        } catch (erro) { console.error(erro); alert("Erro ao buscar dados do servidor."); }
         finally { btnAtualizar.innerText = "🔄 Atualizar Resultados em Tempo Real"; }
     }
 
@@ -379,9 +403,25 @@
         }
     }
 
+    function cartaoLider(l) {
+        return `<div class="rank-lider">
+            <div class="rank-foto-wrap"><img class="rank-foto-grande" src="${esc(fotoDe(l.nome))}" alt="${esc(l.nome)}" ${imgErro}><span class="rank-trofeu">🏆</span></div>
+            <strong>${esc(l.nome)}</strong>
+            <span class="rank-setor">${esc(mapaSetores[l.nome] || '')}</span>
+            <span class="rank-votos">${l.total} voto(s)</span>
+        </div>`;
+    }
+
+    function linhaRank(c, pos) {
+        return `<li><span class="rank-pos">${pos}º</span>
+            <img class="rank-foto-peq" src="${esc(fotoDe(c.nome))}" alt="${esc(c.nome)}" ${imgErro}>
+            <span class="rank-info"><b>${esc(c.nome)}</b><small>${esc(mapaSetores[c.nome] || '')}</small></span>
+            <span class="rank-total">${c.total} voto(s)</span></li>`;
+    }
+
     function renderizarListasCandidatos(votos) {
         const container = document.getElementById('container-ranking-candidatos');
-        container.innerHTML = ''; 
+        container.innerHTML = '';
         const categorias = [
             { chave: 'estagiario', titulo: 'Estagiário' }, { chave: 'terceirizado', titulo: 'Terceirizado' },
             { chave: 'comissionado', titulo: 'Comissionado' }, { chave: 'conselheiro', titulo: 'Conselheiro' },
@@ -391,55 +431,76 @@
         categorias.forEach(cat => {
             const contagem = {};
             votos.forEach(v => { if (v[cat.chave]) contagem[v[cat.chave]] = (contagem[v[cat.chave]] || 0) + 1; });
-            const ranking = Object.entries(contagem).map(([nome, total]) => ({ nome, total })).sort((a, b) => b.total - a.total);
+            const ranking = Object.entries(contagem).map(([nome, total]) => ({ nome, total }))
+                .sort((a, b) => b.total - a.total || a.nome.localeCompare(b.nome, 'pt'));
+
             let html = `<div class="chart-box"><h3>${cat.titulo}</h3>`;
-            if (ranking.length === 0) html += `<p style="color: #999; text-align: center;">Nenhum voto.</p>`;
-            else {
-                html += `<ul style="list-style: none; padding: 0;">`;
-                ranking.forEach((cand, i) => {
-                    const isPrimeiro = i === 0;
-                    const estiloLinha = isPrimeiro ? 'font-weight: bold; font-size: 16px; color: var(--text-dark); background: var(--gold-light); padding: 8px; border-radius: 4px;' : 'font-size: 14px; color: var(--text-muted); padding: 4px 8px; border-bottom: 1px solid #eee;';
-                    html += `<li style="display: flex; justify-content: space-between; margin-bottom: 5px; ${estiloLinha}"><span>${isPrimeiro?'🏆 ':i+1+'º - '}${cand.nome}</span><span>${cand.total} voto(s)</span></li>`;
-                });
-                html += `</ul>`;
+            if (ranking.length === 0) {
+                html += `<p class="rank-vazio">Nenhum voto.</p>`;
+            } else {
+                const lideres = ranking.filter(r => r.total === ranking[0].total); // inclui empates
+                const demais = ranking.slice(lideres.length);
+                html += `<div class="rank-lideres">${lideres.map(cartaoLider).join('')}</div>`;
+                if (lideres.length > 1) html += `<p class="rank-empate">Empate em 1º lugar</p>`;
+                if (demais.length) {
+                    html += `<ul class="rank-lista">${demais.slice(0, 4).map((c, i) => linhaRank(c, lideres.length + i + 1)).join('')}</ul>`;
+                    if (demais.length > 4) {
+                        html += `<details class="rank-mais"><summary>Ver os demais (${demais.length - 4})</summary>
+                            <ul class="rank-lista">${demais.slice(4).map((c, i) => linhaRank(c, lideres.length + i + 5)).join('')}</ul></details>`;
+                    }
+                }
             }
-            html += `</div>`;
-            container.innerHTML += html;
+            container.innerHTML += html + `</div>`;
         });
     }
 
     function processarMetricasSetores(votos) {
-        const categoriasComSetor = ['estagiario', 'terceirizado', 'comissionado', 'funcionario'];
-        const votosSetorGeral = { "ASPLAQ": 0, "Tecnologia da Informação": 0, "Comunicação": 0, "DLCC": 0, "PROGER": 0 };
-        const votosSetorPorCat = { estagiario: {}, terceirizado: {}, comissionado: {}, funcionario: {} };
-        categoriasComSetor.forEach(cat => { votosSetorPorCat[cat] = { "ASPLAQ": 0, "Tecnologia da Informação": 0, "Comunicação": 0, "DLCC": 0, "PROGER": 0 }; });
+        // Conselheiros ficam de fora: o setor deles é o Plenário, então a métrica por setor não faz sentido
+        const cats = ['estagiario', 'terceirizado', 'comissionado', 'funcionario'];
+        const setoresBase = [...new Set(colaboradores.filter(c => !norm(c.cargo).includes('consel')).map(c => c.setor || 'Sem setor'))];
+        const geral = {}; setoresBase.forEach(st => geral[st] = 0);
+        const porCat = {}; cats.forEach(c => porCat[c] = {});
 
-        votos.forEach(v => {
-            categoriasComSetor.forEach(cat => {
-                const nomeVotado = v[cat];
-                if (nomeVotado && mapaSetores[nomeVotado]) {
-                    votosSetorGeral[mapaSetores[nomeVotado]]++;
-                    votosSetorPorCat[cat][mapaSetores[nomeVotado]]++;
-                }
-            });
-        });
+        votos.forEach(v => cats.forEach(cat => {
+            const setor = v[cat] && mapaSetores[v[cat]];
+            if (!setor) return;
+            geral[setor] = (geral[setor] || 0) + 1;
+            porCat[cat][setor] = (porCat[cat][setor] || 0) + 1;
+        }));
 
-        const arrayGeral = Object.entries(votosSetorGeral).sort((a, b) => b[1] - a[1]);
-        if (arrayGeral.length > 0 && arrayGeral[0][1] > 0) {
-            document.getElementById('insight-setor-mais').innerHTML = `${arrayGeral[0][0]} <span style="font-size:16px; opacity:0.8;">(${arrayGeral[0][1]} votos)</span>`;
-            document.getElementById('insight-setor-menos').innerHTML = `${arrayGeral[arrayGeral.length - 1][0]} <span style="font-size:16px; opacity:0.8;">(${arrayGeral[arrayGeral.length - 1][1]} votos)</span>`;
+        const ordenar = obj => Object.entries(obj).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'pt'));
+        const arr = ordenar(geral);
+        const elMais = document.getElementById('insight-setor-mais');
+        const elMenos = document.getElementById('insight-setor-menos');
+        elMais.innerText = 'N/A'; elMenos.innerText = 'N/A';
+
+        if (arr.length > 0 && arr[0][1] > 0) {
+            const menor = arr[arr.length - 1];
+            const empatados = arr.filter(x => x[1] === menor[1]).length - 1;
+            const nota = empatados > 0 ? `<br><span style="font-size:13px; opacity:0.8;">e mais ${empatados} setor(es) com o mesmo total</span>` : '';
+            elMais.innerHTML = `${esc(arr[0][0])} <span style="font-size:16px; opacity:0.8;">(${arr[0][1]} votos)</span>`;
+            elMenos.innerHTML = `${esc(menor[0])} <span style="font-size:16px; opacity:0.8;">(${menor[1]} votos)</span>${nota}`;
         }
 
-        categoriasComSetor.forEach(cat => {
-            const rankingCat = Object.entries(votosSetorPorCat[cat]).sort((a, b) => b[1] - a[1]);
-            criarGrafico(`chart-setor-${cat}`, rankingCat.map(i => i[0]), rankingCat.map(i => i[1]), '#14B892');
+        cats.forEach(cat => {
+            const r = ordenar(porCat[cat]);
+            criarGrafico(`chart-setor-${cat}`, r.map(i => i[0]), r.map(i => i[1]), '#14B892');
         });
     }
 
     function criarGrafico(canvasId, labels, data, color) {
         if (graficosAtivos[canvasId]) graficosAtivos[canvasId].destroy();
-        const ctx = document.getElementById(canvasId).getContext('2d');
-        graficosAtivos[canvasId] = new Chart(ctx, { type: 'bar', data: { labels: labels, datasets: [{ data: data, backgroundColor: color, borderRadius: 4 }] }, options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } } });
+        const canvas = document.getElementById(canvasId);
+        canvas.parentNode.style.height = Math.max(160, labels.length * 34 + 50) + 'px'; // altura acompanha o nº de setores
+        graficosAtivos[canvasId] = new Chart(canvas.getContext('2d'), {
+            type: 'bar',
+            data: { labels, datasets: [{ data, backgroundColor: color, borderRadius: 4 }] },
+            options: {
+                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } }, y: { ticks: { autoSkip: false } } },
+                plugins: { legend: { display: false } }
+            }
+        });
     }
 
     function renderizarTabelaEleitores(votos) {
