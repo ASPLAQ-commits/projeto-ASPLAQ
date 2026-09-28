@@ -4,75 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Votação Destaques 2026 - COREN-PE</title>
-    
-    <!-- Link para o seu CSS -->
+
     <link rel="stylesheet" href="style.css">
-    
+
     <!-- Biblioteca do Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-    <!-- ========================================== -->
-    <!-- TELA 1: LOGIN (Validação do Funcionário)   -->
-    <!-- ========================================== -->
+    <!-- TELA 1: LOGIN -->
     <div id="tela-login" class="container">
-        <!-- A sua logo adicionada aqui -->
         <img src="coren_logo.png" alt="Logo COREN-PE" class="logo-institucional">
-        
+
         <h2>Votação Destaques 2026</h2>
         <p>Insira seu e-mail institucional para acessar a urna.</p>
-        
+
         <input type="email" id="input-email" placeholder="E-mail (@coren-pe.gov.br)" required>
         <button onclick="validarAcesso()" id="btn-entrar">Acessar Urna</button>
-        
+
         <div id="msg-erro" class="mensagem-erro" style="display: none;"></div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- TELA 2: URNA (Oculta até validar o acesso) -->
-    <!-- ========================================== -->
+    <!-- TELA 2: URNA (uma etapa por categoria, candidatos agrupados por setor) -->
     <div id="tela-urna" class="container" style="display: none;">
-        
-        <!-- Cabeçalho Personalizado -->
+
         <div class="cabecalho-usuario">
             <h2 id="saudacao-usuario">Olá, Colaborador!</h2>
             <p id="cargo-usuario" class="badge-setor"></p>
-            <hr>
+        </div>
+
+        <div class="progress-wrapper">
+            <div class="progress-info"><span id="progresso-texto"></span></div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" id="progresso-barra"></div></div>
         </div>
 
         <form id="form-voto" onsubmit="enviarVoto(event)">
-            
-            <!-- COLOQUE AQUI OS SEUS CANDIDATOS -->
-            <!-- Exemplo: Setor ASPLAQ -->
-            <div class="sessao-voto">
-                <h3>Destaque ASPLAQ</h3>
-                <label>
-                    <input type="radio" name="voto_asplaq" value="Candidato 1" required> Candidato 1
-                </label>
-                <label>
-                    <input type="radio" name="voto_asplaq" value="Candidato 2"> Candidato 2
-                </label>
-            </div>
+            <div id="secoes-votacao"></div>
 
-            <!-- Exemplo: Setor TI -->
-            <div class="sessao-voto">
-                <h3>Destaque TI</h3>
-                <label>
-                    <input type="radio" name="voto_ti" value="Candidato 3" required> Candidato 3
-                </label>
-                <label>
-                    <input type="radio" name="voto_ti" value="Candidato 4"> Candidato 4
-                </label>
+            <div class="navegacao-botoes">
+                <button type="button" id="btn-anterior" class="btn-secundario">Voltar</button>
+                <button type="button" id="btn-proximo">Próxima categoria</button>
+                <button type="submit" id="btn-votar" class="btn-confirmar">Confirmar Meu Voto</button>
             </div>
-            
-            <!-- Adicione as outras categorias (Comunicação, DLCC, PROGER) seguindo o mesmo padrão -->
-
-            <button type="submit" id="btn-votar" class="btn-confirmar">Confirmar Meu Voto</button>
         </form>
     </div>
 
-    <!-- Link para o seu arquivo JavaScript -->
     <script src="script.js"></script>
 </body>
 </html>

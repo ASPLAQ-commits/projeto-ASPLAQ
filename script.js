@@ -5,134 +5,220 @@ const supabaseUrl = 'https://cnptvjdzqfsqbdkrnbbe.supabase.co';
 const supabaseKey = 'sb_publishable_cCqmjnqgdSvOcKA6oyd28Q_4BpE1hQ6';
 const clienteSupabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-// Variável global para guardar o e-mail verificado
 window.emailUsuarioValido = "";
+window.nomeUsuarioValido = "";
+
+const ordemCargos = ["Estagiário", "Terceirizado", "Comissionado", "Conselheiro", "Funcionário"];
+let candidatos = [];   // colaboradores vindos da tabela "colaboradores"
+let etapas = [];       // só as categorias que têm candidatos
+let etapaAtual = 0;
+
+const norm = t => (t || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const chave = cargo => norm(cargo).replace(/\s+/g, "_"); // "Estagiário" -> "estagiario" (coluna em votos)
+const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+// "Estagiário(a)", "Funcionário(a) Efetivo", "Conselheiro(a)"... -> categoria da votação
+function categoriaDe(cargo) {
+    const c = norm(cargo);
+    return ordemCargos.find(cat => c.includes(norm(cat).slice(0, 6)));
+}
 
 // ==========================================
-// 2. FUNÇÃO DE LOGIN E VALIDAÇÃO
+// 2. CARREGAR CANDIDATOS DO SUPABASE
+// ==========================================
+async function carregarCandidatos() {
+    // "foto" é opcional: se a coluna ainda não existe, busca sem ela
+    let { data, error } = await clienteSupabase.from('colaboradores').select('nome, setor, cargo, foto');
+    if (error) ({ data, error } = await clienteSupabase.from('colaboradores').select('nome, setor, cargo'));
+    if (error) throw error;
+
+    candidatos = [];
+    data.forEach(p => {
+        const categoria = categoriaDe(p.cargo);
+        if (categoria) candidatos.push({ ...p, setor: p.setor || 'Sem setor', categoria });
+        else console.warn("Cargo sem categoria de votação:", p.cargo, "-", p.nome);
+    });
+    candidatos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt'));
+
+    etapas = ordemCargos.filter(cat => candidatos.some(c => c.categoria === cat));
+    if (etapas.length === 0) throw new Error("Nenhum candidato encontrado na tabela colaboradores");
+}
+
+// ==========================================
+// 3. LOGIN E VALIDAÇÃO
 // ==========================================
 async function validarAcesso() {
-    const emailInput = document.getElementById('input-email').value.trim().toLowerCase();
+    const emailLimpo = document.getElementById('input-email').value.trim().toLowerCase();
     const msgErro = document.getElementById('msg-erro');
     const btnEntrar = document.getElementById('btn-entrar');
 
-    // Esconde mensagem de erro anterior
-    if(msgErro) msgErro.style.display = 'none';
+    msgErro.style.display = 'none';
 
-    // Verifica se digitou algo
-    if (!emailInput || !emailInput.includes('@coren-pe.gov.br')) {
+    if (!emailLimpo.endsWith('@coren-pe.gov.br')) {
         mostrarErro("Por favor, insira um e-mail válido do COREN-PE.");
         return;
     }
 
-    // Altera o botão para mostrar que está a carregar
     btnEntrar.innerText = "Validando dados...";
     btnEntrar.disabled = true;
 
     try {
-        // Passo A: Limpa rigorosamente o e-mail e busca no banco ignorando maiúsculas/minúsculas
-        const emailLimpo = emailInput.trim().toLowerCase();
-
         const { data: colaborador, error: erroColab } = await clienteSupabase
-            .from('colaboradores')
-            .select('*')
-            .ilike('email', emailLimpo)
-            .maybeSingle();
-
-        if (erroColab) {
-            console.error("Erro Supabase:", erroColab);
-        }
+            .from('colaboradores').select('*').ilike('email', emailLimpo).maybeSingle();
+        if (erroColab) throw erroColab; // falha de conexão não é "e-mail não encontrado"
 
         if (!colaborador) {
             mostrarErro("E-mail não localizado na base do COREN-PE. Verifique se digitou corretamente.");
-            btnEntrar.innerText = "Acessar Urna";
-            btnEntrar.disabled = false;
             return;
         }
 
-        // Passo B: Verifica se este e-mail já registou um voto
         const { data: voto, error: erroVoto } = await clienteSupabase
-            .from('votos')
-            .select('email')
-            .eq('email', emailLimpo)
-            .maybeSingle();
+            .from('votos').select('email').eq('email', emailLimpo).maybeSingle();
+        if (erroVoto) throw erroVoto;
 
         if (voto) {
-            mostrarErro("Acesso negado: Este e-mail já registou um voto no sistema.");
-            btnEntrar.innerText = "Acessar Urna";
-            btnEntrar.disabled = false;
+            mostrarErro("Acesso negado: este e-mail já registrou um voto no sistema.");
             return;
         }
 
-        // Passo C: Se tudo estiver certo, liberta a urna!
-        window.emailUsuarioValido = emailLimpo; 
-        
+        await carregarCandidatos();
+        etapaAtual = 0;
+        renderizarCandidatos();
+
+        window.emailUsuarioValido = emailLimpo;
+        window.nomeUsuarioValido = colaborador.nome;
+
         document.getElementById('tela-login').style.display = 'none';
         document.getElementById('tela-urna').style.display = 'block';
-        
-        // Exibe os dados personalizados vindos da planilha
         document.getElementById('saudacao-usuario').innerText = `Olá, ${colaborador.nome}!`;
         document.getElementById('cargo-usuario').innerText = `Setor: ${colaborador.setor} | Cargo: ${colaborador.cargo}`;
-        
+        atualizarNavegacao();
+
     } catch (err) {
-        mostrarErro("Erro de conexão com o servidor. Tente novamente.");
         console.error(err);
+        mostrarErro("Erro de conexão com o servidor. Tente novamente.");
+    } finally {
         btnEntrar.innerText = "Acessar Urna";
         btnEntrar.disabled = false;
     }
 }
 
-// Função auxiliar para exibir o erro no ecrã
 function mostrarErro(mensagem) {
     const msgErro = document.getElementById('msg-erro');
-    if(msgErro) {
-        msgErro.innerText = mensagem;
-        msgErro.style.display = 'block';
-    } else {
-        alert(mensagem);
-    }
+    msgErro.innerText = mensagem;
+    msgErro.style.display = 'block';
 }
 
 // ==========================================
-// 3. FUNÇÃO DE ENVIAR O VOTO PARA O BANCO
+// 4. CARTÕES DE CANDIDATOS (por categoria, agrupados por setor)
+// ==========================================
+// Sem foto, mostra um círculo com as iniciais
+function avatarIniciais(nome) {
+    const iniciais = nome.replace(/^Dra?\.\s*/, '').split(' ').filter(Boolean)
+        .slice(0, 2).map(p => p[0]).join('').toUpperCase();
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#EFEAFC"/><text x="50" y="50" dy=".35em" text-anchor="middle" font-family="Arial" font-size="38" font-weight="700" fill="#6D4CE0">${iniciais}</text></svg>`;
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
+function renderizarCandidatos() {
+    let html = '';
+    etapas.forEach((cargo, i) => {
+        html += `<div class="etapa-votacao" id="etapa-${i}" style="display:${i === 0 ? 'block' : 'none'};">
+            <div class="cargo-header">
+                <h2>${cargo} Destaque</h2>
+                <p>Selecione <strong>apenas 1 candidato</strong> desta categoria.</p>
+            </div>`;
+
+        const doCargo = candidatos.filter(c => c.categoria === cargo);
+        [...new Set(doCargo.map(c => c.setor))].sort((a, b) => a.localeCompare(b, 'pt')).forEach(setor => {
+            html += `<h3>${esc(setor)}</h3><div class="grid-candidatos">`;
+            doCargo.filter(c => c.setor === setor).forEach(c => {
+                html += `<label>
+                    <input type="radio" name="${chave(cargo)}" value="${esc(c.nome)}">
+                    <div class="card-candidato">
+                        <img src="${esc(c.foto || avatarIniciais(c.nome))}" alt="${esc(c.nome)}">
+                        <p>${esc(c.nome)}</p>
+                    </div>
+                </label>`;
+            });
+            html += `</div>`;
+        });
+        html += `</div>`;
+    });
+
+    const container = document.getElementById('secoes-votacao');
+    container.innerHTML = html;
+
+    // Se o link de uma foto estiver quebrado, volta para as iniciais
+    container.querySelectorAll('img').forEach(img =>
+        img.addEventListener('error', () => { img.src = avatarIniciais(img.alt); }, { once: true }));
+}
+
+// ==========================================
+// 5. NAVEGAÇÃO ENTRE CATEGORIAS
+// ==========================================
+function atualizarNavegacao() {
+    const ultima = etapaAtual === etapas.length - 1;
+    document.getElementById('progresso-barra').style.width = `${((etapaAtual + 1) / etapas.length) * 100}%`;
+    document.getElementById('progresso-texto').innerText = `Passo ${etapaAtual + 1} de ${etapas.length}: ${etapas[etapaAtual]}`;
+    document.getElementById('btn-anterior').style.display = etapaAtual === 0 ? 'none' : 'block';
+    document.getElementById('btn-proximo').style.display = ultima ? 'none' : 'block';
+    document.getElementById('btn-votar').style.display = ultima ? 'block' : 'none';
+}
+
+function irParaEtapa(nova) {
+    document.getElementById(`etapa-${etapaAtual}`).style.display = 'none';
+    etapaAtual = nova;
+    document.getElementById(`etapa-${etapaAtual}`).style.display = 'block';
+    atualizarNavegacao();
+    window.scrollTo(0, 0);
+}
+
+function categoriaMarcada(cargo) {
+    return document.querySelector(`input[name="${chave(cargo)}"]:checked`);
+}
+
+document.getElementById('btn-proximo').addEventListener('click', () => {
+    if (!categoriaMarcada(etapas[etapaAtual])) {
+        alert(`Selecione um candidato para ${etapas[etapaAtual]} antes de avançar.`);
+        return;
+    }
+    irParaEtapa(etapaAtual + 1);
+});
+
+document.getElementById('btn-anterior').addEventListener('click', () => irParaEtapa(etapaAtual - 1));
+
+// ==========================================
+// 6. ENVIO DO VOTO
 // ==========================================
 async function enviarVoto(event) {
-    event.preventDefault(); 
+    event.preventDefault();
     const btnVotar = document.getElementById('btn-votar');
 
-    // Pega todos os dados do formulário
-    const form = document.getElementById('form-voto');
-    const formData = new FormData(form);
-    
-    // Monta o objeto com os votos
-    const dadosVoto = {
-        email: window.emailUsuarioValido,
-        voto_asplaq: formData.get('voto_asplaq'),
-        voto_ti: formData.get('voto_ti')
-        // Adicione aqui os outros setores quando os criar no HTML
-    };
+    const faltando = etapas.find(c => !categoriaMarcada(c));
+    if (faltando) {
+        alert(`Falta escolher um candidato em: ${faltando}.`);
+        return;
+    }
 
-    // Altera o botão
+    if (!confirm("Confirmar seus votos? Depois de enviados, não será possível alterar.")) return;
+
+    // Colunas iguais às que o painel admin lê: estagiario, terceirizado, comissionado, conselheiro, funcionario
+    const dadosVoto = { nome_completo: window.nomeUsuarioValido, email: window.emailUsuarioValido };
+    etapas.forEach(cargo => { dadosVoto[chave(cargo)] = categoriaMarcada(cargo).value; });
+
     btnVotar.innerText = "Registrando voto...";
     btnVotar.disabled = true;
 
     try {
-        // Envia para a tabela 'votos' no Supabase
-        const { error } = await clienteSupabase
-            .from('votos')
-            .insert([dadosVoto]);
-
+        const { error } = await clienteSupabase.from('votos').insert([dadosVoto]);
         if (error) throw error;
 
-        // Sucesso!
-        alert("Voto registado com sucesso! Obrigado pela participação.");
-        
-        // Recarrega a página para voltar ao Início
+        alert("Voto registrado com sucesso! Obrigado pela participação.");
         window.location.reload();
-        
     } catch (err) {
-        alert("Erro ao registar voto. Verifique a sua ligação.");
         console.error(err);
+        alert("Erro ao registrar o voto. Verifique sua conexão e tente novamente.");
         btnVotar.innerText = "Confirmar Meu Voto";
         btnVotar.disabled = false;
     }
