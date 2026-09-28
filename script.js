@@ -1,7 +1,7 @@
 // ==========================================
 // 1. CONFIGURAÇÃO DO SUPABASE
 // ==========================================
-const supabaseUrl = 'https://cnptvjdzqlsqbdkrnbbc.supabase.co';
+const supabaseUrl = 'https://cnptvjdzqfsqbdkrnbbe.supabase.co';
 const supabaseKey = 'sb_publishable_cCqmjnqgdSvOcKA6oyd28Q_4BpE1hQ6';
 const clienteSupabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
