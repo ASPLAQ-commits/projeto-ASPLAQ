@@ -1,7 +1,6 @@
 // ==========================================
 // 1. CONFIGURAÇÃO DO SUPABASE
 // ==========================================
-// Coloque aqui a URL e a KEY do seu projeto Supabase
 const supabaseUrl = 'https://cnptvjdzqlsqbdkrnbbc.supabase.co';
 const supabaseKey = 'sb_publishable_cCqmjnqgdSvOcKA6oyd28Q_4BpE1hQ6';
 const clienteSupabase = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -31,12 +30,18 @@ async function validarAcesso() {
     btnEntrar.disabled = true;
 
     try {
-        // Passo A: Verifica se o e-mail está na planilha de colaboradores
+        // Passo A: Limpa rigorosamente o e-mail e busca no banco ignorando maiúsculas/minúsculas
+        const emailLimpo = emailInput.trim().toLowerCase();
+
         const { data: colaborador, error: erroColab } = await clienteSupabase
             .from('colaboradores')
             .select('*')
-            .eq('email', emailInput)
-            .single();
+            .ilike('email', emailLimpo)
+            .maybeSingle();
+
+        if (erroColab) {
+            console.error("Erro Supabase:", erroColab);
+        }
 
         if (!colaborador) {
             mostrarErro("E-mail não localizado na base do COREN-PE. Verifique se digitou corretamente.");
@@ -49,8 +54,8 @@ async function validarAcesso() {
         const { data: voto, error: erroVoto } = await clienteSupabase
             .from('votos')
             .select('email')
-            .eq('email', emailInput)
-            .single();
+            .eq('email', emailLimpo)
+            .maybeSingle();
 
         if (voto) {
             mostrarErro("Acesso negado: Este e-mail já registou um voto no sistema.");
@@ -60,7 +65,7 @@ async function validarAcesso() {
         }
 
         // Passo C: Se tudo estiver certo, liberta a urna!
-        window.emailUsuarioValido = emailInput; 
+        window.emailUsuarioValido = emailLimpo; 
         
         document.getElementById('tela-login').style.display = 'none';
         document.getElementById('tela-urna').style.display = 'block';
@@ -84,7 +89,7 @@ function mostrarErro(mensagem) {
         msgErro.innerText = mensagem;
         msgErro.style.display = 'block';
     } else {
-        alert(mensagem); // Fallback caso a div msg-erro não exista
+        alert(mensagem);
     }
 }
 
@@ -112,7 +117,7 @@ async function enviarVoto(event) {
     btnVotar.disabled = true;
 
     try {
-        // Envia para a tabela 'votos' no Supabase usando o clienteSupabase
+        // Envia para a tabela 'votos' no Supabase
         const { error } = await clienteSupabase
             .from('votos')
             .insert([dadosVoto]);
