@@ -262,6 +262,17 @@
     const norm = t => (t || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const esc = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
+    // "LUIZ GABRIEL SARMENTO" -> "Luiz Gabriel Sarmento" (mantém "de/da/do/dos/das" em minúsculo)
+    const conectivos = new Set(['de', 'da', 'do', 'dos', 'das', 'e']);
+    function formatarNome(nome) {
+        return (nome || '').toLowerCase().split(' ').filter(Boolean).map((palavra, i) => {
+            if (palavra === 'dr.' || palavra === 'dr') return 'Dr.';
+            if (palavra === 'dra.' || palavra === 'dra') return 'Dra.';
+            if (i > 0 && conectivos.has(palavra)) return palavra;
+            return palavra.charAt(0).toUpperCase() + palavra.slice(1);
+        }).join(' ');
+    }
+
     // Sem foto, mostra um círculo com as iniciais
     function avatarIniciais(nome) {
         const ini = String(nome).replace(/^Dra?\.\s*/, '').split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
@@ -446,7 +457,7 @@
     function cartaoLider(l) {
         return `<div class="rank-lider">
             <div class="rank-foto-wrap"><img class="rank-foto-grande" src="${esc(fotoDe(l.nome))}" alt="${esc(l.nome)}" ${imgErro}><span class="rank-trofeu">🏆</span></div>
-            <strong>${esc(l.nome)}</strong>
+            <strong>${esc(formatarNome(l.nome))}</strong>
             <span class="rank-setor">${esc(mapaSetores[l.nome] || '')}</span>
             <span class="rank-votos">${l.total} voto(s)</span>
         </div>`;
@@ -455,7 +466,7 @@
     function linhaRank(c, pos) {
         return `<li><span class="rank-pos">${pos}º</span>
             <img class="rank-foto-peq" src="${esc(fotoDe(c.nome))}" alt="${esc(c.nome)}" ${imgErro}>
-            <span class="rank-info"><b>${esc(c.nome)}</b><small>${esc(mapaSetores[c.nome] || '')}</small></span>
+            <span class="rank-info"><b>${esc(formatarNome(c.nome))}</b><small>${esc(mapaSetores[c.nome] || '')}</small></span>
             <span class="rank-total">${c.total} voto(s)</span></li>`;
     }
 
@@ -553,7 +564,7 @@
             const dataForm = new Date(voto.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
             tbody.innerHTML += `
                 <tr>
-                    <td><strong>${voto.nome_completo}</strong></td>
+                    <td><strong>${esc(formatarNome(voto.nome_completo))}</strong></td>
                     <td>${voto.email}</td>
                     <td>${dataForm}</td>
                     <td style="text-align: center;">
@@ -622,7 +633,7 @@
             const quando = c.quando ? new Date(c.quando).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
             return `<tr>
                 <td>${c.votou ? '<span class="st-ok">✅ Votou</span>' : '<span class="st-pend">⬜ Não votou</span>'}</td>
-                <td><strong>${esc(c.nome)}</strong></td>
+                <td><strong>${esc(formatarNome(c.nome))}</strong></td>
                 <td>${esc(c.setor || '')}</td>
                 <td>${esc(c.cargo || '')}</td>
                 <td>${esc(c.email || '')}</td>

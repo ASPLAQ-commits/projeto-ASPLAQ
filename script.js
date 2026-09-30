@@ -17,8 +17,16 @@ const norm = t => (t || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u03
 const chave = cargo => norm(cargo).replace(/\s+/g, "_"); // "Estagiário" -> "estagiario" (coluna em votos)
 const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-// Retorna true se o nome informado é o da pessoa logada (proíbe voto em si mesmo)
-const ehEu = nome => !!window.nomeUsuarioValido && norm(nome) === norm(window.nomeUsuarioValido);
+// "LUIZ GABRIEL SARMENTO" -> "Luiz Gabriel Sarmento" (mantém "de/da/do/dos/das" em minúsculo)
+const conectivos = new Set(['de', 'da', 'do', 'dos', 'das', 'e']);
+function formatarNome(nome) {
+    return (nome || '').toLowerCase().split(' ').filter(Boolean).map((palavra, i) => {
+        if (palavra === 'dr.' || palavra === 'dr') return 'Dr.';
+        if (palavra === 'dra.' || palavra === 'dra') return 'Dra.';
+        if (i > 0 && conectivos.has(palavra)) return palavra;
+        return palavra.charAt(0).toUpperCase() + palavra.slice(1);
+    }).join(' ');
+}
 
 // "Estagiário(a)", "Funcionário(a) Efetivo", "Conselheiro(a)"... -> categoria da votação
 function categoriaDe(cargo) {
@@ -27,32 +35,19 @@ function categoriaDe(cargo) {
 }
 
 // ==========================================
-// PREENCHIMENTO AUTOMÁTICO DO E-MAIL
-// ==========================================
-document.addEventListener('DOMContentLoaded', () => {
-    const inputEmail = document.getElementById('input-email');
-    if (inputEmail) {
-        inputEmail.addEventListener('input', function() {
-            if (this.value.endsWith('@')) {
-                this.value += 'coren-pe.gov.br';
-            }
-        });
-    }
-});
-
-// ==========================================
 // 2. CARREGAR CANDIDATOS DO SUPABASE
 // ==========================================
-async function carregarCandidatos() {
+async function carregarCandidatos(emailEleitor) {
     // "foto" é opcional: se a coluna ainda não existe, busca sem ela
-    let { data, error } = await clienteSupabase.from('colaboradores').select('nome, setor, cargo, foto');
-    if (error) ({ data, error } = await clienteSupabase.from('colaboradores').select('nome, setor, cargo'));
+    let { data, error } = await clienteSupabase.from('colaboradores').select('nome, setor, cargo, email, foto');
+    if (error) ({ data, error } = await clienteSupabase.from('colaboradores').select('nome, setor, cargo, email'));
     if (error) throw error;
 
     candidatos = [];
     data.forEach(p => {
+        if ((p.email || '').trim().toLowerCase() === emailEleitor) return; // ninguém vota em si mesmo
         const categoria = categoriaDe(p.cargo);
-        if (categoria) candidatos.push({ ...p, setor: p.setor || 'Sem setor', categoria });
+        if (categoria) candidatos.push({ nome: p.nome, setor: p.setor || 'Sem setor', cargo: p.cargo, foto: p.foto, categoria });
         else console.warn("Cargo sem categoria de votação:", p.cargo, "-", p.nome);
     });
     candidatos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt'));
@@ -98,19 +93,25 @@ async function validarAcesso() {
             return;
         }
 
-        // Guarda quem está logado ANTES de desenhar os cartões,
-        // senão o bloqueio de "votar em si mesmo" não funciona
-        window.emailUsuarioValido = emailLimpo;
-        window.nomeUsuarioValido = colaborador.nome;
-
-        await carregarCandidatos();
+        await carregarCandidatos(emailLimpo);
         etapaAtual = 0;
         renderizarCandidatos();
 
+        const nomeFormatado = formatarNome(colaborador.nome);
+        window.emailUsuarioValido = emailLimpo;
+        window.nomeUsuarioValido = nomeFormatado;
+
         document.getElementById('tela-login').style.display = 'none';
         document.getElementById('tela-urna').style.display = 'block';
-        document.getElementById('saudacao-usuario').innerText = `Olá, ${colaborador.nome}!`;
-        document.getElementById('cargo-usuario').innerText = `Setor: ${colaborador.setor} | Cargo: ${colaborador.cargo}`;
+        document.getElementById('saudacao-usuario').innerText = `Olá, ${nomeFormatado}!`;
+        document.getElementById('badge-setor-usuario').innerText = colaborador.setor || '';
+        document.getElementById('badge-cargo-usuario').innerText = colaborador.cargo || '';
+
+        const fotoUsuario = document.getElementById('foto-usuario');
+        fotoUsuario.src = colaborador.foto || avatarIniciais(colaborador.nome);
+        fotoUsuario.alt = nomeFormatado;
+        fotoUsuario.onerror = () => { fotoUsuario.onerror = null; fotoUsuario.src = avatarIniciais(colaborador.nome); };
+
         atualizarNavegacao();
 
     } catch (err) {
@@ -127,6 +128,16 @@ function mostrarErro(mensagem) {
     msgErro.innerText = mensagem;
     msgErro.style.display = 'block';
 }
+
+// Ao digitar "@", completa automaticamente com o domínio institucional.
+// O domínio fica selecionado: se a pessoa continuar digitando, ele é substituído.
+document.getElementById('input-email').addEventListener('input', function () {
+    if (this.value.endsWith('@')) {
+        const posicaoArroba = this.value.length;
+        this.value += 'coren-pe.gov.br';
+        this.setSelectionRange(posicaoArroba, this.value.length);
+    }
+});
 
 // ==========================================
 // 4. CARTÕES DE CANDIDATOS (por categoria, agrupados por setor)
@@ -152,29 +163,13 @@ function renderizarCandidatos() {
         [...new Set(doCargo.map(c => c.setor))].sort((a, b) => a.localeCompare(b, 'pt')).forEach(setor => {
             html += `<h3>${esc(setor)}</h3><div class="grid-candidatos">`;
             doCargo.filter(c => c.setor === setor).forEach(c => {
-                // Verifica se o candidato é a pessoa que está logada (proíbe voto em si mesmo)
-                const souEu = ehEu(c.nome);
-
-                if (souEu) {
-                    // Cartão desativado
-                    html += `<label title="Você não pode votar em si mesmo">
-                        <input type="radio" disabled name="${chave(cargo)}" value="${esc(c.nome)}">
-                        <div class="card-candidato" style="opacity: 0.5; cursor: not-allowed; filter: grayscale(100%);">
-                            <img src="${esc(c.foto || avatarIniciais(c.nome))}" alt="${esc(c.nome)}">
-                            <p>${esc(c.nome)}</p>
-                            <span style="display:block; font-size:11px; color:#e53e3e; margin-top:5px; font-weight:bold;">Seu Perfil</span>
-                        </div>
-                    </label>`;
-                } else {
-                    // Cartão normal habilitado
-                    html += `<label>
-                        <input type="radio" name="${chave(cargo)}" value="${esc(c.nome)}">
-                        <div class="card-candidato">
-                            <img src="${esc(c.foto || avatarIniciais(c.nome))}" alt="${esc(c.nome)}">
-                            <p>${esc(c.nome)}</p>
-                        </div>
-                    </label>`;
-                }
+                html += `<label>
+                    <input type="radio" name="${chave(cargo)}" value="${esc(c.nome)}">
+                    <div class="card-candidato">
+                        <img src="${esc(c.foto || avatarIniciais(c.nome))}" alt="${esc(c.nome)}">
+                        <p>${esc(formatarNome(c.nome))}</p>
+                    </div>
+                </label>`;
             });
             html += `</div>`;
         });
@@ -241,20 +236,13 @@ function revisarVoto(event) {
         return;
     }
 
-    // Segunda barreira: impede voto em si mesmo mesmo se o cartão foi habilitado por outro meio
-    const autoVoto = etapas.find(c => ehEu(categoriaMarcada(c).value));
-    if (autoVoto) {
-        alert(`Você não pode votar em si mesmo (${autoVoto}).`);
-        return;
-    }
-
     const lista = document.getElementById('lista-resumo');
     lista.innerHTML = etapas.map(cargo => {
         const nome = categoriaMarcada(cargo).value;
         return `<div class="resumo-card">
             <span class="cargo-label">${cargo}</span>
             <img src="${esc(fotoDoCandidato(nome))}" alt="${esc(nome)}">
-            <span class="nome-label">${esc(nome)}</span>
+            <span class="nome-label">${esc(formatarNome(nome))}</span>
         </div>`;
     }).join('');
     lista.querySelectorAll('img').forEach(img =>
@@ -279,12 +267,6 @@ document.getElementById('btn-confirmar-final').addEventListener('click', async f
     const dadosVoto = { nome_completo: window.nomeUsuarioValido, email: window.emailUsuarioValido };
     etapas.forEach(cargo => { dadosVoto[chave(cargo)] = categoriaMarcada(cargo).value; });
 
-    // Terceira barreira: última checagem antes de enviar ao servidor
-    if (etapas.some(cargo => ehEu(dadosVoto[chave(cargo)]))) {
-        alert("Você não pode votar em si mesmo.");
-        return;
-    }
-
     this.innerText = "Enviando...";
     this.disabled = true;
     btnVoltar.disabled = true;
@@ -302,9 +284,7 @@ document.getElementById('btn-confirmar-final').addEventListener('click', async f
         console.error(err);
         alert(err.code === '23505'
             ? "Este e-mail já registrou um voto."
-            : (err.message && err.message.includes('votar em si mesmo'))
-                ? "Você não pode votar em si mesmo."
-                : "Erro ao registrar o voto. Verifique sua conexão e tente novamente.");
+            : "Erro ao registrar o voto. Verifique sua conexão e tente novamente.");
         this.innerText = "Confirmar voto";
         this.disabled = false;
         btnVoltar.disabled = false;
