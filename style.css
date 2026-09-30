@@ -561,6 +561,65 @@ button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: non
 }
 
 /* -------------------------------------------------------------
+   BLOCOS DE SETOR
+-------------------------------------------------------------- */
+
+.bloco-setor {
+    background: var(--cor-setor-suave);
+    border: 1px solid color-mix(in srgb, var(--cor-setor) 20%, transparent);
+    border-left: 6px solid var(--cor-setor);
+    border-radius: var(--radius-lg);
+    padding: 20px 22px 12px;
+    margin-bottom: 26px;
+}
+
+.bloco-setor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.bloco-setor-header h3 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.bloco-setor-header h3::before {
+    content: '';
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--cor-setor);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--cor-setor) 22%, transparent);
+    flex-shrink: 0;
+}
+
+.contagem-setor {
+    background: var(--cor-setor);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 5px 12px;
+    border-radius: var(--radius-pill);
+    white-space: nowrap;
+}
+
+/* Cartões ficam brancos e "saltam" sobre o fundo colorido */
+.bloco-setor .card-candidato {
+    box-shadow: var(--shadow-sm);
+}
+
+/* -------------------------------------------------------------
    ACESSIBILIDADE E RESPONSIVIDADE
 -------------------------------------------------------------- */
 
@@ -588,4 +647,6 @@ button:disabled { background-color: #a0aec0; cursor: not-allowed; transform: non
     .grid-candidatos { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
     .card-candidato img { width: 75px; height: 75px; }
     .navegacao-botoes { flex-direction: column; gap: 10px; }
+    .bloco-setor { padding: 16px 14px 8px; }
+    .bloco-setor-header { flex-wrap: wrap; }
 }

@@ -37,18 +37,21 @@ function categoriaDe(cargo) {
 // ==========================================
 // 2. CARREGAR CANDIDATOS DO SUPABASE
 // ==========================================
-async function carregarCandidatos(emailEleitor) {
-    // "foto" é opcional: se a coluna ainda não existe, busca sem ela
+async function carregarCandidatos() {
+    // Busca os dados e trazemos o 'email' para usar na trava de segurança
     let { data, error } = await clienteSupabase.from('colaboradores').select('nome, setor, cargo, email, foto');
     if (error) ({ data, error } = await clienteSupabase.from('colaboradores').select('nome, setor, cargo, email'));
     if (error) throw error;
 
     candidatos = [];
     data.forEach(p => {
-        if ((p.email || '').trim().toLowerCase() === emailEleitor) return; // ninguém vota em si mesmo
         const categoria = categoriaDe(p.cargo);
-        if (categoria) candidatos.push({ nome: p.nome, setor: p.setor || 'Sem setor', cargo: p.cargo, foto: p.foto, categoria });
-        else console.warn("Cargo sem categoria de votação:", p.cargo, "-", p.nome);
+        if (categoria) {
+            // Guardamos o e-mail no objeto do candidato para bloquear o voto depois
+            candidatos.push({ nome: p.nome, setor: p.setor || 'Sem setor', cargo: p.cargo, email: p.email, foto: p.foto, categoria });
+        } else {
+            console.warn("Cargo sem categoria de votação:", p.cargo, "-", p.nome);
+        }
     });
     candidatos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt'));
 
@@ -77,7 +80,7 @@ async function validarAcesso() {
     try {
         const { data: colaborador, error: erroColab } = await clienteSupabase
             .from('colaboradores').select('*').ilike('email', emailLimpo).maybeSingle();
-        if (erroColab) throw erroColab; // falha de conexão não é "e-mail não encontrado"
+        if (erroColab) throw erroColab;
 
         if (!colaborador) {
             mostrarErro("E-mail não localizado na base do COREN-PE. Verifique se digitou corretamente.");
@@ -93,13 +96,15 @@ async function validarAcesso() {
             return;
         }
 
-        await carregarCandidatos(emailLimpo);
-        etapaAtual = 0;
-        renderizarCandidatos();
-
+        // Trazemos todos os candidatos
+        await carregarCandidatos();
+        
         const nomeFormatado = formatarNome(colaborador.nome);
         window.emailUsuarioValido = emailLimpo;
         window.nomeUsuarioValido = nomeFormatado;
+
+        etapaAtual = 0;
+        renderizarCandidatos(); // Agora renderiza passando pelas travas
 
         document.getElementById('tela-login').style.display = 'none';
         document.getElementById('tela-urna').style.display = 'block';
@@ -130,7 +135,6 @@ function mostrarErro(mensagem) {
 }
 
 // Ao digitar "@", completa automaticamente com o domínio institucional.
-// O domínio fica selecionado: se a pessoa continuar digitando, ele é substituído.
 document.getElementById('input-email').addEventListener('input', function () {
     if (this.value.endsWith('@')) {
         const posicaoArroba = this.value.length;
@@ -163,13 +167,31 @@ function renderizarCandidatos() {
         [...new Set(doCargo.map(c => c.setor))].sort((a, b) => a.localeCompare(b, 'pt')).forEach(setor => {
             html += `<h3>${esc(setor)}</h3><div class="grid-candidatos">`;
             doCargo.filter(c => c.setor === setor).forEach(c => {
-                html += `<label>
-                    <input type="radio" name="${chave(cargo)}" value="${esc(c.nome)}">
-                    <div class="card-candidato">
-                        <img src="${esc(c.foto || avatarIniciais(c.nome))}" alt="${esc(c.nome)}">
-                        <p>${esc(formatarNome(c.nome))}</p>
-                    </div>
-                </label>`;
+                
+                // Trava de Segurança Segura: compara o e-mail do candidato com o do utilizador logado
+                const emailCandidato = (c.email || '').trim().toLowerCase();
+                const souEu = (emailCandidato === window.emailUsuarioValido);
+
+                if (souEu) {
+                    // Cartão cinza e bloqueado (Não pode votar em si mesmo)
+                    html += `<label title="Você não pode votar em si mesmo">
+                        <input type="radio" disabled name="${chave(cargo)}" value="${esc(c.nome)}">
+                        <div class="card-candidato" style="opacity: 0.4; cursor: not-allowed; filter: grayscale(100%);">
+                            <img src="${esc(c.foto || avatarIniciais(c.nome))}" alt="${esc(c.nome)}">
+                            <p>${esc(formatarNome(c.nome))}</p>
+                            <span style="display:block; font-size:11px; color:#e53e3e; margin-top:5px; font-weight:bold;">Seu Perfil</span>
+                        </div>
+                    </label>`;
+                } else {
+                    // Cartão normal e funcional
+                    html += `<label>
+                        <input type="radio" name="${chave(cargo)}" value="${esc(c.nome)}">
+                        <div class="card-candidato">
+                            <img src="${esc(c.foto || avatarIniciais(c.nome))}" alt="${esc(c.nome)}">
+                            <p>${esc(formatarNome(c.nome))}</p>
+                        </div>
+                    </label>`;
+                }
             });
             html += `</div>`;
         });
