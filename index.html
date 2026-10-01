@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Votação Destaques 2026 - COREN-PE</title>
+    <title>Premiação Quem Faz a Diferença 2026 - COREN-PE</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -35,7 +35,7 @@
              class="logo-evento-item logo-meeting">
     </div>
 
-    <h2>Votação Destaques 2026</h2>
+    <h2>Premiação Quem Faz a Diferença 2026</h2>
     <p>Insira seu e-mail institucional para acessar a urna.</p>
 
     <input type="email" id="input-email" placeholder="E-mail (@coren-pe.gov.br)" required autocomplete="email">
@@ -45,22 +45,14 @@
 </div>
 
 <!-- ============================================================
-     TELA 2: URNA
+     TELA 2: URNA  (logos apenas ao lado do nome — sem topo)
      ============================================================ -->
 <div id="tela-urna" class="container" style="display: none;">
 
-    <div class="logos-evento">
-        <img src="coren_logo.png" alt="Logo COREN-PE" class="logo-evento-item">
-        <span class="logos-divisor"></span>
-        <img src="meeting_logo_preto.png"
-             data-light="meeting_logo_preto.png"
-             data-dark="meeting_logo.png"
-             alt="Logo Meeting COREN-PE"
-             class="logo-evento-item logo-meeting">
-    </div>
-
+    <!-- Cabeçalho do colaborador — com logos à direita do nome -->
     <div class="cabecalho-usuario">
         <img id="foto-usuario" class="foto-usuario-header" src="" alt="">
+
         <div class="info-usuario-header">
             <h2 id="saudacao-usuario">Olá, Colaborador!</h2>
             <p class="badge-setor">
@@ -68,10 +60,23 @@
                 <span id="badge-cargo-usuario"></span>
             </p>
         </div>
+
+        <!-- Logos à direita -->
+        <div class="logos-cabecalho">
+            <img src="coren_logo.png"
+                 alt="COREN-PE"
+                 class="logo-cabecalho-item">
+            <span class="logos-cabecalho-divisor"></span>
+            <img src="meeting_logo_preto.png"
+                 data-light="meeting_logo_preto.png"
+                 data-dark="meeting_logo.png"
+                 alt="Meeting COREN-PE"
+                 class="logo-cabecalho-item logo-meeting">
+        </div>
     </div>
 
     <div class="titulo-evento-urna">
-        <h1>Votação Destaques 2026</h1>
+        <h1>Premiação Quem Faz a Diferença 2026</h1>
         <p>Escolha os profissionais que fazem a diferença</p>
     </div>
 

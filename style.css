@@ -34,7 +34,6 @@
     --input-bg-focus: #FFFFFF;
     --chart-box-bg: #FDFAF2;
     --resumo-card-bg: #FDFAF2;
-    --table-row-hover: rgba(139,30,92,0.05);
 
     --text-dark: #1F1309;
     --text-muted: #6E5A47;
@@ -78,7 +77,6 @@ body.dark-mode {
     --input-bg-focus: #2A1E3A;
     --chart-box-bg: #221830;
     --resumo-card-bg: #221830;
-    --table-row-hover: rgba(232,155,192,0.06);
 
     --text-dark: #F5EDE0;
     --text-muted: #B8A891;
@@ -166,7 +164,6 @@ body.dark-mode::before { opacity: 0.35; mix-blend-mode: screen; }
     transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 
-/* Fita dourada no topo */
 .container::before {
     content: '';
     position: absolute;
@@ -179,7 +176,6 @@ body.dark-mode::before { opacity: 0.35; mix-blend-mode: screen; }
     box-shadow: 0 1px 0 rgba(255,255,255,0.2) inset;
 }
 
-/* Medalha central (troféu dourado) */
 .container::after {
     content: '';
     position: absolute;
@@ -254,24 +250,6 @@ body.dark-mode::before { opacity: 0.35; mix-blend-mode: screen; }
 .theme-toggle .icon-moon { opacity: 1; transform: rotate(0deg) scale(1); }
 body.dark-mode .theme-toggle .icon-sun  { opacity: 1; transform: rotate(0deg) scale(1); }
 body.dark-mode .theme-toggle .icon-moon { opacity: 0; transform: rotate(90deg) scale(0.5); }
-
-/* ============================================================
-   LOGO
-   ============================================================ */
-.logo-institucional {
-    display: block;
-    margin: 0 auto 30px;
-    max-width: 250px;
-    height: auto;
-    object-fit: contain;
-}
-
-.logo-cabecalho {
-    height: 42px;
-    width: auto;
-    object-fit: contain;
-    flex-shrink: 0;
-}
 
 /* ============================================================
    TÍTULOS
@@ -446,7 +424,7 @@ button:disabled {
 }
 
 /* ============================================================
-   MENSAGEM DE ERRO (login)
+   MENSAGEM DE ERRO
    ============================================================ */
 .mensagem-erro {
     margin-top: 20px;
@@ -462,8 +440,7 @@ button:disabled {
 }
 
 /* ============================================================
-   LOGOS DO EVENTO
-   (troca entre meeting_logo_preto.png e meeting_logo.png via JS)
+   LOGOS DO EVENTO (login e resumo)
    ============================================================ */
 .logos-evento {
     display: flex;
@@ -487,13 +464,8 @@ button:disabled {
     height: 3px;
     border-radius: 3px;
     background: linear-gradient(90deg,
-        transparent,
-        var(--gold-deep),
-        var(--gold-bright),
-        var(--gold-color),
-        var(--gold-bright),
-        var(--gold-deep),
-        transparent);
+        transparent, var(--gold-deep), var(--gold-bright),
+        var(--gold-color), var(--gold-bright), var(--gold-deep), transparent);
     box-shadow: 0 1px 6px rgba(201,153,42,0.4);
 }
 
@@ -516,40 +488,22 @@ button:disabled {
     width: 1px;
     height: 32px;
     background: linear-gradient(180deg,
-        transparent,
-        var(--gold-color) 30%,
-        var(--gold-color) 70%,
-        transparent);
+        transparent, var(--gold-color) 30%,
+        var(--gold-color) 70%, transparent);
     opacity: 0.5;
     flex-shrink: 0;
 }
 
-/* Variante da tela de LOGIN — logos um pouco maiores */
-.logos-login {
-    margin-bottom: 32px;
-}
+.logos-login { margin-bottom: 32px; }
+.logos-login .logo-evento-item { height: 52px; max-width: 170px; }
+.logos-login .logos-divisor { height: 40px; }
 
-.logos-login .logo-evento-item {
-    height: 52px;
-    max-width: 170px;
-}
-
-.logos-login .logos-divisor {
-    height: 40px;
-}
-
-/* Variante da tela de RESUMO — logos menores */
-.logos-resumo .logo-evento-item {
-    height: 36px;
-    max-width: 120px;
-}
-
-.logos-resumo .logos-divisor {
-    height: 28px;
-}
+.logos-resumo .logo-evento-item { height: 36px; max-width: 120px; }
+.logos-resumo .logos-divisor { height: 28px; }
 
 /* ============================================================
-   CABEÇALHO DO COLABORADOR
+   CABEÇALHO DO COLABORADOR — layout flex
+   [foto] [nome + badges] .......... [COREN | Meeting]
    ============================================================ */
 .cabecalho-usuario {
     display: flex;
@@ -558,11 +512,13 @@ button:disabled {
     margin-bottom: 26px;
     padding-bottom: 22px;
     border-bottom: 1.5px solid var(--border-color);
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
 }
 
+/* Foto */
 .foto-usuario-header {
-    width: 62px; height: 62px;
+    width: 62px;
+    height: 62px;
     border-radius: 50%;
     object-fit: cover;
     border: 3px solid var(--card-bg);
@@ -573,12 +529,13 @@ button:disabled {
     background: var(--primary-light);
 }
 
+/* Bloco de info (nome + badges) cresce, mas trunca se faltar espaço */
 .info-usuario-header {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    flex: 1 1 auto;
     min-width: 0;
-    flex: 1;
 }
 
 .info-usuario-header h2 {
@@ -586,6 +543,10 @@ button:disabled {
     padding: 0;
     font-size: 22px;
     color: var(--text-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
 }
 
 .info-usuario-header h2::after { display: none; }
@@ -611,7 +572,55 @@ button:disabled {
 }
 
 /* ============================================================
-   🏆 TÍTULO DO EVENTO
+   LOGOS À DIREITA DO NOME
+   ============================================================ */
+.logos-cabecalho {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;        /* empurra para a direita */
+    flex-shrink: 0;           /* nunca encolhe */
+    padding-left: 16px;
+    position: relative;
+}
+
+/* Divisor vertical sutil entre nome e logos */
+.logos-cabecalho::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1px;
+    height: 36px;
+    background: linear-gradient(180deg,
+        transparent,
+        var(--border-color) 25%,
+        var(--border-color) 75%,
+        transparent);
+}
+
+/* Cada logo — altura FIXA */
+.logo-cabecalho-item {
+    height: 54px !important;
+    width: auto !important;
+    max-width: 200px !important;
+    object-fit: contain;
+    flex-shrink: 0;
+    display: block;
+}
+
+/* Divisor entre as duas logos */
+.logos-cabecalho-divisor {
+    width: 1px;
+    height: 20px;
+    background: var(--border-color);
+    opacity: 0.8;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   TÍTULO DO EVENTO
    ============================================================ */
 .titulo-evento-urna {
     text-align: center;
@@ -642,7 +651,8 @@ button:disabled {
     margin: 14px auto 0;
     border-radius: 3px;
     background: linear-gradient(90deg,
-        var(--gold-deep), var(--gold-bright), var(--gold-color), var(--gold-bright), var(--gold-deep));
+        var(--gold-deep), var(--gold-bright), var(--gold-color),
+        var(--gold-bright), var(--gold-deep));
     box-shadow: 0 1px 6px rgba(201,153,42,0.5);
 }
 
@@ -836,7 +846,7 @@ label:not(.bloqueado):hover .card-candidato img {
     z-index: 1;
 }
 
-/* BADGE — flutua FORA do card, no <label> via ::after */
+/* BADGE flutuante */
 .grid-candidatos label[data-cat]::after {
     content: '';
     position: absolute;
@@ -950,10 +960,7 @@ label:not(.bloqueado):hover .card-candidato img {
     background: linear-gradient(90deg, transparent, var(--gold-color), transparent);
 }
 
-.navegacao-botoes button {
-    margin-top: 0;
-    flex: 1;
-}
+.navegacao-botoes button { margin-top: 0; flex: 1; }
 
 .btn-secundario {
     background: transparent;
@@ -1050,16 +1057,6 @@ label:not(.bloqueado):hover .card-candidato img {
     overflow: hidden;
 }
 
-#mensagem-sucesso::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image:
-        radial-gradient(circle at 20% 30%, rgba(201,153,42,0.15) 0%, transparent 40%),
-        radial-gradient(circle at 80% 70%, rgba(139,30,92,0.10) 0%, transparent 40%);
-    pointer-events: none;
-}
-
 #mensagem-sucesso h3 {
     color: var(--mint-color);
     font-family: 'Cinzel', serif;
@@ -1068,14 +1065,12 @@ label:not(.bloqueado):hover .card-candidato img {
     font-weight: 700;
     text-transform: none;
     letter-spacing: 0.02em;
-    position: relative;
 }
 
 #mensagem-sucesso p {
     color: var(--text-dark);
     margin: 0 0 20px;
     font-size: 15px;
-    position: relative;
     opacity: 0.9;
 }
 
@@ -1231,12 +1226,6 @@ label:not(.bloqueado):hover .card-candidato img {
         0 8px 18px -4px rgba(139,30,92,0.45);
 }
 
-.modal-botoes button.btn-primary:hover {
-    box-shadow:
-        0 1px 0 rgba(255,255,255,0.25) inset,
-        0 12px 24px -4px rgba(139,30,92,0.55);
-}
-
 .modal-botoes button.btn-cancelar {
     background: transparent;
     border: 1.5px solid var(--border-color);
@@ -1279,10 +1268,7 @@ label:not(.bloqueado):hover .card-candidato img {
     h1 { font-size: 24px; }
     h2 { font-size: 19px; }
     .cargo-header h2 { font-size: 24px; }
-    .grid-candidatos {
-        grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
-        gap: 16px;
-    }
+    .grid-candidatos { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 16px; }
     .card-candidato { padding: 20px 14px 18px; }
     .card-candidato img { width: 76px; height: 76px; }
     .card-candidato p { font-size: 14px; }
@@ -1294,23 +1280,38 @@ label:not(.bloqueado):hover .card-candidato img {
     }
     .theme-toggle { top: 12px; right: 12px; width: 42px; height: 42px; }
     .theme-toggle svg { width: 18px; height: 18px; }
-    .cabecalho-usuario { gap: 12px; }
+
+    /* Cabeçalho — quebra para 2 linhas em mobile */
+    .cabecalho-usuario {
+        flex-wrap: wrap;
+    }
     .foto-usuario-header { width: 52px; height: 52px; }
     .info-usuario-header h2 { font-size: 18px; }
+
+    .logos-cabecalho {
+        margin-left: 0;
+        padding-left: 0;
+        width: 100%;
+        justify-content: flex-end;
+        padding-top: 10px;
+        margin-top: 6px;
+    }
+    .logos-cabecalho::before { display: none; }
+    .logo-cabecalho-item { height: 26px !important; max-width: 70px !important; }
+    .logos-cabecalho-divisor { height: 16px; }
+
     .modal-box { padding: 32px 22px 24px; }
     .modal-box h3 { font-size: 19px; }
     .modal-box p { font-size: 14px; }
     .modal-botoes { flex-direction: column-reverse; }
+
     .logos-evento { gap: 14px; margin-bottom: 22px; padding-bottom: 16px; }
     .logo-evento-item { height: 34px; max-width: 110px; }
     .logos-divisor { height: 26px; }
     .logos-login .logo-evento-item { height: 42px; max-width: 130px; }
     .logos-login .logos-divisor { height: 32px; }
     .logos-resumo .logo-evento-item { height: 30px; max-width: 100px; }
-    .titulo-evento-urna {
-        margin: 4px 0 24px;
-        padding: 18px 14px 22px;
-    }
+    .titulo-evento-urna { margin: 4px 0 24px; padding: 18px 14px 22px; }
     .titulo-evento-urna h1 { font-size: 22px; }
     .titulo-evento-urna p { font-size: 13px; }
 }

@@ -56,6 +56,7 @@ const chave = cargo => norm(cargo).replace(/\s+/g, "_");
 const esc = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 const conectivos = new Set(['de', 'da', 'do', 'dos', 'das', 'e']);
+
 function formatarNome(nome) {
     return (nome || '').toLowerCase().split(' ').filter(Boolean).map((palavra, i) => {
         if (palavra === 'dr.' || palavra === 'dr') return 'Dr.';
@@ -63,6 +64,29 @@ function formatarNome(nome) {
         if (i > 0 && conectivos.has(palavra)) return palavra;
         return palavra.charAt(0).toUpperCase() + palavra.slice(1);
     }).join(' ');
+}
+
+// 🆕 Mostra apenas o primeiro + último nome
+// "LUIZ GABRIEL SARMENTO PEREIRA" → "Luiz Pereira"
+// "DRA. MARIA APARECIDA SILVA"    → "Dra. Maria Silva"
+function nomeCurto(nome) {
+    const partes = String(nome || '').trim().split(/\s+/).filter(Boolean);
+    if (partes.length === 0) return '';
+    if (partes.length === 1) return formatarNome(partes[0]);
+
+    // Detecta Dr. / Dra. como prefixo
+    let prefixo = '';
+    let nomes = partes;
+    const p0 = partes[0].toLowerCase().replace(/\.$/, '');
+    if (p0 === 'dr')      { prefixo = 'Dr. ';  nomes = partes.slice(1); }
+    else if (p0 === 'dra'){ prefixo = 'Dra. '; nomes = partes.slice(1); }
+
+    if (nomes.length === 0) return prefixo.trim();
+    if (nomes.length === 1) return prefixo + formatarNome(nomes[0]);
+
+    const primeiro = formatarNome(nomes[0]);
+    const ultimo   = formatarNome(nomes[nomes.length - 1]);
+    return prefixo + primeiro + ' ' + ultimo;
 }
 
 function categoriaDe(cargo) {
@@ -73,7 +97,7 @@ function categoriaDe(cargo) {
 function avatarIniciais(nome) {
     const iniciais = String(nome).replace(/^Dra?\.\s*/, '').split(' ').filter(Boolean)
         .slice(0, 2).map(p => p[0]).join('').toUpperCase();
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#EFF4FF"/><text x="50" y="50" dy=".35em" text-anchor="middle" font-family="Arial" font-size="38" font-weight="700" fill="#1E40AF">${iniciais}</text></svg>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F5E8EE"/><text x="50" y="50" dy=".35em" text-anchor="middle" font-family="Arial" font-size="38" font-weight="700" fill="#8B1E5C">${iniciais}</text></svg>`;
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 }
 
@@ -141,7 +165,7 @@ function modalConfirmacao(titulo, mensagem, textoSim = 'Sim, trocar', textoNao =
 }
 
 // ==========================================
-// 3. CARREGAR CANDIDATOS DO SUPABASE
+// 3. CARREGAR CANDIDATOS
 // ==========================================
 async function carregarCandidatos() {
     let { data, error } = await clienteSupabase.from('colaboradores').select('nome, setor, cargo, email, foto');
@@ -153,18 +177,16 @@ async function carregarCandidatos() {
         const categoria = categoriaDe(p.cargo);
         if (categoria) {
             candidatos.push({ nome: p.nome, setor: p.setor || 'Sem setor', cargo: p.cargo, email: p.email, foto: p.foto, categoria });
-        } else {
-            console.warn("Cargo sem categoria de votação:", p.cargo, "-", p.nome);
         }
     });
     candidatos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt'));
 
     etapas = ordemCargos.filter(cat => candidatos.some(c => c.categoria === cat));
-    if (etapas.length === 0) throw new Error("Nenhum candidato encontrado na tabela colaboradores");
+    if (etapas.length === 0) throw new Error("Nenhum candidato encontrado");
 }
 
 // ==========================================
-// 4. LOGIN E VALIDAÇÃO
+// 4. LOGIN
 // ==========================================
 async function validarAcesso() {
     const emailLimpo = document.getElementById('input-email').value.trim().toLowerCase();
@@ -187,7 +209,7 @@ async function validarAcesso() {
         if (erroColab) throw erroColab;
 
         if (!colaborador) {
-            mostrarErro("E-mail não localizado na base do COREN-PE. Verifique se digitou corretamente.");
+            mostrarErro("E-mail não localizado na base do COREN-PE.");
             return;
         }
 
@@ -196,15 +218,15 @@ async function validarAcesso() {
         if (erroVoto) throw erroVoto;
 
         if (voto) {
-            mostrarErro("Acesso negado: este e-mail já registrou um voto no sistema.");
+            mostrarErro("Acesso negado: este e-mail já registrou um voto.");
             return;
         }
 
         await carregarCandidatos();
 
-        const nomeFormatado = formatarNome(colaborador.nome);
+        // 🔑 Guarda o nome COMPLETO para o banco de dados
         window.emailUsuarioValido = emailLimpo;
-        window.nomeUsuarioValido = nomeFormatado;
+        window.nomeUsuarioValido = formatarNome(colaborador.nome);
 
         Object.keys(escolhas).forEach(k => delete escolhas[k]);
         etapaAtual = 0;
@@ -212,20 +234,24 @@ async function validarAcesso() {
 
         document.getElementById('tela-login').style.display = 'none';
         document.getElementById('tela-urna').style.display = 'block';
-        document.getElementById('saudacao-usuario').innerText = `Olá, ${nomeFormatado}!`;
+
+        // 🆕 Saudação com apenas primeiro + último nome
+        document.getElementById('saudacao-usuario').innerText =
+            `Olá, ${nomeCurto(colaborador.nome)}!`;
+
         document.getElementById('badge-setor-usuario').innerText = colaborador.setor || '';
         document.getElementById('badge-cargo-usuario').innerText = colaborador.cargo || '';
 
         const fotoUsuario = document.getElementById('foto-usuario');
         fotoUsuario.src = colaborador.foto || avatarIniciais(colaborador.nome);
-        fotoUsuario.alt = nomeFormatado;
+        fotoUsuario.alt = formatarNome(colaborador.nome);
         fotoUsuario.onerror = () => { fotoUsuario.onerror = null; fotoUsuario.src = avatarIniciais(colaborador.nome); };
 
         atualizarNavegacao();
 
     } catch (err) {
         console.error(err);
-        mostrarErro("Erro de conexão com o servidor. Tente novamente.");
+        mostrarErro("Erro de conexão com o servidor.");
     } finally {
         btnEntrar.innerText = "Acessar Urna";
         btnEntrar.disabled = false;
@@ -240,14 +266,14 @@ function mostrarErro(mensagem) {
 
 document.getElementById('input-email').addEventListener('input', function () {
     if (this.value.endsWith('@')) {
-        const posicaoArroba = this.value.length;
+        const p = this.value.length;
         this.value += 'coren-pe.gov.br';
-        this.setSelectionRange(posicaoArroba, this.value.length);
+        this.setSelectionRange(p, this.value.length);
     }
 });
 
 // ==========================================
-// 5. RENDERIZAR CARTÕES
+// 5. RENDERIZAR CANDIDATOS
 // ==========================================
 function renderizarCandidatos() {
     let html = '';
@@ -313,7 +339,7 @@ function sincronizarVisual() {
 }
 
 // ==========================================
-// 7. DELEGAÇÃO DE EVENTOS — clique nos cards
+// 7. DELEGAÇÃO DE EVENTOS
 // ==========================================
 document.getElementById('secoes-votacao').addEventListener('click', async function(e) {
     const label = e.target.closest('label[data-cat]');
@@ -326,17 +352,12 @@ document.getElementById('secoes-votacao').addEventListener('click', async functi
     const nome = label.dataset.nome;
     const anterior = escolhas[catKey];
 
-    console.log('🖱️ Clique:', { catKey, nome, anterior });
-
-    // 1) MESMO candidato → desmarcar
     if (anterior === nome) {
         delete escolhas[catKey];
         sincronizarVisual();
-        console.log('↩️ Desmarcado');
         return;
     }
 
-    // 2) OUTRO candidato → confirmar troca
     if (anterior && anterior !== nome) {
         const confirmou = await modalConfirmacao(
             'Trocar de candidato?',
@@ -347,18 +368,14 @@ document.getElementById('secoes-votacao').addEventListener('click', async functi
         if (confirmou) {
             escolhas[catKey] = nome;
             sincronizarVisual();
-            console.log('🔄 Trocado');
         } else {
             sincronizarVisual();
-            console.log('✋ Mantido');
         }
         return;
     }
 
-    // 3) PRIMEIRA escolha
     escolhas[catKey] = nome;
     sincronizarVisual();
-    console.log('✅ Selecionado');
 });
 
 // ==========================================
