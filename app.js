@@ -16,16 +16,33 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ============================================================
-// ⚠️ Credenciais do Supabase
+// ⚠️ Credenciais do Supabase — COREN
 // ============================================================
-const supabaseUrl = 'https://ypyhbuoglipxsyazsxoj.supabase.co';
-const supabaseKey = 'sb_publishable_ufcIVBj-f_fHQqnecaxEfw_50Cslvyx';
+const supabaseUrl = 'https://cnptvjdzqfsqbdkrnbbe.supabase.co';
+const supabaseKey = 'sb_publishable_cCqmjnqgdSvOcKA6oyd28Q_4BpE1hQ6';
 
 // ============================================================
 // CONFIGURAÇÃO DO COREN
 // ============================================================
 const EMAIL_DOMINIO = '@coren-pe.gov.br';
-const ordemCargos = ["Estagiário", "Terceirizado", "Comissionado", "Conselheiro", "Funcionário"];
+
+// Cargos exatamente como estão no banco (tabela colaboradores)
+const ordemCargos = [
+    "Estagiário(a)",
+    "Terceirizado(a)",
+    "Comissionado(a)",
+    "Conselheiro(a)",
+    "Funcionário(a) Efetivo"
+];
+
+// Mapeia o nome do cargo → chave da coluna no banco de votos
+const MAPA_CARGOS = {
+    "Estagiário(a)":          "estagiario",
+    "Terceirizado(a)":        "terceirizado",
+    "Comissionado(a)":        "comissionado",
+    "Conselheiro(a)":         "conselheiro",
+    "Funcionário(a) Efetivo": "funcionario"
+};
 
 // ============================================================
 // ESTADO GLOBAL
@@ -35,13 +52,13 @@ let eleitorAtual = { nome: '', email: '' };
 let etapaAtual = 0;
 let carregando = true;
 
-// Uma única escolha por categoria
+// Uma única escolha por categoria (chave = nome da coluna no banco)
 const escolhas = {
-    estagiario: null,
+    estagiario:   null,
     terceirizado: null,
     comissionado: null,
-    conselheiro: null,
-    funcionario: null
+    conselheiro:  null,
+    funcionario:  null
 };
 
 // ============================================================
@@ -114,14 +131,43 @@ function modalConfirmacao(titulo, mensagem, textoSim = 'Sim, trocar', textoNao =
 }
 
 // ============================================================
-// BUSCA CANDIDATOS DO SUPABASE
+// 🔑 FUNÇÕES AUXILIARES
+// ============================================================
+
+// Converte o nome do cargo em chave da coluna do banco
+function chaveCategoria(cargo) {
+    if (MAPA_CARGOS[cargo]) return MAPA_CARGOS[cargo];
+    // fallback robusto
+    const c = cargo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (c.includes("estagi"))     return "estagiario";
+    if (c.includes("terceiriz"))  return "terceirizado";
+    if (c.includes("comission"))  return "comissionado";
+    if (c.includes("conselheir")) return "conselheiro";
+    if (c.includes("funcionar"))  return "funcionario";
+    return c.replace(/[^a-z]+/g, "_");
+}
+
+// Foto do candidato ou avatar gerado automaticamente
+function getFotoCandidato(nomeCand) {
+    if (!nomeCand) return 'https://via.placeholder.com/90';
+    const cand = candidatosData.find(c => c.nome === nomeCand);
+    if (cand && cand.foto) return cand.foto;
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(nomeCand)}&background=8B1E5C&color=fff&bold=true&size=256`;
+}
+
+// ============================================================
+// BUSCA CANDIDATOS DO SUPABASE (tabela: colaboradores)
 // ============================================================
 async function carregarCandidatos() {
-    const url = `${supabaseUrl}/rest/v1/candidatos?select=*&ativo=eq.true&order=serie.asc,nome.asc`;
+    const url = `${supabaseUrl}/rest/v1/colaboradores?select=*&order=setor.asc,nome.asc`;
     const resposta = await fetch(url, {
         headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
     });
-    if (!resposta.ok) throw new Error("Falha ao buscar candidatos");
+    if (!resposta.ok) {
+        const erro = await resposta.text();
+        console.error('Erro Supabase:', resposta.status, erro);
+        throw new Error("Falha ao buscar colaboradores: " + resposta.status);
+    }
     return await resposta.json();
 }
 
@@ -131,30 +177,25 @@ async function carregarCandidatos() {
 async function inicializar() {
     const btnLogin = document.getElementById('btn-login');
     const htmlOriginal = btnLogin.innerHTML;
-    btnLogin.innerHTML = "Carregando candidatos...";
+    btnLogin.innerHTML = "Carregando colaboradores...";
     btnLogin.disabled = true;
 
     try {
         candidatosData = await carregarCandidatos();
-        if (!candidatosData.length) throw new Error("Nenhum candidato cadastrado");
+        if (!candidatosData.length) throw new Error("Nenhum colaborador cadastrado");
         renderizarCandidatos();
         carregando = false;
         btnLogin.innerHTML = htmlOriginal;
         btnLogin.disabled = false;
+        console.log(`✅ ${candidatosData.length} colaboradores carregados`);
     } catch (erro) {
-        console.error('Erro ao carregar candidatos:', erro);
-        await modalAviso('Erro ao carregar', 'Não foi possível carregar os candidatos.<br>Verifique a conexão e recarregue a página.');
+        console.error('Erro ao carregar colaboradores:', erro);
+        await modalAviso(
+            'Erro ao carregar',
+            'Não foi possível carregar a lista de colaboradores.<br>Verifique a conexão e recarregue a página.'
+        );
         btnLogin.innerHTML = "Erro ao carregar";
     }
-}
-
-function getFotoCandidato(nomeCand) {
-    const cand = candidatosData.find(c => c.nome === nomeCand);
-    return cand ? cand.foto : 'https://via.placeholder.com/90';
-}
-
-function chaveCategoria(cargo) {
-    return cargo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
 }
 
 // ============================================================
@@ -163,7 +204,7 @@ function chaveCategoria(cargo) {
 document.getElementById('form-login').addEventListener('submit', async function(e) {
     e.preventDefault();
     if (carregando) {
-        await modalAviso('Aguarde', 'Os candidatos ainda estão sendo carregados.');
+        await modalAviso('Aguarde', 'Os colaboradores ainda estão sendo carregados.');
         return;
     }
 
@@ -201,6 +242,7 @@ document.getElementById('form-login').addEventListener('submit', async function(
             document.getElementById('votacao-section').style.display = 'block';
         }
     } catch (erro) {
+        console.error('Erro no login:', erro);
         await modalAviso('Erro de conexão', 'Não foi possível conectar ao servidor.<br>Tente novamente em instantes.');
     } finally {
         btnLogin.innerHTML = htmlOriginal;
@@ -213,10 +255,14 @@ document.getElementById('form-login').addEventListener('submit', async function(
 // ============================================================
 function renderizarCandidatos() {
     const container = document.getElementById('secoes-votacao');
+
+    // Agrupa por cargo → setor → [candidatos]
     const agrupado = candidatosData.reduce((acc, candidato) => {
-        if (!acc[candidato.cargo]) acc[candidato.cargo] = {};
-        if (!acc[candidato.cargo][candidato.serie]) acc[candidato.cargo][candidato.serie] = [];
-        acc[candidato.cargo][candidato.serie].push(candidato);
+        const cargo = candidato.cargo || 'Outros';
+        const setor = candidato.setor || 'Geral';
+        if (!acc[cargo]) acc[cargo] = {};
+        if (!acc[cargo][setor]) acc[cargo][setor] = [];
+        acc[cargo][setor].push(candidato);
         return acc;
     }, {});
 
@@ -234,15 +280,17 @@ function renderizarCandidatos() {
                 <span class="contador" id="contador-${key}">— nenhum —</span>
             </div>
         `;
+
         if (agrupado[cargo]) {
-            for (const serie in agrupado[cargo]) {
-                html += `<h3>${serie}</h3><div class="grid-candidatos">`;
-                agrupado[cargo][serie].forEach(cand => {
+            for (const setor in agrupado[cargo]) {
+                html += `<h3>${setor}</h3><div class="grid-candidatos">`;
+                agrupado[cargo][setor].forEach(cand => {
+                    const foto = cand.foto || `https://ui-avatars.com/api/?name=${encodeURIComponent(cand.nome)}&background=8B1E5C&color=fff&bold=true&size=256`;
                     html += `
                         <div class="candidato-item" data-nome="${cand.nome}" data-cat="${key}">
                             <div class="badge-pos"></div>
                             <div class="card-candidato">
-                                <img src="${cand.foto}" alt="${cand.nome}" loading="lazy">
+                                <img src="${foto}" alt="${cand.nome}" loading="lazy">
                                 <p>${cand.nome}</p>
                             </div>
                         </div>
@@ -250,11 +298,15 @@ function renderizarCandidatos() {
                 });
                 html += `</div>`;
             }
+        } else {
+            html += `<p style="text-align: center; color: var(--text-muted); padding: 20px;">Nenhum colaborador cadastrado nesta categoria.</p>`;
         }
+
         html += `</div>`;
     });
     container.innerHTML = html;
 
+    // Eventos de clique nos cards
     document.querySelectorAll('.candidato-item').forEach(item => {
         item.addEventListener('click', () => toggleCandidato(item.dataset.cat, item.dataset.nome));
     });
@@ -264,9 +316,9 @@ function renderizarCandidatos() {
 
 // ============================================================
 // 🎯 TOGGLE DE CANDIDATO (seleção única por categoria)
-// - Se não escolheu nada → seleciona
-// - Se clicou no mesmo → desmarca
-// - Se já tinha outro → pergunta se quer trocar
+// - Clicou em nada selecionado → seleciona
+// - Clicou no mesmo → desmarca
+// - Clicou em outro quando já tem um → pergunta se quer trocar
 // ============================================================
 async function toggleCandidato(catKey, nomeCand) {
     const atual = escolhas[catKey];
@@ -300,11 +352,12 @@ async function toggleCandidato(catKey, nomeCand) {
 // ATUALIZA BADGES E ESTADOS VISUAIS
 // ============================================================
 function atualizarBadges() {
+    // Limpa tudo
     document.querySelectorAll('.badge-pos').forEach(el => el.innerHTML = '');
     document.querySelectorAll('.card-candidato').forEach(el => el.classList.remove('tem-posicao'));
 
-    ordemCargos.forEach(cargo => {
-        const catKey = chaveCategoria(cargo);
+    // Aplica nas seleções atuais
+    Object.keys(escolhas).forEach(catKey => {
         const nome = escolhas[catKey];
         if (!nome) return;
 
@@ -417,11 +470,11 @@ document.getElementById('btn-confirmar-final').addEventListener('click', async f
     const votosParaEnvio = {
         nome_completo: eleitorAtual.nome,
         email: eleitorAtual.email,
-        estagiario: escolhas.estagiario,
+        estagiario:   escolhas.estagiario,
         terceirizado: escolhas.terceirizado,
         comissionado: escolhas.comissionado,
-        conselheiro: escolhas.conselheiro,
-        funcionario: escolhas.funcionario
+        conselheiro:  escolhas.conselheiro,
+        funcionario:  escolhas.funcionario
     };
 
     const htmlOriginal = this.innerHTML;
@@ -441,12 +494,15 @@ document.getElementById('btn-confirmar-final').addEventListener('click', async f
             document.getElementById('header-resumo').innerHTML = `<h2>Comprovante de Votação</h2><p>Votos enviados por <strong>${eleitorAtual.email}</strong>.</p>`;
             document.getElementById('mensagem-sucesso').style.display = 'block';
         } else {
+            const erro = await resposta.text();
+            console.error('Erro ao enviar:', resposta.status, erro);
             await modalAviso('Voto já registado', 'Este e-mail já consta na base de dados.<br>Você não pode votar novamente.');
             this.innerHTML = htmlOriginal;
             this.disabled = false;
             document.getElementById('btn-voltar-edicao').style.display = 'flex';
         }
     } catch (erro) {
+        console.error('Erro de comunicação:', erro);
         await modalAviso('Erro de comunicação', 'Não foi possível enviar os seus votos.<br>Tente novamente em instantes.');
         this.innerHTML = htmlOriginal;
         this.disabled = false;
