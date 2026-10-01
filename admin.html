@@ -3,109 +3,307 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Apuração - COREN-PE</title>
+    <title>Painel de Apuração - Destaques 2026 COREN-PE</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Biblioteca do Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
-        .dashboard-container { max-width: 1200px; }
-        
-        /* Cabeçalho do Admin */
-        .header-admin { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 15px; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
-        
-        /* Modal de Senha */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(23, 18, 43, 0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); }
-        .modal-content { background: var(--card-bg); padding: 35px 30px; border-radius: var(--radius-lg); width: 90%; max-width: 420px; box-shadow: var(--shadow-md); text-align: center; }
-        .modal-content h3 { color: var(--primary-color); font-size: 22px; margin-top: 0; margin-bottom: 10px; font-family: 'Space Grotesk', sans-serif; }
-        .input-modal { width: 100%; padding: 14px 16px; margin-bottom: 15px; border: 1.5px solid var(--border-color); border-radius: var(--radius-md); font-family: inherit; font-size: 16px; background-color: #FBFAFE; }
-        .input-modal:focus { outline: none; border-color: var(--primary-color); background-color: #fff; box-shadow: 0 0 0 4px var(--primary-light); }
+        /* ============================================================
+           ESTILOS ESPECÍFICOS DO PAINEL ADMIN
+           ============================================================ */
+        .dashboard-container { max-width: 1240px; }
+
+        .header-admin {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .modal-overlay-admin {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(20, 12, 6, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 35px 30px;
+            border-radius: var(--radius-lg);
+            width: 90%;
+            max-width: 420px;
+            box-shadow: var(--shadow-md);
+            text-align: center;
+        }
+
+        .modal-content h3 {
+            color: var(--primary-color);
+            font-size: 22px;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-family: 'Cinzel', serif;
+        }
+
+        .input-modal {
+            width: 100%;
+            padding: 14px 16px;
+            margin-bottom: 15px;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: 16px;
+            background-color: var(--input-bg);
+            color: var(--text-dark);
+        }
+
+        .input-modal:focus {
+            outline: none;
+            border-color: var(--gold-color);
+            background-color: var(--input-bg-focus);
+            box-shadow: 0 0 0 4px rgba(201,153,42,0.15);
+        }
+
         .btn-modal { margin-top: 10px; }
 
         /* Abas */
-        .tabs { display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; flex-wrap: wrap; justify-content: center; }
-        .tab-btn { background: transparent; color: var(--text-muted); border: none; font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 600; padding: 10px 20px; cursor: pointer; border-radius: var(--radius-md); box-shadow: none; margin: 0; width: auto; transition: var(--transition); }
-        .tab-btn:hover { background: var(--primary-light); color: var(--primary-color); transform: none; box-shadow: none; }
-        .tab-btn.active { background: var(--primary-color); color: white; box-shadow: var(--shadow-sm); }
-        .tab-content { display: none; animation: fadeIn 0.4s ease; }
-        .tab-content.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 40px; }
-        .chart-box { background: #FBFAFE; border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; box-shadow: var(--shadow-sm); }
-        .chart-box h3 { color: var(--primary-color); margin-top: 0; text-align: center; border-bottom: 2px solid var(--gold-light); padding-bottom: 10px; font-size: 18px; }
-        
-        .insight-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .insight-card { background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); color: white; padding: 20px; border-radius: var(--radius-md); text-align: center; box-shadow: var(--shadow-md); }
-        .insight-card h4 { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 500; margin-bottom: 10px; opacity: 0.9; }
-        .insight-card .valor { font-size: 24px; font-weight: 700; }
-        .insight-card.bad { background: linear-gradient(135deg, #6D6483, #17122B); }
-
-        /* Tabelas */
-        .table-container { overflow-x: auto; background: #FBFAFE; border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; box-shadow: var(--shadow-sm); }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
-        th { color: var(--primary-color); font-family: 'Space Grotesk', sans-serif; font-weight: 600; background-color: var(--primary-light); border-radius: 4px; }
-        td { color: var(--text-dark); font-size: 14px; }
-        tr:hover td { background-color: #f1ecfc55; }
-        
-        .btn-excluir {
-            background-color: #e53e3e; color: white; border: none; padding: 6px 12px; font-size: 13px; font-weight: 600;
-            border-radius: var(--radius-md); cursor: pointer; box-shadow: none; margin: 0; width: auto; transition: var(--transition);
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
-        .btn-excluir:hover { background-color: #c53030; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(229, 62, 62, 0.3); }
 
-        /* Ranking com fotos */
-        .rank-lideres { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-bottom: 14px; }
-        .rank-lider { flex: 1 1 150px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; background: var(--gold-light); border: 1.5px solid var(--gold-color); border-radius: var(--radius-md); padding: 16px 10px; }
-        .rank-foto-wrap { position: relative; margin-bottom: 8px; }
-        .rank-foto-grande { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; border: 3px solid var(--gold-color); background: #fff; }
-        .rank-trofeu { position: absolute; right: -8px; bottom: -4px; font-size: 22px; }
-        .rank-setor { font-size: 12px; color: var(--text-muted); }
-        .rank-votos { margin-top: 4px; font-weight: 700; color: var(--primary-color); font-size: 14px; }
-        .rank-empate { text-align: center; font-size: 12px; color: var(--text-muted); margin: -4px 0 12px; }
-        .rank-lista { list-style: none; padding: 0; margin: 0; }
-        .rank-lista li { display: flex; align-items: center; gap: 10px; padding: 8px 4px; border-bottom: 1px solid var(--border-color); }
-        .rank-pos { width: 26px; font-weight: 600; color: var(--text-muted); font-size: 13px; }
-        .rank-foto-peq { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: #fff; }
-        .rank-info { flex: 1; display: flex; flex-direction: column; min-width: 0; font-size: 14px; }
-        .rank-info small { color: var(--text-muted); font-size: 12px; }
-        .rank-total { font-size: 13px; color: var(--text-muted); white-space: nowrap; }
-        .rank-mais summary { cursor: pointer; color: var(--primary-color); font-size: 13px; font-weight: 600; padding: 10px 4px; }
-        .rank-vazio { color: #999; text-align: center; }
-        .chart-wrap { position: relative; }
-        .grid-largo { grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); }
-        /* Participação */
-        .part-resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .part-card { background: #FBFAFE; border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; text-align: center; }
-        .part-card strong { display: block; font-family: 'Space Grotesk', sans-serif; font-size: 30px; }
-        .part-card span { font-size: 13px; color: var(--text-muted); }
-        .part-filtros { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 15px; }
-        .part-filtros input { flex: 1 1 220px; width: auto; padding: 10px 14px; font-size: 14px; }
-        .chip { width: auto; margin: 0; padding: 8px 16px; background: var(--primary-light); color: var(--primary-color); border: none; border-radius: var(--radius-pill); font-size: 14px; box-shadow: none; }
-        .chip:hover { background: #E1D8FA; transform: none; box-shadow: none; }
-        .chip.active { background: var(--primary-color); color: #fff; }
-        .st-ok { color: #0f8a6d; font-weight: 600; white-space: nowrap; }
-        .st-pend { color: var(--text-muted); white-space: nowrap; }
+        .tab-btn {
+            background: transparent;
+            color: var(--text-muted);
+            border: none;
+            font-family: 'Cinzel', serif;
+            font-size: 15px;
+            font-weight: 600;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: var(--radius-md);
+            box-shadow: none;
+            margin: 0;
+            width: auto;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            background: var(--primary-light);
+            color: var(--primary-color);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        body.dark-mode .tab-btn.active { color: #1F1309; }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+        .tab-content.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .chart-box {
+            background: var(--chart-box-bg);
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .chart-box h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+            text-align: center;
+            border-bottom: 2px solid var(--gold-light);
+            padding-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .insight-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .insight-card {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            padding: 20px;
+            border-radius: var(--radius-md);
+            text-align: center;
+            box-shadow: var(--shadow-md);
+        }
+
+        .insight-card h4 {
+            font-family: 'Cinzel', serif;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .insight-card .valor {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .insight-card.bad {
+            background: linear-gradient(135deg, #6D6483, #17122B);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            background: var(--chart-box-bg);
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            color: var(--text-dark);
+            font-family: 'Cinzel', serif;
+            font-weight: 600;
+            background-color: var(--primary-light);
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        td { color: var(--text-dark); font-size: 14px; }
+
+        tr:hover td { background-color: var(--table-row-hover); }
+
+        .btn-excluir {
+            background: linear-gradient(135deg, #EF4444, #DC2626);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            box-shadow: none;
+            margin: 0;
+            width: auto;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-excluir:hover {
+            background: linear-gradient(135deg, #DC2626, #B91C1C);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(229, 62, 62, 0.3);
+        }
+
+        .inline-icon {
+            width: 1.15em;
+            height: 1.15em;
+            flex-shrink: 0;
+            vertical-align: middle;
+        }
+
+        /* Ajuste dos logos no admin */
+        .logos-evento {
+            margin-bottom: 32px;
+            padding-bottom: 20px;
+        }
+
+        .logo-evento-item {
+            height: 48px !important;
+            max-width: 160px !important;
+        }
     </style>
 </head>
 <body>
 
+<!-- 🌙 Botão de tema -->
+<button type="button" class="theme-toggle" id="theme-toggle" aria-label="Alternar tema" title="Alternar tema">
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+    </svg>
+</button>
+
 <div class="container dashboard-container">
     <h1>Painel de Apuração 🏆</h1>
-    <img src="coren_logo.png" alt="Logo COREN-PE" class="logo-institucional">
-    
+
+    <!-- Logos institucionais -->
+    <div class="logos-evento">
+        <img src="coren_logo.png" alt="Logo COREN-PE" class="logo-evento-item">
+        <span class="logos-divisor"></span>
+        <img src="meeting_logo_preto.png"
+             data-light="meeting_logo_preto.png"
+             data-dark="meeting_logo.png"
+             alt="Logo Meeting COREN-PE"
+             class="logo-evento-item logo-meeting">
+    </div>
+
     <!-- Login Admin -->
     <div id="admin-login-section">
         <h2>Acesso Restrito</h2>
         <p style="text-align: center; color: var(--text-muted); margin-bottom: 20px;">Área exclusiva para a comissão organizadora.</p>
         <form id="form-admin-login">
             <label for="admin-email">E-mail de Administrador</label>
-            <input type="email" id="admin-email" required placeholder="Ex: admin@coren-pe.gov.br">
+            <input type="email" id="admin-email" required placeholder="admin@coren-pe.gov.br">
 
             <label for="admin-senha">Senha do Painel</label>
-            <input type="password" id="admin-senha" required placeholder="Digite a senha de acesso ao painel" style="width: 100%; padding: 14px 16px; border: 1.5px solid var(--border-color); border-radius: var(--radius-md); font-size: 16px; background-color: #FBFAFE; margin-top: 8px;">
+            <input type="password" id="admin-senha" required placeholder="Digite a senha de acesso ao painel">
 
             <button type="submit" id="btn-admin-login">Acessar Apuração</button>
         </form>
@@ -113,10 +311,10 @@
 
     <!-- Dashboard -->
     <div id="admin-dashboard-section" style="display: none;">
-        
+
         <div class="header-admin">
-            <div>
-                <span style="color: var(--text-muted); font-size: 15px;">👤 Logado como: <strong id="nome-admin-logado" style="color: var(--primary-color);"></strong></span>
+            <div style="display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 15px;">
+                👤 Logado como: <strong id="nome-admin-logado" style="color: var(--primary-color);"></strong>
             </div>
             <div>
                 <button type="button" class="btn-secundario" style="padding: 10px 20px; margin-top: 0; border-radius: var(--radius-pill); font-size: 14px; width: auto;" onclick="abrirModalSenha(false)">🔑 Alterar Minha Senha</button>
@@ -129,11 +327,10 @@
 
         <!-- Abas -->
         <div class="tabs">
-            <button class="tab-btn active" onclick="abrirAba('aba-candidatos')">Candidatos Mais Votados</button>
-            <button class="tab-btn" onclick="abrirAba('aba-setores')">Métricas por Setor</button>
-            <button class="tab-btn" onclick="abrirAba('aba-eleitores')">Registo de Eleitores</button>
-            <button class="tab-btn" onclick="abrirAba('aba-participacao')">✅ Participação</button>
-            <button class="tab-btn" onclick="abrirAba('aba-logs')">📋 Logs de Auditoria</button>
+            <button class="tab-btn active" onclick="abrirAba('aba-candidatos', this)">🏆 Candidatos Mais Votados</button>
+            <button class="tab-btn" onclick="abrirAba('aba-setores', this)">📊 Métricas por Setor</button>
+            <button class="tab-btn" onclick="abrirAba('aba-eleitores', this)">👥 Registo de Eleitores</button>
+            <button class="tab-btn" onclick="abrirAba('aba-logs', this)">📋 Logs de Auditoria</button>
         </div>
 
         <!-- ABA 1 -->
@@ -145,34 +342,34 @@
         <div id="aba-setores" class="tab-content">
             <div class="insight-cards">
                 <div class="insight-card">
-                    <h4>🌟 Setor Mais Votado (Geral)</h4>
+                    <h4>🌟 Setor Mais Votado</h4>
                     <div class="valor" id="insight-setor-mais">N/A</div>
                 </div>
                 <div class="insight-card bad">
-                    <h4>📉 Setor Menos Votado (Geral)</h4>
+                    <h4>📉 Setor Menos Votado</h4>
                     <div class="valor" id="insight-setor-menos">N/A</div>
                 </div>
             </div>
             <h3 style="text-align: center; color: var(--text-dark); margin-bottom: 20px;">Setores Mais Votados por Categoria</h3>
-            <div class="dashboard-grid grid-largo">
-                <div class="chart-box"><h3>Estagiários</h3><div class="chart-wrap"><canvas id="chart-setor-estagiario"></canvas></div></div>
-                <div class="chart-box"><h3>Terceirizados</h3><div class="chart-wrap"><canvas id="chart-setor-terceirizado"></canvas></div></div>
-                <div class="chart-box"><h3>Comissionados</h3><div class="chart-wrap"><canvas id="chart-setor-comissionado"></canvas></div></div>
-                <div class="chart-box"><h3>Funcionários</h3><div class="chart-wrap"><canvas id="chart-setor-funcionario"></canvas></div></div>
+            <div class="dashboard-grid">
+                <div class="chart-box"><h3>Estagiário</h3><canvas id="chart-setor-estagiario"></canvas></div>
+                <div class="chart-box"><h3>Terceirizado</h3><canvas id="chart-setor-terceirizado"></canvas></div>
+                <div class="chart-box"><h3>Comissionado</h3><canvas id="chart-setor-comissionado"></canvas></div>
+                <div class="chart-box"><h3>Funcionário</h3><canvas id="chart-setor-funcionario"></canvas></div>
             </div>
         </div>
 
-        <!-- ABA 3 (ELEITORES E EXCLUSÃO) -->
+        <!-- ABA 3 -->
         <div id="aba-eleitores" class="tab-content">
             <h2 style="font-size: 18px; margin-bottom: 15px; color: var(--text-dark);">Auditoria e Gestão de Votos</h2>
-            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Caso algum voto precise ser anulado (ex: erro no preenchimento ou contestação de e-mail), pode excluí-lo abaixo para liberar o eleitor a votar novamente.</p>
-            
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Caso algum voto precise ser anulado, pode excluí-lo abaixo para liberar o eleitor a votar novamente.</p>
+
             <div class="table-container">
                 <table id="tabela-eleitores">
                     <thead>
                         <tr>
                             <th>Nome do Eleitor</th>
-                            <th>E-mail Institucional</th>
+                            <th>E-mail</th>
                             <th>Data e Hora</th>
                             <th style="text-align: center;">Ações</th>
                         </tr>
@@ -182,37 +379,11 @@
             </div>
         </div>
 
-        <!-- ABA: PARTICIPAÇÃO (quem já votou e quem falta) -->
-        <div id="aba-participacao" class="tab-content">
-            <div class="part-resumo">
-                <div class="part-card"><strong id="part-votaram" style="color: #0f8a6d;">0</strong><span>Já votaram</span></div>
-                <div class="part-card"><strong id="part-faltam" style="color: var(--accent-color);">0</strong><span>Ainda não votaram</span></div>
-                <div class="part-card"><strong id="part-percentual" style="color: var(--primary-color);">0%</strong><span>Participação</span></div>
-            </div>
-            <p id="part-aviso" style="display: none; color: var(--text-muted); font-size: 13px; margin-bottom: 15px;"></p>
-
-            <div class="part-filtros">
-                <button type="button" class="chip active" data-filtro="todos">Todos</button>
-                <button type="button" class="chip" data-filtro="votaram">✅ Já votaram</button>
-                <button type="button" class="chip" data-filtro="faltam">⬜ Ainda não votaram</button>
-                <input type="text" id="busca-participacao" placeholder="Buscar por nome, setor ou e-mail">
-            </div>
-
-            <div class="table-container">
-                <table id="tabela-participacao">
-                    <thead>
-                        <tr><th>Status</th><th>Colaborador</th><th>Setor</th><th>Cargo</th><th>E-mail</th><th>Voto registrado em</th></tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- ABA 4 (LOGS DE AUDITORIA) -->
+        <!-- ABA 4 -->
         <div id="aba-logs" class="tab-content">
             <h2 style="font-size: 18px; margin-bottom: 15px; color: var(--text-dark);">Histórico de Anulações (Logs)</h2>
             <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Registo imutável de quais administradores anularam votos e quando.</p>
-            
+
             <div class="table-container">
                 <table id="tabela-logs">
                     <thead>
@@ -235,7 +406,7 @@
 </div>
 
 <!-- Modal Senha -->
-<div id="modal-senha" class="modal-overlay" style="display: none;">
+<div id="modal-senha" class="modal-overlay-admin" style="display: none;">
     <div class="modal-content">
         <h3 id="titulo-modal-senha">Alterar Senha</h3>
         <p id="desc-modal-senha" style="color: var(--text-muted); font-size: 14px; margin-bottom: 25px;">Por segurança, defina uma nova senha para o seu acesso.</p>
@@ -251,51 +422,94 @@
 </div>
 
 <script>
+    // ============================================================
+    // 🌓 LOGO MEETING — troca src conforme o tema
+    // ============================================================
+    function aplicarLogoTema() {
+        const isDark = document.body.classList.contains('dark-mode');
+        document.querySelectorAll('.logo-meeting').forEach(img => {
+            const novaSrc = isDark ? img.dataset.dark : img.dataset.light;
+            if (novaSrc && img.getAttribute('src') !== novaSrc) {
+                img.setAttribute('src', novaSrc);
+            }
+        });
+    }
+
+    // ============================================================
+    // 🌙 TEMA CLARO / ESCURO
+    // ============================================================
+    (function initTema() {
+        const temaSalvo = localStorage.getItem('tema');
+        if (temaSalvo === 'dark') document.body.classList.add('dark-mode');
+    })();
+
+    document.addEventListener('DOMContentLoaded', () => {
+        aplicarLogoTema();
+
+        const btnTema = document.getElementById('theme-toggle');
+        if (!btnTema) return;
+        btnTema.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('tema', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            aplicarLogoTema();
+        });
+    });
+
+    // ============================================================
+    // Credenciais do Supabase
+    // ============================================================
     const supabaseUrl = 'https://cnptvjdzqfsqbdkrnbbe.supabase.co';
     const supabaseKey = 'sb_publishable_cCqmjnqgdSvOcKA6oyd28Q_4BpE1hQ6';
     let graficosAtivos = {};
     let adminLogado = null;
     let trocaObrigatoria = false;
 
-    let colaboradores = [];
+    // Estado global
+    let candidatosData = [];
     let mapaSetores = {};
-    let mapaFotos = {};
+    let SERIES_LISTA = [];
 
-    const norm = t => (t || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    const esc = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const ICON = {
+        trophy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;vertical-align:-0.2em;flex-shrink:0;"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>',
+        trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:-0.15em;"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>'
+    };
 
-    // "LUIZ GABRIEL SARMENTO" -> "Luiz Gabriel Sarmento" (mantém "de/da/do/dos/das" em minúsculo)
-    const conectivos = new Set(['de', 'da', 'do', 'dos', 'das', 'e']);
-    function formatarNome(nome) {
-        return (nome || '').toLowerCase().split(' ').filter(Boolean).map((palavra, i) => {
-            if (palavra === 'dr.' || palavra === 'dr') return 'Dr.';
-            if (palavra === 'dra.' || palavra === 'dra') return 'Dra.';
-            if (i > 0 && conectivos.has(palavra)) return palavra;
-            return palavra.charAt(0).toUpperCase() + palavra.slice(1);
-        }).join(' ');
+    function chaveCategoria(cargo) {
+        return cargo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
     }
 
-    // Sem foto, mostra um círculo com as iniciais
-    function avatarIniciais(nome) {
-        const ini = String(nome).replace(/^Dra?\.\s*/, '').split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#EFEAFC"/><text x="50" y="50" dy=".35em" text-anchor="middle" font-family="Arial" font-size="38" font-weight="700" fill="#6D4CE0">${ini}</text></svg>`;
-        return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    async function carregarCandidatosDoBanco() {
+        const url = `${supabaseUrl}/rest/v1/colaboradores?select=*&order=setor.asc,nome.asc`;
+        const resposta = await fetch(url, { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } });
+        if (!resposta.ok) throw new Error("Falha ao buscar colaboradores");
+        candidatosData = await resposta.json();
+        mapaSetores = {};
+        candidatosData.forEach(c => mapaSetores[c.nome] = c.setor);
+        SERIES_LISTA = [...new Set(candidatosData.map(c => c.setor))].sort();
     }
-    const fotoDe = nome => mapaFotos[nome] || avatarIniciais(nome);
-    const imgErro = `onerror="this.onerror=null;this.src=avatarIniciais(this.alt)"`;
 
-    function abrirAba(idAba) {
+    (async function init() {
+        try { await carregarCandidatosDoBanco(); }
+        catch (erro) {
+            console.error(erro);
+            alert("Erro ao carregar colaboradores. Recarregue a página.");
+        }
+    })();
+
+    function abrirAba(idAba, elBotao) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         document.getElementById(idAba).classList.add('active');
-        event.currentTarget.classList.add('active');
+        if (elBotao) elBotao.classList.add('active');
     }
 
+    // LOGIN ADMIN — usa tabela admin_users
     document.getElementById('form-admin-login').addEventListener('submit', async function(e) {
         e.preventDefault();
         const email = document.getElementById('admin-email').value.trim().toLowerCase();
         const senha = document.getElementById('admin-senha').value;
         const btnLogin = document.getElementById('btn-admin-login');
+        const htmlOriginal = btnLogin.innerHTML;
         btnLogin.innerText = "Autenticando...";
         btnLogin.disabled = true;
 
@@ -307,19 +521,19 @@
             if (admins.length > 0 && admins[0].senha === senha) {
                 adminLogado = admins[0];
                 document.getElementById('admin-login-section').style.display = 'none';
-                if (senha === 'coren2026') {
+                if (senha === 'admin2026') {
                     abrirModalSenha(true);
                 } else {
                     mostrarDashboard();
                 }
             } else {
                 alert("Acesso negado. Credenciais incorretas.");
-                btnLogin.innerText = "Acessar Apuração";
+                btnLogin.innerHTML = htmlOriginal;
                 btnLogin.disabled = false;
             }
         } catch (erro) {
-            alert("Erro ao conectar ao servidor.");
-            btnLogin.innerText = "Acessar Apuração";
+            alert("Erro ao conectar ao servidor.\n\n" + erro.message);
+            btnLogin.innerHTML = htmlOriginal;
             btnLogin.disabled = false;
         }
     });
@@ -333,11 +547,11 @@
     function abrirModalSenha(obrigatorio = false) {
         trocaObrigatoria = obrigatorio;
         document.getElementById('modal-senha').style.display = 'flex';
-        if(obrigatorio) {
+        if (obrigatorio) {
             document.getElementById('btn-fechar-modal').style.display = 'none';
             document.getElementById('btn-salvar-senha').style.width = '100%';
             document.getElementById('titulo-modal-senha').innerText = 'Primeiro Acesso';
-            document.getElementById('desc-modal-senha').innerText = 'Por razões de segurança, defina uma senha pessoal antes de acessar.';
+            document.getElementById('desc-modal-senha').innerText = 'Por segurança, defina uma senha pessoal antes de acessar.';
         } else {
             document.getElementById('btn-fechar-modal').style.display = 'block';
             document.getElementById('btn-salvar-senha').style.width = '60%';
@@ -355,21 +569,18 @@
         e.preventDefault();
         const nova = document.getElementById('nova-senha').value;
         const confirma = document.getElementById('confirma-nova-senha').value;
-
         if (nova !== confirma) { alert("As senhas não coincidem."); return; }
         if (nova.length < 6) { alert("A senha deve ter pelo menos 6 caracteres."); return; }
 
         const btnSalvar = document.getElementById('btn-salvar-senha');
         btnSalvar.innerText = "Salvando...";
         btnSalvar.disabled = true;
-
         try {
             const resposta = await fetch(`${supabaseUrl}/rest/v1/admin_users?email=eq.${encodeURIComponent(adminLogado.email)}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json', 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}`, 'Prefer': 'return=minimal' },
                 body: JSON.stringify({ senha: nova })
             });
-
             if (resposta.ok) {
                 alert("Senha atualizada com sucesso!");
                 adminLogado.senha = nova;
@@ -377,200 +588,152 @@
                 document.getElementById('form-alterar-senha').reset();
                 if (trocaObrigatoria) mostrarDashboard();
             } else { alert("Erro ao salvar."); }
-        } catch (erro) { alert("Erro de comunicação."); } 
+        } catch (erro) { alert("Erro de comunicação."); }
         finally { btnSalvar.innerText = "Salvar Nova Senha"; btnSalvar.disabled = false; }
     });
 
-    async function buscarColaboradores() {
-        const h = { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` };
-        // "foto" é opcional: se a coluna ainda não existe, busca sem ela
-        let r = await fetch(`${supabaseUrl}/rest/v1/colaboradores?select=nome,setor,cargo,email,foto`, { headers: h });
-        if (!r.ok) r = await fetch(`${supabaseUrl}/rest/v1/colaboradores?select=nome,setor,cargo,email`, { headers: h });
-        if (!r.ok) throw new Error('Falha ao buscar colaboradores');
-        return r.json();
-    }
-
     async function carregarApuracao() {
         const btnAtualizar = document.getElementById('btn-atualizar');
+        const htmlOriginal = btnAtualizar.innerHTML;
         btnAtualizar.innerText = "A atualizar...";
         try {
-            const h = { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` };
-            const [respVotos, respLogs, listaColab] = await Promise.all([
-                fetch(`${supabaseUrl}/rest/v1/votos?select=*`, { headers: h }),
-                fetch(`${supabaseUrl}/rest/v1/audit_logs?select=*`, { headers: h }),
-                buscarColaboradores()
+            const [respVotos, respLogs] = await Promise.all([
+                fetch(`${supabaseUrl}/rest/v1/votos?select=*`, { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }),
+                fetch(`${supabaseUrl}/rest/v1/audit_logs?select=*`, { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } })
             ]);
-
             const votos = await respVotos.json();
             const logs = await respLogs.json();
-
-            colaboradores = listaColab;
-            mapaSetores = {}; mapaFotos = {};
-            colaboradores.forEach(c => {
-                mapaSetores[c.nome] = c.setor || 'Sem setor';
-                if (c.foto) mapaFotos[c.nome] = c.foto;
-            });
 
             document.getElementById('total-votos').innerText = votos.length;
             renderizarListasCandidatos(votos);
             processarMetricasSetores(votos);
             renderizarTabelaEleitores(votos);
-            renderizarParticipacao(votos);
             renderizarTabelaLogs(logs);
-        } catch (erro) { console.error(erro); alert("Erro ao buscar dados do servidor."); }
-        finally { btnAtualizar.innerText = "🔄 Atualizar Resultados em Tempo Real"; }
+        } catch (erro) { alert("Erro ao buscar dados do servidor."); }
+        finally { btnAtualizar.innerHTML = htmlOriginal; }
     }
 
-    // FUNÇÃO DE EXCLUIR VOTO COM REGISTO DE LOGS
     async function excluirVoto(idVoto, emailEleitor) {
-        if (!confirm(`Tem certeza que deseja ANULAR o voto do e-mail ${emailEleitor}? Esta ação ficará registrada no log de auditoria.`)) {
-            return;
-        }
-
+        if (!confirm(`Anular o voto de ${emailEleitor}?`)) return;
         try {
-            // 1. Apaga o voto
             const respostaVoto = await fetch(`${supabaseUrl}/rest/v1/votos?id=eq.${idVoto}`, {
                 method: 'DELETE',
                 headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
             });
-
             if (respostaVoto.ok) {
-                // 2. Grava o registo na tabela de logs
                 await fetch(`${supabaseUrl}/rest/v1/audit_logs`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}`, 'Prefer': 'return=minimal' },
                     body: JSON.stringify({
                         admin_email: adminLogado.email,
                         eleitor_email: emailEleitor,
-                        detalhes: `Voto anulado pelo administrador ${adminLogado.nome} (${adminLogado.email})`
+                        detalhes: `Voto anulado pelo administrador ${adminLogado.nome}`
                     })
                 });
-
-                alert("Voto anulado com sucesso e registado na auditoria!");
-                carregarApuracao(); 
-            } else {
-                alert("Erro ao tentar excluir o voto.");
-            }
-        } catch (erro) {
-            alert("Erro de comunicação com o servidor.");
-        }
-    }
-
-    function cartaoLider(l) {
-        return `<div class="rank-lider">
-            <div class="rank-foto-wrap"><img class="rank-foto-grande" src="${esc(fotoDe(l.nome))}" alt="${esc(l.nome)}" ${imgErro}><span class="rank-trofeu">🏆</span></div>
-            <strong>${esc(formatarNome(l.nome))}</strong>
-            <span class="rank-setor">${esc(mapaSetores[l.nome] || '')}</span>
-            <span class="rank-votos">${l.total} voto(s)</span>
-        </div>`;
-    }
-
-    function linhaRank(c, pos) {
-        return `<li><span class="rank-pos">${pos}º</span>
-            <img class="rank-foto-peq" src="${esc(fotoDe(c.nome))}" alt="${esc(c.nome)}" ${imgErro}>
-            <span class="rank-info"><b>${esc(formatarNome(c.nome))}</b><small>${esc(mapaSetores[c.nome] || '')}</small></span>
-            <span class="rank-total">${c.total} voto(s)</span></li>`;
+                alert("Voto anulado e registado na auditoria!");
+                carregarApuracao();
+            } else { alert("Erro ao excluir."); }
+        } catch (erro) { alert("Erro de comunicação."); }
     }
 
     function renderizarListasCandidatos(votos) {
         const container = document.getElementById('container-ranking-candidatos');
         container.innerHTML = '';
         const categorias = [
-            { chave: 'estagiario', titulo: 'Estagiário' }, { chave: 'terceirizado', titulo: 'Terceirizado' },
-            { chave: 'comissionado', titulo: 'Comissionado' }, { chave: 'conselheiro', titulo: 'Conselheiro' },
-            { chave: 'funcionario', titulo: 'Funcionário' }
+            { chave: 'estagiario',  titulo: 'Estagiário' },
+            { chave: 'terceirizado', titulo: 'Terceirizado' },
+            { chave: 'comissionado', titulo: 'Comissionado' },
+            { chave: 'conselheiro',  titulo: 'Conselheiro' },
+            { chave: 'funcionario',  titulo: 'Funcionário' }
         ];
 
         categorias.forEach(cat => {
             const contagem = {};
             votos.forEach(v => { if (v[cat.chave]) contagem[v[cat.chave]] = (contagem[v[cat.chave]] || 0) + 1; });
-            const ranking = Object.entries(contagem).map(([nome, total]) => ({ nome, total }))
-                .sort((a, b) => b.total - a.total || a.nome.localeCompare(b.nome, 'pt'));
-
+            const ranking = Object.entries(contagem).map(([nome, total]) => ({ nome, total })).sort((a, b) => b.total - a.total);
             let html = `<div class="chart-box"><h3>${cat.titulo}</h3>`;
-            if (ranking.length === 0) {
-                html += `<p class="rank-vazio">Nenhum voto.</p>`;
-            } else {
-                const lideres = ranking.filter(r => r.total === ranking[0].total); // inclui empates
-                const demais = ranking.slice(lideres.length);
-                html += `<div class="rank-lideres">${lideres.map(cartaoLider).join('')}</div>`;
-                if (lideres.length > 1) html += `<p class="rank-empate">Empate em 1º lugar</p>`;
-                if (demais.length) {
-                    html += `<ul class="rank-lista">${demais.slice(0, 4).map((c, i) => linhaRank(c, lideres.length + i + 1)).join('')}</ul>`;
-                    if (demais.length > 4) {
-                        html += `<details class="rank-mais"><summary>Ver os demais (${demais.length - 4})</summary>
-                            <ul class="rank-lista">${demais.slice(4).map((c, i) => linhaRank(c, lideres.length + i + 5)).join('')}</ul></details>`;
-                    }
-                }
+            if (ranking.length === 0) html += `<p style="color: #999; text-align: center;">Nenhum voto.</p>`;
+            else {
+                html += `<ul style="list-style: none; padding: 0;">`;
+                ranking.forEach((cand, i) => {
+                    const isPrimeiro = i === 0;
+                    const estiloLinha = isPrimeiro
+                        ? 'font-weight: bold; font-size: 16px; color: var(--text-dark); background: var(--gold-light); padding: 8px; border-radius: 4px;'
+                        : 'font-size: 14px; color: var(--text-muted); padding: 4px 8px; border-bottom: 1px solid #eee;';
+                    const prefixo = isPrimeiro ? `${ICON.trophy} ` : `${i + 1}º - `;
+                    html += `<li style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 5px; ${estiloLinha}">
+                        <span style="display:flex; align-items:center; gap:6px;">${prefixo}${cand.nome}</span>
+                        <span>${cand.total} voto(s)</span>
+                    </li>`;
+                });
+                html += `</ul>`;
             }
-            container.innerHTML += html + `</div>`;
+            html += `</div>`;
+            container.innerHTML += html;
         });
     }
 
     function processarMetricasSetores(votos) {
-        // Conselheiros ficam de fora: o setor deles é o Plenário, então a métrica por setor não faz sentido
-        const cats = ['estagiario', 'terceirizado', 'comissionado', 'funcionario'];
-        const setoresBase = [...new Set(colaboradores.filter(c => !norm(c.cargo).includes('consel')).map(c => c.setor || 'Sem setor'))];
-        const geral = {}; setoresBase.forEach(st => geral[st] = 0);
-        const porCat = {}; cats.forEach(c => porCat[c] = {});
+        const categorias = ['estagiario', 'terceirizado', 'comissionado', 'funcionario'];
+        const votosSetorGeral = {};
+        SERIES_LISTA.forEach(s => votosSetorGeral[s] = 0);
 
-        votos.forEach(v => cats.forEach(cat => {
-            const setor = v[cat] && mapaSetores[v[cat]];
-            if (!setor) return;
-            geral[setor] = (geral[setor] || 0) + 1;
-            porCat[cat][setor] = (porCat[cat][setor] || 0) + 1;
-        }));
+        const votosSetorPorCat = {};
+        categorias.forEach(cat => {
+            votosSetorPorCat[cat] = {};
+            SERIES_LISTA.forEach(s => votosSetorPorCat[cat][s] = 0);
+        });
 
-        const ordenar = obj => Object.entries(obj).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'pt'));
-        const arr = ordenar(geral);
-        const elMais = document.getElementById('insight-setor-mais');
-        const elMenos = document.getElementById('insight-setor-menos');
-        elMais.innerText = 'N/A'; elMenos.innerText = 'N/A';
+        votos.forEach(v => {
+            categorias.forEach(cat => {
+                const nomeVotado = v[cat];
+                if (nomeVotado && mapaSetores[nomeVotado]) {
+                    votosSetorGeral[mapaSetores[nomeVotado]]++;
+                    votosSetorPorCat[cat][mapaSetores[nomeVotado]]++;
+                }
+            });
+        });
 
-        if (arr.length > 0 && arr[0][1] > 0) {
-            const menor = arr[arr.length - 1];
-            const empatados = arr.filter(x => x[1] === menor[1]).length - 1;
-            const nota = empatados > 0 ? `<br><span style="font-size:13px; opacity:0.8;">e mais ${empatados} setor(es) com o mesmo total</span>` : '';
-            elMais.innerHTML = `${esc(arr[0][0])} <span style="font-size:16px; opacity:0.8;">(${arr[0][1]} votos)</span>`;
-            elMenos.innerHTML = `${esc(menor[0])} <span style="font-size:16px; opacity:0.8;">(${menor[1]} votos)</span>${nota}`;
+        const arrayGeral = Object.entries(votosSetorGeral).sort((a, b) => b[1] - a[1]);
+        if (arrayGeral.length > 0 && arrayGeral[0][1] > 0) {
+            document.getElementById('insight-setor-mais').innerHTML = `${arrayGeral[0][0]} <span style="font-size:16px; opacity:0.8;">(${arrayGeral[0][1]} votos)</span>`;
+            document.getElementById('insight-setor-menos').innerHTML = `${arrayGeral[arrayGeral.length - 1][0]} <span style="font-size:16px; opacity:0.8;">(${arrayGeral[arrayGeral.length - 1][1]} votos)</span>`;
+        } else {
+            document.getElementById('insight-setor-mais').innerText = 'N/A';
+            document.getElementById('insight-setor-menos').innerText = 'N/A';
         }
 
-        cats.forEach(cat => {
-            const r = ordenar(porCat[cat]);
-            criarGrafico(`chart-setor-${cat}`, r.map(i => i[0]), r.map(i => i[1]), '#14B892');
+        categorias.forEach(cat => {
+            const rankingCat = Object.entries(votosSetorPorCat[cat]).sort((a, b) => b[1] - a[1]);
+            criarGrafico(`chart-setor-${cat}`, rankingCat.map(i => i[0]), rankingCat.map(i => i[1]), '#14B892');
         });
     }
 
     function criarGrafico(canvasId, labels, data, color) {
         if (graficosAtivos[canvasId]) graficosAtivos[canvasId].destroy();
-        const canvas = document.getElementById(canvasId);
-        canvas.parentNode.style.height = Math.max(160, labels.length * 34 + 50) + 'px'; // altura acompanha o nº de setores
-        graficosAtivos[canvasId] = new Chart(canvas.getContext('2d'), {
+        const canvasEl = document.getElementById(canvasId);
+        if (!canvasEl) return;
+        graficosAtivos[canvasId] = new Chart(canvasEl.getContext('2d'), {
             type: 'bar',
             data: { labels, datasets: [{ data, backgroundColor: color, borderRadius: 4 }] },
-            options: {
-                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-                scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } }, y: { ticks: { autoSkip: false } } },
-                plugins: { legend: { display: false } }
-            }
+            options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
         });
     }
 
     function renderizarTabelaEleitores(votos) {
         const tbody = document.querySelector('#tabela-eleitores tbody');
-        tbody.innerHTML = ''; 
-        const votosOrdenados = votos.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        tbody.innerHTML = '';
+        const votosOrdenados = [...votos].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         if (votosOrdenados.length === 0) return tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nenhum voto registado ainda.</td></tr>';
-        
         votosOrdenados.forEach(voto => {
             const dataForm = new Date(voto.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
             tbody.innerHTML += `
                 <tr>
-                    <td><strong>${esc(formatarNome(voto.nome_completo))}</strong></td>
+                    <td><strong>${voto.nome_completo}</strong></td>
                     <td>${voto.email}</td>
                     <td>${dataForm}</td>
                     <td style="text-align: center;">
-                        <button class="btn-excluir" onclick="excluirVoto(${voto.id}, '${voto.email}')">🗑️ Anular</button>
+                        <button class="btn-excluir" onclick="excluirVoto(${voto.id}, '${voto.email}')">${ICON.trash} Anular</button>
                     </td>
                 </tr>`;
         });
@@ -578,10 +741,9 @@
 
     function renderizarTabelaLogs(logs) {
         const tbody = document.querySelector('#tabela-logs tbody');
-        tbody.innerHTML = ''; 
-        const logsOrdenados = logs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        tbody.innerHTML = '';
+        const logsOrdenados = [...logs].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         if (logsOrdenados.length === 0) return tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nenhum registo de auditoria até o momento.</td></tr>';
-        
         logsOrdenados.forEach(log => {
             const dataForm = new Date(log.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
             tbody.innerHTML += `
@@ -593,64 +755,6 @@
                 </tr>`;
         });
     }
-
-    // ===== PARTICIPAÇÃO: quem já votou e quem ainda não =====
-    let listaParticipacao = [];
-    let filtroParticipacao = 'todos';
-
-    function renderizarParticipacao(votos) {
-        const votouEm = {};
-        votos.forEach(v => { if (v.email) votouEm[v.email.trim().toLowerCase()] = v.created_at; });
-
-        listaParticipacao = colaboradores.map(c => {
-            const quando = votouEm[(c.email || '').trim().toLowerCase()];
-            return { ...c, votou: !!quando, quando };
-        }).sort((a, b) => a.nome.localeCompare(b.nome, 'pt'));
-
-        const total = listaParticipacao.length;
-        const qtd = listaParticipacao.filter(c => c.votou).length;
-        document.getElementById('part-votaram').innerText = qtd;
-        document.getElementById('part-faltam').innerText = total - qtd;
-        document.getElementById('part-percentual').innerText = (total ? Math.round(qtd / total * 100) : 0) + '%';
-
-        // Votos cujo e-mail não está na tabela de colaboradores (ex.: votos de teste)
-        const aviso = document.getElementById('part-aviso');
-        const semCadastro = votos.length - qtd;
-        aviso.style.display = semCadastro > 0 ? 'block' : 'none';
-        aviso.innerText = `Atenção: ${semCadastro} voto(s) registrado(s) com e-mail que não consta na tabela de colaboradores (podem ser votos de teste).`;
-
-        desenharTabelaParticipacao();
-    }
-
-    function desenharTabelaParticipacao() {
-        const termo = norm(document.getElementById('busca-participacao').value);
-        const linhas = listaParticipacao.filter(c =>
-            (filtroParticipacao === 'todos' || (filtroParticipacao === 'votaram') === c.votou) &&
-            norm(`${c.nome} ${c.email} ${c.setor}`).includes(termo));
-
-        const tbody = document.querySelector('#tabela-participacao tbody');
-        if (linhas.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nenhum colaborador encontrado.</td></tr>'; return; }
-
-        tbody.innerHTML = linhas.map(c => {
-            const quando = c.quando ? new Date(c.quando).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
-            return `<tr>
-                <td>${c.votou ? '<span class="st-ok">✅ Votou</span>' : '<span class="st-pend">⬜ Não votou</span>'}</td>
-                <td><strong>${esc(formatarNome(c.nome))}</strong></td>
-                <td>${esc(c.setor || '')}</td>
-                <td>${esc(c.cargo || '')}</td>
-                <td>${esc(c.email || '')}</td>
-                <td>${quando}</td>
-            </tr>`;
-        }).join('');
-    }
-
-    document.querySelectorAll('.chip').forEach(btn => btn.addEventListener('click', () => {
-        document.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        filtroParticipacao = btn.dataset.filtro;
-        desenharTabelaParticipacao();
-    }));
-    document.getElementById('busca-participacao').addEventListener('input', desenharTabelaParticipacao);
 
     document.getElementById('btn-atualizar').addEventListener('click', carregarApuracao);
 </script>
