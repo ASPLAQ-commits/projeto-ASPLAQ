@@ -1,182 +1,251 @@
-const supabaseUrl = 'https://cnptvjdzqfsqbdkrnbbe.supabase.co';
-const supabaseKey = 'sb_publishable_cCqmjnqgdSvOcKA6oyd28Q_4BpE1hQ6';
+// ============================================================
+// 🌙 TEMA CLARO / ESCURO
+// ============================================================
+(function initTema() {
+    const temaSalvo = localStorage.getItem('tema');
+    if (temaSalvo === 'dark') document.body.classList.add('dark-mode');
+})();
 
-// MANTENHA A SUA ARRAY "candidatosData" COMPLETA AQUI
-const candidatosData = [
-    // === ASPLAQ ===
-    { id: "c1", nome: "Mariana Costa", cargo: "Estagiário", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Mariana+Costa&background=random&color=fff" },
-    { id: "c2", nome: "João Vítor", cargo: "Estagiário", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Joao+Vitor&background=random&color=fff" },
-    { id: "c3", nome: "Beatriz Souza", cargo: "Estagiário", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Beatriz+Souza&background=random&color=fff" },
-    { id: "c4", nome: "João Pedro Silva", cargo: "Terceirizado", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Joao+Pedro&background=random&color=fff" },
-    { id: "c5", nome: "Carla Dias", cargo: "Terceirizado", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Carla+Dias&background=random&color=fff" },
-    { id: "c6", nome: "Rodrigo Alves", cargo: "Terceirizado", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Rodrigo+Alves&background=random&color=fff" },
-    { id: "c7", nome: "Carlos Eduardo", cargo: "Comissionado", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Carlos+Eduardo&background=random&color=fff" },
-    { id: "c8", nome: "Amanda Nogueira", cargo: "Comissionado", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Amanda+Nogueira&background=random&color=fff" },
-    { id: "c9", nome: "Felipe Rocha", cargo: "Comissionado", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Felipe+Rocha&background=random&color=fff" },
-    { id: "c10", nome: "Dra. Juliana Souza", cargo: "Conselheiro", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Juliana+Souza&background=random&color=fff" },
-    { id: "c11", nome: "Dr. Renato Mendes", cargo: "Conselheiro", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Renato+Mendes&background=random&color=fff" },
-    { id: "c12", nome: "Dra. Patrícia Lima", cargo: "Conselheiro", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Patricia+Lima&background=random&color=fff" },
-    { id: "c13", nome: "Roberto Alves", cargo: "Funcionário", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Roberto+Alves&background=random&color=fff" },
-    { id: "c14", nome: "Camila Fernandes", cargo: "Funcionário", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Camila+Fernandes&background=random&color=fff" },
-    { id: "c15", nome: "Tiago Ribeiro", cargo: "Funcionário", setor: "ASPLAQ", foto: "https://ui-avatars.com/api/?name=Tiago+Ribeiro&background=random&color=fff" },
+document.addEventListener('DOMContentLoaded', () => {
+    const btnTema = document.getElementById('theme-toggle');
+    if (!btnTema) return;
+    btnTema.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        localStorage.setItem('tema', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+    });
+});
 
-    // === Tecnologia da Informação ===
-    { id: "c16", nome: "Luiz Gabriel Sarmento", cargo: "Estagiário", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Luiz+Gabriel&background=random&color=fff" },
-    { id: "c17", nome: "Paulo Barroca", cargo: "Estagiário", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Paulo+Barroca&background=random&color=fff" },
-    { id: "c18", nome: "Ana Clara", cargo: "Estagiário", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Ana+Clara&background=random&color=fff" },
-    { id: "c19", nome: "Marcos Vinícius", cargo: "Terceirizado", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Marcos+Vinicius&background=random&color=fff" },
-    { id: "c20", nome: "Letícia Gomes", cargo: "Terceirizado", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Leticia+Gomes&background=random&color=fff" },
-    { id: "c21", nome: "Bruno Henrique", cargo: "Terceirizado", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Bruno+Henrique&background=random&color=fff" },
-    { id: "c22", nome: "Felipe Costa", cargo: "Comissionado", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Felipe+Costa&background=random&color=fff" },
-    { id: "c23", nome: "Juliana Almeida", cargo: "Comissionado", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Juliana+Almeida&background=random&color=fff" },
-    { id: "c24", nome: "Ricardo Fontes", cargo: "Comissionado", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Ricardo+Fontes&background=random&color=fff" },
-    { id: "c25", nome: "Dr. Marcos Lima", cargo: "Conselheiro", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Marcos+Lima&background=random&color=fff" },
-    { id: "c26", nome: "Dra. Fernanda Costa", cargo: "Conselheiro", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Fernanda+Costa&background=random&color=fff" },
-    { id: "c27", nome: "Dr. Eduardo Silva", cargo: "Conselheiro", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Eduardo+Silva&background=random&color=fff" },
-    { id: "c28", nome: "Ricardo Silva", cargo: "Funcionário", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Ricardo+Silva&background=random&color=fff" },
-    { id: "c29", nome: "Vanessa Martins", cargo: "Funcionário", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Vanessa+Martins&background=random&color=fff" },
-    { id: "c30", nome: "André Castro", cargo: "Funcionário", setor: "Tecnologia da Informação", foto: "https://ui-avatars.com/api/?name=Andre+Castro&background=random&color=fff" },
+// ============================================================
+// ⚠️ Credenciais do Supabase
+// ============================================================
+const supabaseUrl = 'https://ypyhbuoglipxsyazsxoj.supabase.co';
+const supabaseKey = 'sb_publishable_ufcIVBj-f_fHQqnecaxEfw_50Cslvyx';
 
-    // === Comunicação ===
-    { id: "c31", nome: "Sofia Almeida", cargo: "Estagiário", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Sofia+Almeida&background=random&color=fff" },
-    { id: "c32", nome: "Pedro Lucas", cargo: "Estagiário", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Pedro+Lucas&background=random&color=fff" },
-    { id: "c33", nome: "Laura Monteiro", cargo: "Estagiário", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Laura+Monteiro&background=random&color=fff" },
-    { id: "c34", nome: "Lucas Mendes", cargo: "Terceirizado", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Lucas+Mendes&background=random&color=fff" },
-    { id: "c35", nome: "Thaís Pereira", cargo: "Terceirizado", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Thais+Pereira&background=random&color=fff" },
-    { id: "c36", nome: "Renato Góes", cargo: "Terceirizado", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Renato+Goes&background=random&color=fff" },
-    { id: "c37", nome: "Fernanda Lima", cargo: "Comissionado", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Fernanda+Lima&background=random&color=fff" },
-    { id: "c38", nome: "Diego Souza", cargo: "Comissionado", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Diego+Souza&background=random&color=fff" },
-    { id: "c39", nome: "Bianca Castro", cargo: "Comissionado", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Bianca+Castro&background=random&color=fff" },
-    { id: "c40", nome: "Dra. Camila Rocha", cargo: "Conselheiro", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Camila+Rocha&background=random&color=fff" },
-    { id: "c41", nome: "Dr. Henrique Viana", cargo: "Conselheiro", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Henrique+Viana&background=random&color=fff" },
-    { id: "c42", nome: "Dra. Alice Borges", cargo: "Conselheiro", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Alice+Borges&background=random&color=fff" },
-    { id: "c43", nome: "Thiago Martins", cargo: "Funcionário", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Thiago+Martins&background=random&color=fff" },
-    { id: "c44", nome: "Natália Ribeiro", cargo: "Funcionário", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Natalia+Ribeiro&background=random&color=fff" },
-    { id: "c45", nome: "Gustavo Lima", cargo: "Funcionário", setor: "Comunicação", foto: "https://ui-avatars.com/api/?name=Gustavo+Lima&background=random&color=fff" },
-
-    // === DLCC ===
-    { id: "c46", nome: "Pedro Henrique", cargo: "Estagiário", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Pedro+Henrique&background=random&color=fff" },
-    { id: "c47", nome: "Alice Farias", cargo: "Estagiário", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Alice+Farias&background=random&color=fff" },
-    { id: "c48", nome: "Mateus Costa", cargo: "Estagiário", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Mateus+Costa&background=random&color=fff" },
-    { id: "c49", nome: "Gabriela Nunes", cargo: "Terceirizado", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Gabriela+Nunes&background=random&color=fff" },
-    { id: "c50", nome: "Rafael Almeida", cargo: "Terceirizado", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Rafael+Almeida&background=random&color=fff" },
-    { id: "c51", nome: "Mariana Barros", cargo: "Terceirizado", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Mariana+Barros&background=random&color=fff" },
-    { id: "c52", nome: "Rafael Gomes", cargo: "Comissionado", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Rafael+Gomes&background=random&color=fff" },
-    { id: "c53", nome: "Carolina Mendes", cargo: "Comissionado", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Carolina+Mendes&background=random&color=fff" },
-    { id: "c54", nome: "Fernando Souza", cargo: "Comissionado", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Fernando+Souza&background=random&color=fff" },
-    { id: "c55", nome: "Dr. Bruno Castro", cargo: "Conselheiro", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Bruno+Castro&background=random&color=fff" },
-    { id: "c56", nome: "Dra. Letícia Ramos", cargo: "Conselheiro", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Leticia+Ramos&background=random&color=fff" },
-    { id: "c57", nome: "Dr. Tiago Silva", cargo: "Conselheiro", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Tiago+Silva&background=random&color=fff" },
-    { id: "c58", nome: "Amanda Freitas", cargo: "Funcionário", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Amanda+Freitas&background=random&color=fff" },
-    { id: "c59", nome: "Leandro Carvalho", cargo: "Funcionário", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Leandro+Carvalho&background=random&color=fff" },
-    { id: "c60", nome: "Priscila Rocha", cargo: "Funcionário", setor: "DLCC", foto: "https://ui-avatars.com/api/?name=Priscila+Rocha&background=random&color=fff" },
-
-    // === PROGER ===
-    { id: "c61", nome: "Letícia Carvalho", cargo: "Estagiário", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Leticia+Carvalho&background=random&color=fff" },
-    { id: "c62", nome: "Cauã Silva", cargo: "Estagiário", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Caua+Silva&background=random&color=fff" },
-    { id: "c63", nome: "Isadora Martins", cargo: "Estagiário", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Isadora+Martins&background=random&color=fff" },
-    { id: "c64", nome: "Diego Monteiro", cargo: "Terceirizado", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Diego+Monteiro&background=random&color=fff" },
-    { id: "c65", nome: "Renata Alves", cargo: "Terceirizado", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Renata+Alves&background=random&color=fff" },
-    { id: "c66", nome: "Samuel Costa", cargo: "Terceirizado", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Samuel+Costa&background=random&color=fff" },
-    { id: "c67", nome: "Patrícia Santos", cargo: "Comissionado", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Patricia+Santos&background=random&color=fff" },
-    { id: "c68", nome: "Vinícius Rocha", cargo: "Comissionado", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Vinicius+Rocha&background=random&color=fff" },
-    { id: "c69", nome: "Tatiana Lima", cargo: "Comissionado", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Tatiana+Lima&background=random&color=fff" },
-    { id: "c70", nome: "Dr. Marcelo Ferreira", cargo: "Conselheiro", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Marcelo+Ferreira&background=random&color=fff" },
-    { id: "c71", nome: "Dra. Sandra Gomes", cargo: "Conselheiro", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Sandra+Gomes&background=random&color=fff" },
-    { id: "c72", nome: "Dr. Roberto Nunes", cargo: "Conselheiro", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Roberto+Nunes&background=random&color=fff" },
-    { id: "c73", nome: "Luciana Dias", cargo: "Funcionário", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Luciana+Dias&background=random&color=fff" },
-    { id: "c74", nome: "Márcio Silva", cargo: "Funcionário", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Marcio+Silva&background=random&color=fff" },
-    { id: "c75", nome: "Eliane Costa", cargo: "Funcionário", setor: "PROGER", foto: "https://ui-avatars.com/api/?name=Eliane+Costa&background=random&color=fff" }
-];
-
-let eleitorAtual = { nome: '', email: '' };
+// ============================================================
+// CONFIGURAÇÃO DO COREN
+// ============================================================
+const EMAIL_DOMINIO = '@coren-pe.gov.br';
 const ordemCargos = ["Estagiário", "Terceirizado", "Comissionado", "Conselheiro", "Funcionário"];
-let etapaAtual = 0;
 
-// Função auxiliar para procurar a foto do candidato pelo nome
+// ============================================================
+// ESTADO GLOBAL
+// ============================================================
+let candidatosData = [];
+let eleitorAtual = { nome: '', email: '' };
+let etapaAtual = 0;
+let carregando = true;
+
+// Uma única escolha por categoria
+const escolhas = {
+    estagiario: null,
+    terceirizado: null,
+    comissionado: null,
+    conselheiro: null,
+    funcionario: null
+};
+
+// ============================================================
+// ÍCONES DO MODAL
+// ============================================================
+const ICONES_MODAL = {
+    aviso: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+    confirmacao: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+    erro: '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>'
+};
+
+// ============================================================
+// MODAL CUSTOMIZADO
+// ============================================================
+const modalEl = document.getElementById('modal-custom');
+const modalIconWrapper = document.getElementById('modal-icon-wrapper');
+const modalIcon = document.getElementById('modal-icon');
+const modalTitulo = document.getElementById('modal-titulo');
+const modalMensagem = document.getElementById('modal-mensagem');
+const modalBotoes = document.getElementById('modal-botoes');
+let modalResolver = null;
+
+function abrirModal({ tipo = 'aviso', titulo, mensagem, botoes }) {
+    return new Promise(resolve => {
+        modalResolver = resolve;
+        modalIconWrapper.className = 'modal-icon-wrapper tipo-' + tipo;
+        modalIcon.innerHTML = ICONES_MODAL[tipo] || ICONES_MODAL.aviso;
+        modalTitulo.innerText = titulo;
+        modalMensagem.innerHTML = mensagem;
+
+        modalBotoes.innerHTML = '';
+        botoes.forEach(btn => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'btn-' + (btn.estilo || 'primary');
+            b.innerHTML = btn.texto;
+            b.addEventListener('click', () => fecharModal(btn.valor));
+            modalBotoes.appendChild(b);
+        });
+
+        modalEl.style.display = 'flex';
+
+        const escHandler = (e) => {
+            if (e.key === 'Escape') { fecharModal(null); document.removeEventListener('keydown', escHandler); }
+        };
+        document.addEventListener('keydown', escHandler);
+    });
+}
+
+function fecharModal(valor) {
+    modalEl.style.display = 'none';
+    if (modalResolver) { modalResolver(valor); modalResolver = null; }
+}
+
+function modalAviso(titulo, mensagem) {
+    return abrirModal({
+        tipo: 'aviso', titulo, mensagem,
+        botoes: [{ texto: 'Entendi', valor: true, estilo: 'primary' }]
+    });
+}
+
+function modalConfirmacao(titulo, mensagem, textoSim = 'Sim, trocar', textoNao = 'Não, manter') {
+    return abrirModal({
+        tipo: 'confirmacao', titulo, mensagem,
+        botoes: [
+            { texto: textoNao, valor: false, estilo: 'cancelar' },
+            { texto: textoSim, valor: true, estilo: 'primary' }
+        ]
+    });
+}
+
+// ============================================================
+// BUSCA CANDIDATOS DO SUPABASE
+// ============================================================
+async function carregarCandidatos() {
+    const url = `${supabaseUrl}/rest/v1/candidatos?select=*&ativo=eq.true&order=serie.asc,nome.asc`;
+    const resposta = await fetch(url, {
+        headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+    });
+    if (!resposta.ok) throw new Error("Falha ao buscar candidatos");
+    return await resposta.json();
+}
+
+// ============================================================
+// INICIALIZAÇÃO
+// ============================================================
+async function inicializar() {
+    const btnLogin = document.getElementById('btn-login');
+    const htmlOriginal = btnLogin.innerHTML;
+    btnLogin.innerHTML = "Carregando candidatos...";
+    btnLogin.disabled = true;
+
+    try {
+        candidatosData = await carregarCandidatos();
+        if (!candidatosData.length) throw new Error("Nenhum candidato cadastrado");
+        renderizarCandidatos();
+        carregando = false;
+        btnLogin.innerHTML = htmlOriginal;
+        btnLogin.disabled = false;
+    } catch (erro) {
+        console.error('Erro ao carregar candidatos:', erro);
+        await modalAviso('Erro ao carregar', 'Não foi possível carregar os candidatos.<br>Verifique a conexão e recarregue a página.');
+        btnLogin.innerHTML = "Erro ao carregar";
+    }
+}
+
 function getFotoCandidato(nomeCand) {
     const cand = candidatosData.find(c => c.nome === nomeCand);
     return cand ? cand.foto : 'https://via.placeholder.com/90';
 }
 
-// LOGIN E VALIDAÇÃO NO SUPABASE
+function chaveCategoria(cargo) {
+    return cargo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
+}
+
+// ============================================================
+// LOGIN (com validação @coren-pe.gov.br)
+// ============================================================
 document.getElementById('form-login').addEventListener('submit', async function(e) {
     e.preventDefault();
+    if (carregando) {
+        await modalAviso('Aguarde', 'Os candidatos ainda estão sendo carregados.');
+        return;
+    }
+
     const nomeDigitado = document.getElementById('nome-login').value.trim();
     const emailDigitado = document.getElementById('email-login').value.trim().toLowerCase();
 
-    if (!emailDigitado.endsWith('@coren-pe.gov.br')) {
-        alert("Por favor, utilize o seu e-mail institucional (@coren-pe.gov.br).");
+    // 🔒 Validação específica do COREN
+    if (!emailDigitado.endsWith(EMAIL_DOMINIO)) {
+        await modalAviso(
+            'E-mail inválido',
+            `Por favor, utilize o seu e-mail institucional (<strong>${EMAIL_DOMINIO}</strong>).`
+        );
         return;
     }
 
     const btnLogin = document.getElementById('btn-login');
-    btnLogin.innerText = "Verificando...";
+    const htmlOriginal = btnLogin.innerHTML;
+    btnLogin.innerHTML = "Verificando...";
     btnLogin.disabled = true;
 
     try {
-        // Verifica no banco de dados se este email já votou
         const url = `${supabaseUrl}/rest/v1/votos?email=eq.${encodeURIComponent(emailDigitado)}&select=*`;
         const resposta = await fetch(url, {
             headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
         });
-        
         const dados = await resposta.json();
 
         if (dados && dados.length > 0) {
-            // JÁ VOTOU - Mostrar ecrã de recibo apenas como leitura
             mostrarEcraRecibo(dados[0]);
         } else {
-            // NÃO VOTOU - Iniciar votação
             eleitorAtual.nome = nomeDigitado;
             eleitorAtual.email = emailDigitado;
-            
-            // Atualiza os nomes exibidos na tela
             document.querySelectorAll('.nome-exibicao').forEach(el => el.innerText = nomeDigitado);
-            
             document.getElementById('login-section').style.display = 'none';
             document.getElementById('votacao-section').style.display = 'block';
         }
     } catch (erro) {
-        alert("Erro ao conectar com o servidor. Tente novamente.");
+        await modalAviso('Erro de conexão', 'Não foi possível conectar ao servidor.<br>Tente novamente em instantes.');
     } finally {
-        btnLogin.innerText = "Entrar";
+        btnLogin.innerHTML = htmlOriginal;
         btnLogin.disabled = false;
     }
 });
 
-// RENDERIZAR CARTÕES DE VOTAÇÃO
+// ============================================================
+// RENDERIZAR CANDIDATOS
+// ============================================================
 function renderizarCandidatos() {
     const container = document.getElementById('secoes-votacao');
     const agrupado = candidatosData.reduce((acc, candidato) => {
         if (!acc[candidato.cargo]) acc[candidato.cargo] = {};
-        if (!acc[candidato.cargo][candidato.setor]) acc[candidato.cargo][candidato.setor] = [];
-        acc[candidato.cargo][candidato.setor].push(candidato);
+        if (!acc[candidato.cargo][candidato.serie]) acc[candidato.cargo][candidato.serie] = [];
+        acc[candidato.cargo][candidato.serie].push(candidato);
         return acc;
     }, {});
 
     let html = '';
     ordemCargos.forEach((cargo, index) => {
+        const key = chaveCategoria(cargo);
         html += `<div class="etapa-votacao" id="etapa-${index}" style="display: ${index === 0 ? 'block' : 'none'};">`;
         html += `
             <div class="cargo-header">
-                <h2>${cargo} Destaque </h2>
-                <p>Selecione <strong>apenas 1 candidato</strong> desta categoria.</p>
+                <h2>${cargo} Destaque</h2>
+                <p>Escolha <strong>apenas 1 candidato</strong>. Clique no card para selecionar; clique novamente para desmarcar.</p>
+            </div>
+            <div class="instrucao-escolha" data-cat="${key}">
+                <span>Escolhido:</span>
+                <span class="contador" id="contador-${key}">— nenhum —</span>
             </div>
         `;
         if (agrupado[cargo]) {
-            for (const setor in agrupado[cargo]) {
-                html += `<h3>${setor}</h3><div class="grid-candidatos">`;
-                agrupado[cargo][setor].forEach(cand => {
-                    const nameAttr = cargo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
+            for (const serie in agrupado[cargo]) {
+                html += `<h3>${serie}</h3><div class="grid-candidatos">`;
+                agrupado[cargo][serie].forEach(cand => {
                     html += `
-                        <label>
-                            <input type="radio" name="${nameAttr}" value="${cand.nome}">
+                        <div class="candidato-item" data-nome="${cand.nome}" data-cat="${key}">
+                            <div class="badge-pos"></div>
                             <div class="card-candidato">
-                                <img src="${cand.foto}" alt="${cand.nome}">
+                                <img src="${cand.foto}" alt="${cand.nome}" loading="lazy">
                                 <p>${cand.nome}</p>
                             </div>
-                        </label>
+                        </div>
                     `;
                 });
                 html += `</div>`;
@@ -185,38 +254,129 @@ function renderizarCandidatos() {
         html += `</div>`;
     });
     container.innerHTML = html;
+
+    document.querySelectorAll('.candidato-item').forEach(item => {
+        item.addEventListener('click', () => toggleCandidato(item.dataset.cat, item.dataset.nome));
+    });
+
     atualizarInterfaceNavegacao();
 }
-renderizarCandidatos();
 
-// CONTROLE DA BARRA E BOTÕES WIZARD
+// ============================================================
+// 🎯 TOGGLE DE CANDIDATO (seleção única por categoria)
+// - Se não escolheu nada → seleciona
+// - Se clicou no mesmo → desmarca
+// - Se já tinha outro → pergunta se quer trocar
+// ============================================================
+async function toggleCandidato(catKey, nomeCand) {
+    const atual = escolhas[catKey];
+
+    // 1) Clicou no mesmo que já estava selecionado → desmarcar
+    if (atual === nomeCand) {
+        escolhas[catKey] = null;
+        atualizarBadges();
+        atualizarContador();
+        return;
+    }
+
+    // 2) Já tinha outro escolhido → pergunta se quer trocar
+    if (atual && atual !== nomeCand) {
+        const confirmou = await modalConfirmacao(
+            'Trocar de candidato?',
+            `Você já escolheu <strong>${atual}</strong> nesta categoria.<br><br>Deseja trocar por <strong>${nomeCand}</strong>?`,
+            'Sim, trocar',
+            'Não, manter'
+        );
+        if (!confirmou) return;
+    }
+
+    // 3) Sem escolha anterior, ou troca confirmada → marca o novo
+    escolhas[catKey] = nomeCand;
+    atualizarBadges();
+    atualizarContador();
+}
+
+// ============================================================
+// ATUALIZA BADGES E ESTADOS VISUAIS
+// ============================================================
+function atualizarBadges() {
+    document.querySelectorAll('.badge-pos').forEach(el => el.innerHTML = '');
+    document.querySelectorAll('.card-candidato').forEach(el => el.classList.remove('tem-posicao'));
+
+    ordemCargos.forEach(cargo => {
+        const catKey = chaveCategoria(cargo);
+        const nome = escolhas[catKey];
+        if (!nome) return;
+
+        const item = document.querySelector(`.candidato-item[data-cat="${catKey}"][data-nome="${CSS.escape(nome)}"]`);
+        if (!item) return;
+
+        const card = item.querySelector('.card-candidato');
+        const badgeContainer = item.querySelector('.badge-pos');
+        card.classList.add('tem-posicao');
+
+        const badge = document.createElement('span');
+        badge.className = 'badge-item selecionado';
+        badge.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><polyline points="20 6 9 17 4 12"/></svg>';
+        badgeContainer.appendChild(badge);
+    });
+}
+
+// ============================================================
+// ATUALIZA CONTADOR DE CADA CATEGORIA
+// ============================================================
+function atualizarContador() {
+    ordemCargos.forEach(cargo => {
+        const catKey = chaveCategoria(cargo);
+        const nome = escolhas[catKey];
+        const contador = document.getElementById(`contador-${catKey}`);
+        const aviso = document.querySelector(`.instrucao-escolha[data-cat="${catKey}"]`);
+
+        if (contador) {
+            contador.innerText = nome ? nome : '— nenhum —';
+        }
+        if (aviso) {
+            aviso.classList.toggle('completo', !!nome);
+        }
+    });
+}
+
+// ============================================================
+// NAVEGAÇÃO
+// ============================================================
 function atualizarInterfaceNavegacao() {
     const progresso = ((etapaAtual + 1) / ordemCargos.length) * 100;
     document.getElementById('progresso-barra').style.width = `${progresso}%`;
     document.getElementById('progresso-texto').innerText = `Passo ${etapaAtual + 1} de ${ordemCargos.length}: ${ordemCargos[etapaAtual]}`;
 
-    document.getElementById('btn-anterior').style.display = etapaAtual === 0 ? 'none' : 'block';
-    
+    document.getElementById('btn-anterior').style.display = etapaAtual === 0 ? 'none' : 'flex';
+
     if (etapaAtual === ordemCargos.length - 1) {
         document.getElementById('btn-proximo').style.display = 'none';
-        document.getElementById('btn-revisar').style.display = 'block';
+        document.getElementById('btn-revisar').style.display = 'flex';
     } else {
-        document.getElementById('btn-proximo').style.display = 'block';
+        document.getElementById('btn-proximo').style.display = 'flex';
         document.getElementById('btn-revisar').style.display = 'none';
     }
 }
 
-document.getElementById('btn-proximo').addEventListener('click', () => {
+document.getElementById('btn-proximo').addEventListener('click', async () => {
     const cargoAtual = ordemCargos[etapaAtual];
-    const nameAttr = cargoAtual.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
-    if (!document.querySelector(`input[name="${nameAttr}"]:checked`)) {
-        alert(`Selecione quem receberá o seu voto para ${cargoAtual} antes de avançar.`); return;
+    const catKey = chaveCategoria(cargoAtual);
+
+    if (!escolhas[catKey]) {
+        await modalAviso(
+            'Escolha um candidato',
+            `Você precisa escolher <strong>1 candidato</strong> na categoria <strong>${cargoAtual}</strong> antes de avançar.`
+        );
+        return;
     }
+
     document.getElementById(`etapa-${etapaAtual}`).style.display = 'none';
     etapaAtual++;
     document.getElementById(`etapa-${etapaAtual}`).style.display = 'block';
     atualizarInterfaceNavegacao();
-    window.scrollTo(0, 0); 
+    window.scrollTo(0, 0);
 });
 
 document.getElementById('btn-anterior').addEventListener('click', () => {
@@ -227,48 +387,45 @@ document.getElementById('btn-anterior').addEventListener('click', () => {
     window.scrollTo(0, 0);
 });
 
-// BOTÃO "REVISAR VOTOS" (Abre a tela de resumo antes de confirmar)
-document.getElementById('btn-revisar').addEventListener('click', () => {
+document.getElementById('btn-revisar').addEventListener('click', async () => {
     const cargoAtual = ordemCargos[etapaAtual];
-    const nameAttr = cargoAtual.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
-    if (!document.querySelector(`input[name="${nameAttr}"]:checked`)) {
-        alert("Selecione a sua última opção antes de revisar os votos."); return;
-    }
-    
-    // Coleta as escolhas atuais
-    const votos = {
-        estagiario: document.querySelector('input[name="estagiario"]:checked').value,
-        terceirizado: document.querySelector('input[name="terceirizado"]:checked').value,
-        comissionado: document.querySelector('input[name="comissionado"]:checked').value,
-        conselheiro: document.querySelector('input[name="conselheiro"]:checked').value,
-        funcionario: document.querySelector('input[name="funcionario"]:checked').value
-    };
+    const catKey = chaveCategoria(cargoAtual);
 
-    preencherListaResumo(votos);
-    
-    // Ocultar form, mostrar resumo interativo
+    if (!escolhas[catKey]) {
+        await modalAviso(
+            'Escolha um candidato',
+            `Antes de revisar, escolha <strong>1 candidato</strong> na categoria <strong>${cargoAtual}</strong>.`
+        );
+        return;
+    }
+
+    preencherListaResumo();
     document.getElementById('votacao-section').style.display = 'none';
     document.getElementById('resumo-section').style.display = 'block';
     window.scrollTo(0, 0);
 });
 
-// BOTÃO "VOLTAR PARA EDIÇÃO"
 document.getElementById('btn-voltar-edicao').addEventListener('click', () => {
     document.getElementById('resumo-section').style.display = 'none';
     document.getElementById('votacao-section').style.display = 'block';
 });
 
-// ENVIO FINAL DEFINITIVO
+// ============================================================
+// ENVIO FINAL
+// ============================================================
 document.getElementById('btn-confirmar-final').addEventListener('click', async function() {
     const votosParaEnvio = {
-        estagiario: document.querySelector('input[name="estagiario"]:checked').value,
-        terceirizado: document.querySelector('input[name="terceirizado"]:checked').value,
-        comissionado: document.querySelector('input[name="comissionado"]:checked').value,
-        conselheiro: document.querySelector('input[name="conselheiro"]:checked').value,
-        funcionario: document.querySelector('input[name="funcionario"]:checked').value
+        nome_completo: eleitorAtual.nome,
+        email: eleitorAtual.email,
+        estagiario: escolhas.estagiario,
+        terceirizado: escolhas.terceirizado,
+        comissionado: escolhas.comissionado,
+        conselheiro: escolhas.conselheiro,
+        funcionario: escolhas.funcionario
     };
 
-    this.innerText = "Enviando...";
+    const htmlOriginal = this.innerHTML;
+    this.innerHTML = "Enviando...";
     this.disabled = true;
     document.getElementById('btn-voltar-edicao').style.display = 'none';
 
@@ -276,66 +433,69 @@ document.getElementById('btn-confirmar-final').addEventListener('click', async f
         const resposta = await fetch(`${supabaseUrl}/rest/v1/votos`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}`, 'Prefer': 'return=minimal' },
-            body: JSON.stringify({
-                nome_completo: eleitorAtual.nome,
-                email: eleitorAtual.email,
-                ...votosParaEnvio
-            })
+            body: JSON.stringify(votosParaEnvio)
         });
 
         if (resposta.ok) {
-            // Sucesso! Mostrar mensagem e bloquear alterações
             this.style.display = 'none';
             document.getElementById('header-resumo').innerHTML = `<h2>Comprovante de Votação</h2><p>Votos enviados por <strong>${eleitorAtual.email}</strong>.</p>`;
             document.getElementById('mensagem-sucesso').style.display = 'block';
         } else {
-            alert("Erro: O seu E-mail já consta na base de dados.");
-            this.innerText = "Confirmar e Enviar";
+            await modalAviso('Voto já registado', 'Este e-mail já consta na base de dados.<br>Você não pode votar novamente.');
+            this.innerHTML = htmlOriginal;
             this.disabled = false;
-            document.getElementById('btn-voltar-edicao').style.display = 'block';
+            document.getElementById('btn-voltar-edicao').style.display = 'flex';
         }
     } catch (erro) {
-        alert("Erro de comunicação com o servidor.");
-        this.innerText = "Confirmar e Enviar";
+        await modalAviso('Erro de comunicação', 'Não foi possível enviar os seus votos.<br>Tente novamente em instantes.');
+        this.innerHTML = htmlOriginal;
         this.disabled = false;
-        document.getElementById('btn-voltar-edicao').style.display = 'block';
+        document.getElementById('btn-voltar-edicao').style.display = 'flex';
     }
 });
 
-// FUNÇÃO PARA PREENCHER O HTML DO RESUMO (Usado tanto para revisar quanto para ver votos antigos)
+// ============================================================
+// RESUMO
+// ============================================================
 function preencherListaResumo(votosDB) {
     const lista = document.getElementById('lista-resumo');
-    lista.innerHTML = ''; // limpa
+    lista.innerHTML = '';
+    const dados = votosDB || null;
 
     ordemCargos.forEach(cargo => {
-        const key = cargo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
-        const nomeVotado = votosDB[key];
+        const key = chaveCategoria(cargo);
+        const nomeVotado = dados ? dados[key] : escolhas[key];
         const foto = getFotoCandidato(nomeVotado);
 
         lista.innerHTML += `
             <div class="resumo-card">
                 <span class="cargo-label">${cargo}</span>
-                <img src="${foto}" alt="${nomeVotado}">
-                <span class="nome-label">${nomeVotado}</span>
+                <img src="${foto}" alt="${nomeVotado || 'Não escolhido'}">
+                <span class="nome-label">${nomeVotado || '—'}</span>
             </div>
         `;
     });
 }
 
-// MOSTRAR TELA DE RECIBO PARA QUEM JÁ VOTOU (Modo Leitura)
+// ============================================================
+// RECIBO PARA QUEM JÁ VOTOU
+// ============================================================
 function mostrarEcraRecibo(dadosDB) {
     document.getElementById('login-section').style.display = 'none';
     document.getElementById('resumo-section').style.display = 'block';
-    
-    // Altera Textos
+
     document.getElementById('header-resumo').innerHTML = `
         <h2 style="color: #1a7f37;">Voto Já Registrado!</h2>
         <p>Identificamos que <strong>${dadosDB.nome_completo}</strong> (${dadosDB.email}) já participou da votação. Abaixo estão as suas escolhas:</p>
     `;
-    
-    // Esconde botões de edição/envio
+
     document.getElementById('botoes-resumo').style.display = 'none';
     document.getElementById('mensagem-sucesso').style.display = 'none';
 
     preencherListaResumo(dadosDB);
 }
+
+// ============================================================
+// 🚀 Start
+// ============================================================
+inicializar();
