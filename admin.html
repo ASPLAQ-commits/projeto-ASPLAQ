@@ -456,10 +456,12 @@
     });
 
     // ============================================================
-    // Credenciais do Supabase
+    // 🔐 Credenciais do Supabase
     // ============================================================
     const supabaseUrl = 'https://cnptvjdzqfsqbdkrnbbe.supabase.co';
     const supabaseKey = 'sb_publishable_cCqmjnqgdSvOcKA6oyd28Q_4BpE1hQ6';
+    const clienteSupabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
     let graficosAtivos = {};
     let adminLogado = null;
     let trocaObrigatoria = false;
@@ -503,7 +505,11 @@
         if (elBotao) elBotao.classList.add('active');
     }
 
-    // LOGIN ADMIN — usa tabela admin_users
+    // ============================================================
+    // 🔐 LOGIN ADMIN — via RPC SEGURA (validar_admin)
+    // A tabela admin_users está bloqueada para o público.
+    // Esta função RPC valida as credenciais no servidor.
+    // ============================================================
     document.getElementById('form-admin-login').addEventListener('submit', async function(e) {
         e.preventDefault();
         const email = document.getElementById('admin-email').value.trim().toLowerCase();
@@ -514,24 +520,24 @@
         btnLogin.disabled = true;
 
         try {
-            const url = `${supabaseUrl}/rest/v1/admin_users?email=eq.${encodeURIComponent(email)}&select=*`;
-            const resposta = await fetch(url, { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } });
-            const admins = await resposta.json();
+            const { data, error } = await clienteSupabase.rpc('validar_admin', {
+                p_email: email,
+                p_senha: senha
+            });
 
-            if (admins.length > 0 && admins[0].senha === senha) {
-                adminLogado = admins[0];
+            if (error) throw error;
+
+            if (Array.isArray(data) && data.length > 0) {
+                adminLogado = data[0];
                 document.getElementById('admin-login-section').style.display = 'none';
-                if (senha === 'admin2026') {
-                    abrirModalSenha(true);
-                } else {
-                    mostrarDashboard();
-                }
+                mostrarDashboard();
             } else {
                 alert("Acesso negado. Credenciais incorretas.");
                 btnLogin.innerHTML = htmlOriginal;
                 btnLogin.disabled = false;
             }
         } catch (erro) {
+            console.error(erro);
             alert("Erro ao conectar ao servidor.\n\n" + erro.message);
             btnLogin.innerHTML = htmlOriginal;
             btnLogin.disabled = false;
@@ -565,31 +571,53 @@
         document.getElementById('form-alterar-senha').reset();
     });
 
+    // ============================================================
+    // ALTERAR SENHA — via RPC SEGURA (alterar_senha_admin)
+    // ============================================================
     document.getElementById('form-alterar-senha').addEventListener('submit', async function(e) {
         e.preventDefault();
         const nova = document.getElementById('nova-senha').value;
         const confirma = document.getElementById('confirma-nova-senha').value;
         if (nova !== confirma) { alert("As senhas não coincidem."); return; }
-        if (nova.length < 6) { alert("A senha deve ter pelo menos 6 caracteres."); return; }
+        if (nova.length < 8) { alert("A senha deve ter pelo menos 8 caracteres."); return; }
 
         const btnSalvar = document.getElementById('btn-salvar-senha');
         btnSalvar.innerText = "Salvando...";
         btnSalvar.disabled = true;
+
         try {
-            const resposta = await fetch(`${supabaseUrl}/rest/v1/admin_users?email=eq.${encodeURIComponent(adminLogado.email)}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json', 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}`, 'Prefer': 'return=minimal' },
-                body: JSON.stringify({ senha: nova })
+            // Usa a senha ANTIGA (que está no adminLogado? não — pedimos para autenticar de novo)
+            // Solução mais simples: exige que o admin informe a senha atual antes de trocar
+            const senhaAtual = prompt("Para sua segurança, digite a SUA SENHA ATUAL:");
+            if (!senhaAtual) {
+                alert("Operação cancelada.");
+                return;
+            }
+
+            const { data, error } = await clienteSupabase.rpc('alterar_senha_admin', {
+                p_email: adminLogado.email,
+                p_senha_atual: senhaAtual,
+                p_senha_nova: nova
             });
-            if (resposta.ok) {
+
+            if (error) throw error;
+
+            if (data === true) {
                 alert("Senha atualizada com sucesso!");
-                adminLogado.senha = nova;
                 document.getElementById('modal-senha').style.display = 'none';
                 document.getElementById('form-alterar-senha').reset();
                 if (trocaObrigatoria) mostrarDashboard();
-            } else { alert("Erro ao salvar."); }
-        } catch (erro) { alert("Erro de comunicação."); }
-        finally { btnSalvar.innerText = "Salvar Nova Senha"; btnSalvar.disabled = false; }
+            } else {
+                alert("Senha atual incorreta ou erro ao salvar.");
+            }
+        } catch (erro) {
+            console.error(erro);
+            alert("Erro ao salvar: " + erro.message);
+        }
+        finally {
+            btnSalvar.innerText = "Salvar Nova Senha";
+            btnSalvar.disabled = false;
+        }
     });
 
     async function carregarApuracao() {
