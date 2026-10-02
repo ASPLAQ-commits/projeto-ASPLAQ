@@ -464,9 +464,7 @@
 
     let graficosAtivos = {};
     let adminLogado = null;
-    let trocaObrigatoria = false;
-
-    // Estado global
+    let adminToken = null; // 🔑 Token da sessão do admin (retornado pela RPC validar_admin)
     let candidatosData = [];
     let mapaSetores = {};
     let SERIES_LISTA = [];
@@ -480,9 +478,14 @@
         return cargo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
     }
 
+    // ============================================================
+    // Carrega colaboradores (tabela pública, RLS permite SELECT)
+    // ============================================================
     async function carregarCandidatosDoBanco() {
         const url = `${supabaseUrl}/rest/v1/colaboradores?select=*&order=setor.asc,nome.asc`;
-        const resposta = await fetch(url, { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } });
+        const resposta = await fetch(url, {
+            headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+        });
         if (!resposta.ok) throw new Error("Falha ao buscar colaboradores");
         candidatosData = await resposta.json();
         mapaSetores = {};
@@ -507,8 +510,7 @@
 
     // ============================================================
     // 🔐 LOGIN ADMIN — via RPC SEGURA (validar_admin)
-    // A tabela admin_users está bloqueada para o público.
-    // Esta função RPC valida as credenciais no servidor.
+    // Retorna: { id, nome, email, token }
     // ============================================================
     document.getElementById('form-admin-login').addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -529,6 +531,7 @@
 
             if (Array.isArray(data) && data.length > 0) {
                 adminLogado = data[0];
+                adminToken = data[0].token; // 🔑 guarda o token da sessão
                 document.getElementById('admin-login-section').style.display = 'none';
                 mostrarDashboard();
             } else {
@@ -551,19 +554,11 @@
     }
 
     function abrirModalSenha(obrigatorio = false) {
-        trocaObrigatoria = obrigatorio;
         document.getElementById('modal-senha').style.display = 'flex';
-        if (obrigatorio) {
-            document.getElementById('btn-fechar-modal').style.display = 'none';
-            document.getElementById('btn-salvar-senha').style.width = '100%';
-            document.getElementById('titulo-modal-senha').innerText = 'Primeiro Acesso';
-            document.getElementById('desc-modal-senha').innerText = 'Por segurança, defina uma senha pessoal antes de acessar.';
-        } else {
-            document.getElementById('btn-fechar-modal').style.display = 'block';
-            document.getElementById('btn-salvar-senha').style.width = '60%';
-            document.getElementById('titulo-modal-senha').innerText = 'Alterar Senha';
-            document.getElementById('desc-modal-senha').innerText = 'Digite a sua nova senha secreta abaixo.';
-        }
+        document.getElementById('btn-fechar-modal').style.display = 'block';
+        document.getElementById('btn-salvar-senha').style.width = '60%';
+        document.getElementById('titulo-modal-senha').innerText = 'Alterar Senha';
+        document.getElementById('desc-modal-senha').innerText = 'Digite a sua nova senha secreta abaixo.';
     }
 
     document.getElementById('btn-fechar-modal').addEventListener('click', () => {
@@ -572,7 +567,7 @@
     });
 
     // ============================================================
-    // ALTERAR SENHA — via RPC SEGURA (alterar_senha_admin)
+    // ALTERAR SENHA — via RPC alterar_senha_admin
     // ============================================================
     document.getElementById('form-alterar-senha').addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -581,19 +576,14 @@
         if (nova !== confirma) { alert("As senhas não coincidem."); return; }
         if (nova.length < 8) { alert("A senha deve ter pelo menos 8 caracteres."); return; }
 
+        const senhaAtual = prompt("Por segurança, digite a SUA SENHA ATUAL:");
+        if (!senhaAtual) { alert("Operação cancelada."); return; }
+
         const btnSalvar = document.getElementById('btn-salvar-senha');
         btnSalvar.innerText = "Salvando...";
         btnSalvar.disabled = true;
 
         try {
-            // Usa a senha ANTIGA (que está no adminLogado? não — pedimos para autenticar de novo)
-            // Solução mais simples: exige que o admin informe a senha atual antes de trocar
-            const senhaAtual = prompt("Para sua segurança, digite a SUA SENHA ATUAL:");
-            if (!senhaAtual) {
-                alert("Operação cancelada.");
-                return;
-            }
-
             const { data, error } = await clienteSupabase.rpc('alterar_senha_admin', {
                 p_email: adminLogado.email,
                 p_senha_atual: senhaAtual,
@@ -601,69 +591,91 @@
             });
 
             if (error) throw error;
-
             if (data === true) {
                 alert("Senha atualizada com sucesso!");
                 document.getElementById('modal-senha').style.display = 'none';
                 document.getElementById('form-alterar-senha').reset();
-                if (trocaObrigatoria) mostrarDashboard();
             } else {
                 alert("Senha atual incorreta ou erro ao salvar.");
             }
         } catch (erro) {
             console.error(erro);
-            alert("Erro ao salvar: " + erro.message);
-        }
-        finally {
+            alert("Erro: " + erro.message);
+        } finally {
             btnSalvar.innerText = "Salvar Nova Senha";
             btnSalvar.disabled = false;
         }
     });
 
+    // ============================================================
+    // 📊 CARREGAR APURAÇÃO — via RPCs protegidas por token
+    // ============================================================
     async function carregarApuracao() {
         const btnAtualizar = document.getElementById('btn-atualizar');
         const htmlOriginal = btnAtualizar.innerHTML;
         btnAtualizar.innerText = "A atualizar...";
+
         try {
+            if (!adminToken) {
+                alert("Sessão expirada. Faça login novamente.");
+                location.reload();
+                return;
+            }
+
             const [respVotos, respLogs] = await Promise.all([
-                fetch(`${supabaseUrl}/rest/v1/votos?select=*`, { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }),
-                fetch(`${supabaseUrl}/rest/v1/audit_logs?select=*`, { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } })
+                clienteSupabase.rpc('admin_listar_votos', { p_token: adminToken }),
+                clienteSupabase.rpc('admin_listar_logs', { p_token: adminToken })
             ]);
-            const votos = await respVotos.json();
-            const logs = await respLogs.json();
+
+            if (respVotos.error) throw respVotos.error;
+            if (respLogs.error) throw respLogs.error;
+
+            const votos = respVotos.data || [];
+            const logs = respLogs.data || [];
 
             document.getElementById('total-votos').innerText = votos.length;
             renderizarListasCandidatos(votos);
             processarMetricasSetores(votos);
             renderizarTabelaEleitores(votos);
             renderizarTabelaLogs(logs);
-        } catch (erro) { alert("Erro ao buscar dados do servidor."); }
-        finally { btnAtualizar.innerHTML = htmlOriginal; }
+        } catch (erro) {
+            console.error(erro);
+            alert("Erro ao buscar dados do servidor.\n\n" + erro.message);
+        } finally {
+            btnAtualizar.innerHTML = htmlOriginal;
+        }
     }
 
+    // ============================================================
+    // 🗑️ EXCLUIR VOTO — via RPC admin_excluir_voto (com log automático)
+    // ============================================================
     async function excluirVoto(idVoto, emailEleitor) {
         if (!confirm(`Anular o voto de ${emailEleitor}?`)) return;
+
         try {
-            const respostaVoto = await fetch(`${supabaseUrl}/rest/v1/votos?id=eq.${idVoto}`, {
-                method: 'DELETE',
-                headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+            const { data, error } = await clienteSupabase.rpc('admin_excluir_voto', {
+                p_token: adminToken,
+                p_id_voto: idVoto,
+                p_email_eleitor: emailEleitor
             });
-            if (respostaVoto.ok) {
-                await fetch(`${supabaseUrl}/rest/v1/audit_logs`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}`, 'Prefer': 'return=minimal' },
-                    body: JSON.stringify({
-                        admin_email: adminLogado.email,
-                        eleitor_email: emailEleitor,
-                        detalhes: `Voto anulado pelo administrador ${adminLogado.nome}`
-                    })
-                });
+
+            if (error) throw error;
+
+            if (data === true) {
                 alert("Voto anulado e registado na auditoria!");
                 carregarApuracao();
-            } else { alert("Erro ao excluir."); }
-        } catch (erro) { alert("Erro de comunicação."); }
+            } else {
+                alert("Erro ao anular o voto.");
+            }
+        } catch (erro) {
+            console.error(erro);
+            alert("Erro: " + erro.message);
+        }
     }
 
+    // ============================================================
+    // RENDERIZAÇÃO
+    // ============================================================
     function renderizarListasCandidatos(votos) {
         const container = document.getElementById('container-ranking-candidatos');
         container.innerHTML = '';
