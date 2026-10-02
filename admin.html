@@ -464,7 +464,7 @@
 
     let graficosAtivos = {};
     let adminLogado = null;
-    let adminToken = null; // 🔑 Token da sessão do admin (retornado pela RPC validar_admin)
+    let adminToken = null; // 🔑 Token de sessão do admin
     let candidatosData = [];
     let mapaSetores = {};
     let SERIES_LISTA = [];
@@ -479,10 +479,10 @@
     }
 
     // ============================================================
-    // Carrega colaboradores (tabela pública, RLS permite SELECT)
+    // 🔒 Carrega colaboradores via VIEW pública (sem e-mails)
     // ============================================================
     async function carregarCandidatosDoBanco() {
-        const url = `${supabaseUrl}/rest/v1/colaboradores?select=*&order=setor.asc,nome.asc`;
+        const url = `${supabaseUrl}/rest/v1/colaboradores_publico?select=*&order=setor.asc,nome.asc`;
         const resposta = await fetch(url, {
             headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
         });
@@ -509,8 +509,7 @@
     }
 
     // ============================================================
-    // 🔐 LOGIN ADMIN — via RPC SEGURA (validar_admin)
-    // Retorna: { id, nome, email, token }
+    // 🔐 LOGIN ADMIN — via RPC (retorna token de sessão)
     // ============================================================
     document.getElementById('form-admin-login').addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -531,7 +530,7 @@
 
             if (Array.isArray(data) && data.length > 0) {
                 adminLogado = data[0];
-                adminToken = data[0].token; // 🔑 guarda o token da sessão
+                adminToken = data[0].token;
                 document.getElementById('admin-login-section').style.display = 'none';
                 mostrarDashboard();
             } else {
@@ -551,6 +550,19 @@
         document.getElementById('admin-dashboard-section').style.display = 'block';
         document.getElementById('nome-admin-logado').innerText = adminLogado.nome;
         carregarApuracao();
+
+        // 🔄 Renovação automática de sessão a cada 15 min
+        setInterval(async () => {
+            if (!adminToken) return;
+            try {
+                await clienteSupabase.rpc('renovar_sessao', { p_token: adminToken });
+                console.log('🔄 Sessão renovada');
+            } catch (e) {
+                console.warn('⚠️ Sessão expirada');
+                alert("Sua sessão expirou. Faça login novamente.");
+                location.reload();
+            }
+        }, 15 * 60 * 1000);
     }
 
     function abrirModalSenha(obrigatorio = false) {
@@ -640,6 +652,11 @@
             renderizarTabelaLogs(logs);
         } catch (erro) {
             console.error(erro);
+            if (erro.message && erro.message.includes('Sessão')) {
+                alert("Sua sessão expirou. Faça login novamente.");
+                location.reload();
+                return;
+            }
             alert("Erro ao buscar dados do servidor.\n\n" + erro.message);
         } finally {
             btnAtualizar.innerHTML = htmlOriginal;
@@ -647,7 +664,7 @@
     }
 
     // ============================================================
-    // 🗑️ EXCLUIR VOTO — via RPC admin_excluir_voto (com log automático)
+    // 🗑️ EXCLUIR VOTO — via RPC com verificação de existência
     // ============================================================
     async function excluirVoto(idVoto, emailEleitor) {
         if (!confirm(`Anular o voto de ${emailEleitor}?`)) return;
@@ -664,12 +681,18 @@
             if (data === true) {
                 alert("Voto anulado e registado na auditoria!");
                 carregarApuracao();
-            } else {
-                alert("Erro ao anular o voto.");
             }
         } catch (erro) {
             console.error(erro);
-            alert("Erro: " + erro.message);
+            if (erro.message && erro.message.includes('não encontrado')) {
+                alert("Este voto já foi removido por outro admin.");
+            } else if (erro.message && erro.message.includes('Sessão')) {
+                alert("Sua sessão expirou. Faça login novamente.");
+                location.reload();
+                return;
+            } else {
+                alert("Erro ao anular: " + erro.message);
+            }
         }
     }
 

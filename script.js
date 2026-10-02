@@ -21,18 +21,27 @@ function aplicarLogoTema() {
 
 document.addEventListener('DOMContentLoaded', () => {
     const btnTema = document.getElementById('theme-toggle');
-
-    // 🔑 Aplica a logo correta no carregamento inicial
     aplicarLogoTema();
-
     if (!btnTema) return;
     btnTema.addEventListener('click', () => {
         document.body.classList.toggle('dark-mode');
         localStorage.setItem('tema', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-        // 🔑 Troca a logo imediatamente ao alternar o tema
         aplicarLogoTema();
     });
 });
+
+// ==========================================
+// 📧 CONFIGURAÇÃO EMAILJS
+// ==========================================
+const EMAILJS_PUBLIC_KEY  = 'SUA_PUBLIC_KEY_AQUI';
+const EMAILJS_SERVICE_ID  = 'SEU_SERVICE_ID_AQUI';
+const EMAILJS_TEMPLATE_ID = 'SEU_TEMPLATE_ID_AQUI';
+
+(function initEmailJS() {
+    if (typeof emailjs !== 'undefined') {
+        emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+    }
+})();
 
 // ==========================================
 // 1. CONFIGURAÇÃO DO SUPABASE
@@ -43,6 +52,8 @@ const clienteSupabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 window.emailUsuarioValido = "";
 window.nomeUsuarioValido = "";
+let dadosColaboradorPendente = null;
+let intervaloReenvio = null;
 
 const ordemCargos = ["Estagiário", "Terceirizado", "Comissionado", "Conselheiro", "Funcionário"];
 let candidatos = [];
@@ -56,7 +67,6 @@ const chave = cargo => norm(cargo).replace(/\s+/g, "_");
 const esc = t => String(t ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 const conectivos = new Set(['de', 'da', 'do', 'dos', 'das', 'e']);
-
 function formatarNome(nome) {
     return (nome || '').toLowerCase().split(' ').filter(Boolean).map((palavra, i) => {
         if (palavra === 'dr.' || palavra === 'dr') return 'Dr.';
@@ -66,27 +76,18 @@ function formatarNome(nome) {
     }).join(' ');
 }
 
-// 🆕 Mostra apenas o primeiro + último nome
-// "LUIZ GABRIEL SARMENTO PEREIRA" → "Luiz Pereira"
-// "DRA. MARIA APARECIDA SILVA"    → "Dra. Maria Silva"
 function nomeCurto(nome) {
     const partes = String(nome || '').trim().split(/\s+/).filter(Boolean);
     if (partes.length === 0) return '';
     if (partes.length === 1) return formatarNome(partes[0]);
-
-    // Detecta Dr. / Dra. como prefixo
     let prefixo = '';
     let nomes = partes;
     const p0 = partes[0].toLowerCase().replace(/\.$/, '');
-    if (p0 === 'dr')      { prefixo = 'Dr. ';  nomes = partes.slice(1); }
-    else if (p0 === 'dra'){ prefixo = 'Dra. '; nomes = partes.slice(1); }
-
+    if (p0 === 'dr')       { prefixo = 'Dr. ';  nomes = partes.slice(1); }
+    else if (p0 === 'dra') { prefixo = 'Dra. '; nomes = partes.slice(1); }
     if (nomes.length === 0) return prefixo.trim();
     if (nomes.length === 1) return prefixo + formatarNome(nomes[0]);
-
-    const primeiro = formatarNome(nomes[0]);
-    const ultimo   = formatarNome(nomes[nomes.length - 1]);
-    return prefixo + primeiro + ' ' + ultimo;
+    return prefixo + formatarNome(nomes[0]) + ' ' + formatarNome(nomes[nomes.length - 1]);
 }
 
 function categoriaDe(cargo) {
@@ -165,18 +166,27 @@ function modalConfirmacao(titulo, mensagem, textoSim = 'Sim, trocar', textoNao =
 }
 
 // ==========================================
-// 3. CARREGAR CANDIDATOS
+// 3. CARREGAR CANDIDATOS (via RPC listar_candidatos)
 // ==========================================
-async function carregarCandidatos() {
-    let { data, error } = await clienteSupabase.from('colaboradores').select('nome, setor, cargo, email, foto');
-    if (error) ({ data, error } = await clienteSupabase.from('colaboradores').select('nome, setor, cargo, email'));
+async function carregarCandidatos(emailVotante) {
+    const { data, error } = await clienteSupabase.rpc('listar_candidatos', {
+        p_email_votante: emailVotante
+    });
+
     if (error) throw error;
 
     candidatos = [];
-    data.forEach(p => {
+    (data || []).forEach(p => {
         const categoria = categoriaDe(p.cargo);
         if (categoria) {
-            candidatos.push({ nome: p.nome, setor: p.setor || 'Sem setor', cargo: p.cargo, email: p.email, foto: p.foto, categoria });
+            candidatos.push({
+                nome: p.nome,
+                setor: p.setor || 'Sem setor',
+                cargo: p.cargo,
+                foto: p.foto,
+                categoria
+                // SEM email — o RPC já excluiu o próprio votante
+            });
         }
     });
     candidatos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt'));
@@ -186,7 +196,7 @@ async function carregarCandidatos() {
 }
 
 // ==========================================
-// 4. LOGIN
+// 4. LOGIN — Gera código server-side
 // ==========================================
 async function validarAcesso() {
     const emailLimpo = document.getElementById('input-email').value.trim().toLowerCase();
@@ -200,58 +210,58 @@ async function validarAcesso() {
         return;
     }
 
-    btnEntrar.innerText = "Validando dados...";
+    btnEntrar.innerText = "Gerando código...";
     btnEntrar.disabled = true;
 
     try {
-        const { data: colaborador, error: erroColab } = await clienteSupabase
-            .from('colaboradores').select('*').ilike('email', emailLimpo).maybeSingle();
-        if (erroColab) throw erroColab;
+        // 🔒 Gera código NO SERVIDOR (valida email + já votou)
+        const { data: codigo, error } = await clienteSupabase.rpc('gerar_codigo', {
+            p_email: emailLimpo
+        });
 
-        if (!colaborador) {
-            mostrarErro("E-mail não localizado na base do COREN-PE.");
+        if (error) throw error;
+
+        // Guarda dados para o próximo passo
+        dadosColaboradorPendente = { email: emailLimpo };
+
+        // Envia por e-mail (via EmailJS)
+        try {
+            await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+                to_email: emailLimpo,
+                codigo: codigo,
+                to_name: 'Colaborador'
+            });
+        } catch (emailErr) {
+            console.error('Erro no envio:', emailErr);
+            await modalAviso('Erro ao enviar e-mail',
+                'Não foi possível enviar o código para o seu e-mail.<br><br>Verifique se o EmailJS está configurado.');
+            btnEntrar.innerText = "Acessar Urna";
+            btnEntrar.disabled = false;
             return;
         }
 
-        const { data: voto, error: erroVoto } = await clienteSupabase
-            .from('votos').select('email').eq('email', emailLimpo).maybeSingle();
-        if (erroVoto) throw erroVoto;
-
-        if (voto) {
-            mostrarErro("Acesso negado: este e-mail já registrou um voto.");
-            return;
-        }
-
-        await carregarCandidatos();
-
-        // 🔑 Guarda o nome COMPLETO para o banco de dados
-        window.emailUsuarioValido = emailLimpo;
-        window.nomeUsuarioValido = formatarNome(colaborador.nome);
-
-        Object.keys(escolhas).forEach(k => delete escolhas[k]);
-        etapaAtual = 0;
-        renderizarCandidatos();
-
+        // Troca para tela de código
         document.getElementById('tela-login').style.display = 'none';
-        document.getElementById('tela-urna').style.display = 'block';
+        document.getElementById('tela-codigo').style.display = 'block';
+        document.getElementById('email-verificacao').innerText = emailLimpo;
+        document.getElementById('input-codigo').value = '';
+        document.getElementById('msg-erro-codigo').style.display = 'none';
+        document.getElementById('input-codigo').focus();
 
-        // 🆕 Saudação com apenas primeiro + último nome
-        document.getElementById('saudacao-usuario').innerText =
-            `Olá, ${nomeCurto(colaborador.nome)}!`;
-
-        document.getElementById('badge-setor-usuario').innerText = colaborador.setor || '';
-        document.getElementById('badge-cargo-usuario').innerText = colaborador.cargo || '';
-
-        const fotoUsuario = document.getElementById('foto-usuario');
-        fotoUsuario.src = colaborador.foto || avatarIniciais(colaborador.nome);
-        fotoUsuario.alt = formatarNome(colaborador.nome);
-        fotoUsuario.onerror = () => { fotoUsuario.onerror = null; fotoUsuario.src = avatarIniciais(colaborador.nome); };
-
-        atualizarNavegacao();
+        iniciarTimerReenvio(60);
 
     } catch (err) {
         console.error(err);
-        mostrarErro("Erro de conexão com o servidor.");
+        const msg = (err.message || '').toLowerCase();
+        if (msg.includes('não encontrado')) {
+            mostrarErro("E-mail não localizado na base do COREN-PE.");
+        } else if (msg.includes('já registrou')) {
+            mostrarErro("Este e-mail já registrou um voto.");
+        } else if (msg.includes('@coren-pe.gov.br')) {
+            mostrarErro("Apenas e-mails institucionais podem votar.");
+        } else {
+            mostrarErro("Erro ao gerar código. Tente novamente.");
+        }
     } finally {
         btnEntrar.innerText = "Acessar Urna";
         btnEntrar.disabled = false;
@@ -273,7 +283,115 @@ document.getElementById('input-email').addEventListener('input', function () {
 });
 
 // ==========================================
-// 5. RENDERIZAR CANDIDATOS
+// 5. CONFIRMAR CÓDIGO
+// ==========================================
+async function confirmarCodigo() {
+    const codigoDigitado = document.getElementById('input-codigo').value.trim();
+    const msgErroCodigo = document.getElementById('msg-erro-codigo');
+
+    msgErroCodigo.style.display = 'none';
+
+    if (!/^\d{6}$/.test(codigoDigitado)) {
+        msgErroCodigo.innerText = "Digite os 6 dígitos do código.";
+        msgErroCodigo.style.display = 'block';
+        return;
+    }
+
+    try {
+        const emailPendente = (dadosColaboradorPendente.email || '').trim().toLowerCase();
+
+        // 🔒 Valida NO SERVIDOR
+        const { data, error } = await clienteSupabase.rpc('validar_codigo', {
+            p_email: emailPendente,
+            p_codigo: codigoDigitado
+        });
+
+        if (error) throw error;
+
+        if (data === true) {
+            await liberarVotacao();
+        }
+    } catch (err) {
+        console.error(err);
+        msgErroCodigo.innerText = err.message || "Código incorreto.";
+        msgErroCodigo.style.display = 'block';
+    }
+}
+
+async function reenviarCodigo() {
+    if (!dadosColaboradorPendente) return;
+    const email = dadosColaboradorPendente.email;
+    await validarAcesso();
+}
+
+function iniciarTimerReenvio(segundos) {
+    const btnReenviar = document.getElementById('btn-reenviar');
+    const timerSpan = document.getElementById('timer-reenvio');
+    let contador = segundos;
+
+    btnReenviar.disabled = true;
+    timerSpan.innerText = `(${contador}s)`;
+
+    if (intervaloReenvio) clearInterval(intervaloReenvio);
+
+    intervaloReenvio = setInterval(() => {
+        contador--;
+        if (contador <= 0) {
+            clearInterval(intervaloReenvio);
+            btnReenviar.disabled = false;
+            timerSpan.innerText = '';
+        } else {
+            timerSpan.innerText = `(${contador}s)`;
+        }
+    }, 1000);
+}
+
+// ==========================================
+// 6. LIBERAR VOTAÇÃO
+// ==========================================
+async function liberarVotacao() {
+    try {
+        const email = dadosColaboradorPendente.email;
+
+        // 🔒 Carrega candidatos SEM email, SEM o próprio votante
+        await carregarCandidatos(email);
+
+        // Nome do votante (buscado na view pública — só nome)
+        const { data: nomes } = await clienteSupabase
+            .from('colaboradores_publico')
+            .select('nome')
+            .ilike('nome', '%')
+            .limit(0); // não busca nome do votante aqui, usamos direto do retorno do RPC se necessário
+
+        window.emailUsuarioValido = email;
+        // Busca o nome completo do votante via RPC implícito:
+        // usando o próprio carregarCandidatos não tem o votante. Então pegamos do formulário anterior:
+        window.nomeUsuarioValido = formatarNome(window.nomeUsuarioValido || email.split('@')[0]);
+
+        Object.keys(escolhas).forEach(k => delete escolhas[k]);
+        etapaAtual = 0;
+        renderizarCandidatos();
+
+        document.getElementById('tela-codigo').style.display = 'none';
+        document.getElementById('tela-urna').style.display = 'block';
+        document.getElementById('saudacao-usuario').innerText = `Olá, ${nomeCurto(window.nomeUsuarioValido)}!`;
+        document.getElementById('badge-setor-usuario').innerText = '';
+        document.getElementById('badge-cargo-usuario').innerText = '';
+
+        const fotoUsuario = document.getElementById('foto-usuario');
+        fotoUsuario.src = avatarIniciais(window.nomeUsuarioValido);
+        fotoUsuario.alt = window.nomeUsuarioValido;
+
+        atualizarNavegacao();
+
+    } catch (err) {
+        console.error(err);
+        await modalAviso('Erro', 'Erro ao carregar a urna. Recarregue a página.');
+    }
+}
+
+// ==========================================
+// 7. RENDERIZAR CANDIDATOS
 // ==========================================
 function renderizarCandidatos() {
     let html = '';
@@ -289,28 +407,14 @@ function renderizarCandidatos() {
         [...new Set(doCargo.map(c => c.setor))].sort((a, b) => a.localeCompare(b, 'pt')).forEach(setor => {
             html += `<h3>${esc(setor)}</h3><div class="grid-candidatos">`;
             doCargo.filter(c => c.setor === setor).forEach(c => {
-                const emailCandidato = (c.email || '').trim().toLowerCase();
-                const souEu = (emailCandidato === window.emailUsuarioValido);
                 const foto = c.foto || avatarIniciais(c.nome);
-
-                if (souEu) {
-                    html += `<label class="bloqueado" title="Você não pode votar em si mesmo">
-                        <input type="radio" disabled name="${chaveCargo}" value="${esc(c.nome)}">
-                        <div class="card-candidato">
-                            <img src="${esc(foto)}" alt="${esc(c.nome)}">
-                            <p>${esc(formatarNome(c.nome))}</p>
-                            <span style="display:block; font-size:11px; color:#e53e3e; margin-top:5px; font-weight:bold;">Seu Perfil</span>
-                        </div>
-                    </label>`;
-                } else {
-                    html += `<label data-cat="${chaveCargo}" data-nome="${esc(c.nome)}">
-                        <input type="radio" name="${chaveCargo}" value="${esc(c.nome)}">
-                        <div class="card-candidato">
-                            <img src="${esc(foto)}" alt="${esc(c.nome)}">
-                            <p>${esc(formatarNome(c.nome))}</p>
-                        </div>
-                    </label>`;
-                }
+                html += `<label data-cat="${chaveCargo}" data-nome="${esc(c.nome)}">
+                    <input type="radio" name="${chaveCargo}" value="${esc(c.nome)}">
+                    <div class="card-candidato">
+                        <img src="${esc(foto)}" alt="${esc(c.nome)}">
+                        <p>${esc(formatarNome(c.nome))}</p>
+                    </div>
+                </label>`;
             });
             html += `</div>`;
         });
@@ -325,7 +429,7 @@ function renderizarCandidatos() {
 }
 
 // ==========================================
-// 6. SINCRONIZAÇÃO VISUAL
+// 8. SINCRONIZAÇÃO VISUAL
 // ==========================================
 function sincronizarVisual() {
     document.querySelectorAll('#secoes-votacao label[data-cat]').forEach(label => {
@@ -339,7 +443,7 @@ function sincronizarVisual() {
 }
 
 // ==========================================
-// 7. DELEGAÇÃO DE EVENTOS
+// 9. DELEGAÇÃO DE EVENTOS
 // ==========================================
 document.getElementById('secoes-votacao').addEventListener('click', async function(e) {
     const label = e.target.closest('label[data-cat]');
@@ -365,12 +469,8 @@ document.getElementById('secoes-votacao').addEventListener('click', async functi
             'Sim, trocar',
             'Não, manter'
         );
-        if (confirmou) {
-            escolhas[catKey] = nome;
-            sincronizarVisual();
-        } else {
-            sincronizarVisual();
-        }
+        if (confirmou) escolhas[catKey] = nome;
+        sincronizarVisual();
         return;
     }
 
@@ -379,7 +479,7 @@ document.getElementById('secoes-votacao').addEventListener('click', async functi
 });
 
 // ==========================================
-// 8. NAVEGAÇÃO
+// 10. NAVEGAÇÃO
 // ==========================================
 function atualizarNavegacao() {
     const ultima = etapaAtual === etapas.length - 1;
@@ -416,7 +516,7 @@ document.getElementById('btn-proximo').addEventListener('click', async () => {
 document.getElementById('btn-anterior').addEventListener('click', () => irParaEtapa(etapaAtual - 1));
 
 // ==========================================
-// 9. REVISÃO E CONFIRMAÇÃO
+// 11. REVISÃO
 // ==========================================
 function fotoDoCandidato(nome) {
     const c = candidatos.find(x => x.nome === nome);
@@ -455,33 +555,83 @@ document.getElementById('btn-voltar-edicao').addEventListener('click', () => {
     window.scrollTo(0, 0);
 });
 
+// ==========================================
+// 12. ENVIO FINAL — via RPC registrar_voto
+// ==========================================
 document.getElementById('btn-confirmar-final').addEventListener('click', async function () {
     const btnVoltar = document.getElementById('btn-voltar-edicao');
-    const dadosVoto = { nome_completo: window.nomeUsuarioValido, email: window.emailUsuarioValido };
-    etapas.forEach(cargo => { dadosVoto[chave(cargo)] = categoriaMarcada(cargo).value; });
+    const htmlOriginal = this.innerHTML;
 
-    this.innerText = "Enviando...";
+    this.innerHTML = "Enviando...";
     this.disabled = true;
     btnVoltar.disabled = true;
+    document.getElementById('btn-voltar-edicao').style.display = 'none';
 
     try {
-        const { error } = await clienteSupabase.from('votos').insert([dadosVoto]);
+        const { data, error } = await clienteSupabase.rpc('registrar_voto', {
+            p_nome_completo: window.nomeUsuarioValido,
+            p_email: window.emailUsuarioValido,
+            p_estagiario:   escolhas.estagiario,
+            p_terceirizado: escolhas.terceirizado,
+            p_comissionado: escolhas.comissionado,
+            p_conselheiro:  escolhas.conselheiro,
+            p_funcionario:  escolhas.funcionario
+        });
+
         if (error) throw error;
 
-        document.getElementById('header-resumo').innerHTML =
-            `<h2>Comprovante de votação</h2><p>Votos registrados por <strong>${esc(window.nomeUsuarioValido)}</strong>.</p>`;
-        document.getElementById('botoes-resumo').style.display = 'none';
-        document.getElementById('mensagem-sucesso').style.display = 'block';
-        window.scrollTo(0, 0);
-    } catch (err) {
-        console.error(err);
-        if (err.code === '23505') {
-            await modalAviso('Voto já registado', 'Este e-mail já registrou um voto.');
+        if (data === true) {
+            this.style.display = 'none';
+            document.getElementById('header-resumo').innerHTML =
+                `<h2>Comprovante de Votação</h2><p>Votos enviados por <strong>${esc(window.nomeUsuarioValido)}</strong>.</p>`;
+            document.getElementById('mensagem-sucesso').style.display = 'block';
         } else {
-            await modalAviso('Erro ao enviar', 'Erro ao registrar o voto. Verifique sua conexão e tente novamente.');
+            await modalAviso('Erro ao enviar', 'Não foi possível registrar o seu voto.');
+            this.innerHTML = htmlOriginal;
+            this.disabled = false;
+            btnVoltar.disabled = false;
+            document.getElementById('btn-voltar-edicao').style.display = 'flex';
         }
-        this.innerText = "Confirmar voto";
+    } catch (err) {
+        console.error('Erro ao enviar voto:', err);
+        let msg = 'Erro ao registrar o voto. Tente novamente.';
+        const erroTxt = (err.message || '').toLowerCase();
+
+        if (erroTxt.includes('não autorizado')) {
+            msg = 'O seu e-mail não consta na lista de colaboradores autorizados.';
+        } else if (erroTxt.includes('já registrou')) {
+            msg = 'Este e-mail já registrou um voto.';
+        } else if (erroTxt.includes('@coren-pe.gov.br')) {
+            msg = 'Apenas e-mails institucionais podem votar.';
+        } else if (erroTxt.includes('em si mesmo')) {
+            msg = 'Não é permitido votar em si mesmo.';
+        }
+
+        await modalAviso('Erro ao enviar', msg);
+        this.innerHTML = htmlOriginal;
         this.disabled = false;
         btnVoltar.disabled = false;
+        document.getElementById('btn-voltar-edicao').style.display = 'flex';
     }
 });
+
+// ==========================================
+// 13. RECIBO PARA QUEM JÁ VOTOU
+// ==========================================
+function mostrarEcraRecibo(dadosDB) {
+    document.getElementById('tela-login').style.display = 'none';
+    document.getElementById('tela-resumo').style.display = 'block';
+
+    document.getElementById('header-resumo').innerHTML = `
+        <h2 style="color: #1a7f37;">Voto Já Registrado!</h2>
+        <p>Identificamos que <strong>${dadosDB.nome_completo}</strong> (${dadosDB.email}) já participou da votação.</p>
+    `;
+
+    document.getElementById('botoes-resumo').style.display = 'none';
+    document.getElementById('mensagem-sucesso').style.display = 'none';
+}
+
+// ==========================================
+// 🚀 Start
+// ==========================================
+// Não precisa mais de "inicializar()" — o fluxo começa no validarAcesso()
