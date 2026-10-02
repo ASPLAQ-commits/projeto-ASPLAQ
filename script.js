@@ -42,7 +42,7 @@ const EMAILJS_TEMPLATE_ID = 'template_jnjq8ma';
         emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
         console.log('✅ EmailJS inicializado');
     } else {
-        console.error('❌ EmailJS não carregado — verifique o <script> no index.html');
+        console.error('❌ EmailJS não carregado');
     }
 })();
 
@@ -57,6 +57,10 @@ window.emailUsuarioValido = "";
 window.nomeUsuarioValido = "";
 let dadosColaboradorPendente = null;
 let intervaloReenvio = null;
+
+// 🔑 Chave do localStorage para persistir sessão
+const SESSION_KEY = 'votacao_sessao';
+const SESSION_DURATION_MS = 4 * 60 * 60 * 1000; // 4 horas
 
 const ordemCargos = ["Estagiário", "Terceirizado", "Comissionado", "Conselheiro", "Funcionário"];
 let candidatos = [];
@@ -103,6 +107,72 @@ function avatarIniciais(nome) {
         .slice(0, 2).map(p => p[0]).join('').toUpperCase();
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#F5E8EE"/><text x="50" y="50" dy=".35em" text-anchor="middle" font-family="Arial" font-size="38" font-weight="700" fill="#8B1E5C">${iniciais}</text></svg>`;
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
+// ==========================================
+// 🔑 SESSÃO PERSISTENTE — salvar, restaurar, limpar
+// ==========================================
+function salvarSessao(info) {
+    try {
+        localStorage.setItem(SESSION_KEY, JSON.stringify({
+            email: info.email,
+            nome: info.nome,
+            setor: info.setor,
+            cargo: info.cargo,
+            foto: info.foto,
+            expira: Date.now() + SESSION_DURATION_MS
+        }));
+    } catch (e) {
+        console.warn('Erro ao salvar sessão:', e);
+    }
+}
+
+function limparSessao() {
+    try {
+        localStorage.removeItem(SESSION_KEY);
+    } catch (e) {
+        console.warn('Erro ao limpar sessão:', e);
+    }
+}
+
+async function restaurarSessao() {
+    let sessao;
+    try {
+        const raw = localStorage.getItem(SESSION_KEY);
+        if (!raw) return false;
+        sessao = JSON.parse(raw);
+    } catch (e) {
+        limparSessao();
+        return false;
+    }
+
+    // Verifica expiração
+    if (!sessao.expira || sessao.expira < Date.now()) {
+        limparSessao();
+        return false;
+    }
+
+    // Verifica se o votante ainda não votou
+    try {
+        const { data: jaVotou, error } = await clienteSupabase.rpc('verificar_voto_existente', {
+            p_email: sessao.email
+        });
+        if (error) throw error;
+
+        if (jaVotou === true) {
+            limparSessao();
+            return false;
+        }
+    } catch (e) {
+        console.warn('Erro ao verificar voto:', e);
+        limparSessao();
+        return false;
+    }
+
+    // ✅ Sessão válida — restaura
+    dadosColaboradorPendente = sessao;
+    await liberarVotacao();
+    return true;
 }
 
 // ==========================================
@@ -198,7 +268,7 @@ async function carregarCandidatos(emailVotante) {
 }
 
 // ==========================================
-// 4. LOGIN — Gera código server-side
+// 4. LOGIN — com bypass para e-mails de teste
 // ==========================================
 async function validarAcesso() {
     const emailLimpo = document.getElementById('input-email').value.trim().toLowerCase();
@@ -212,18 +282,61 @@ async function validarAcesso() {
         return;
     }
 
-    btnEntrar.innerText = "Gerando código...";
+    btnEntrar.innerText = "Validando...";
     btnEntrar.disabled = true;
 
     try {
-        // 🔒 Gera código NO SERVIDOR
+        // 🔍 1. Verifica se é e-mail de teste
+        const { data: ehTeste, error: errTeste } = await clienteSupabase.rpc('email_e_teste', {
+            p_email: emailLimpo
+        });
+
+        if (!errTeste && ehTeste === true) {
+            console.log('🧪 E-mail de teste detectado — pulando OTP');
+
+            // Busca dados do colaborador
+            const { data: dados, error: errDados } = await clienteSupabase.rpc('dados_colaborador', {
+                p_email: emailLimpo
+            });
+
+            if (errDados) throw errDados;
+            if (!dados || dados.length === 0) {
+                mostrarErro("E-mail não localizado na base do COREN-PE.");
+                return;
+            }
+
+            const info = dados[0];
+
+            // Verifica se já votou
+            const { data: jaVotou } = await clienteSupabase.rpc('verificar_voto_existente', {
+                p_email: emailLimpo
+            });
+
+            if (jaVotou === true) {
+                mostrarErro("Este e-mail já registrou um voto.");
+                return;
+            }
+
+            // Libera direto
+            dadosColaboradorPendente = {
+                email: emailLimpo,
+                nome: info.nome,
+                setor: info.setor,
+                cargo: info.cargo,
+                foto: info.foto
+            };
+
+            await liberarVotacao();
+            return;
+        }
+
+        // 🔒 2. Fluxo normal: gera OTP
         const { data: codigo, error } = await clienteSupabase.rpc('gerar_codigo', {
             p_email: emailLimpo
         });
 
         if (error) throw error;
 
-        // Guarda email para o próximo passo
         dadosColaboradorPendente = { email: emailLimpo };
 
         // Envia por e-mail
@@ -233,21 +346,19 @@ async function validarAcesso() {
                 codigo: codigo,
                 to_name: 'Colaborador'
             });
-            console.log('📧 E-mail enviado para', emailLimpo);
+            console.log('📧 E-mail enviado');
         } catch (emailErr) {
             console.error('Erro no envio:', emailErr);
             await modalAviso(
                 'Erro ao enviar e-mail',
-                'Não foi possível enviar o código para o seu e-mail.<br><br>' +
-                '<small style="color:#888; font-size:12px;">Detalhes: ' +
-                (emailErr.text || emailErr.message || JSON.stringify(emailErr)) + '</small>'
+                'Não foi possível enviar o código.<br><br>' +
+                '<small style="color:#888; font-size:12px;">' +
+                (emailErr.text || emailErr.message || '') + '</small>'
             );
-            btnEntrar.innerText = "Acessar Urna";
-            btnEntrar.disabled = false;
             return;
         }
 
-        // Troca para tela de código
+        // Tela de código
         document.getElementById('tela-login').style.display = 'none';
         document.getElementById('tela-codigo').style.display = 'block';
         document.getElementById('email-verificacao').innerText = emailLimpo;
@@ -267,7 +378,7 @@ async function validarAcesso() {
         } else if (msg.includes('@coren-pe.gov.br')) {
             mostrarErro("Apenas e-mails institucionais podem votar.");
         } else {
-            mostrarErro("Erro ao gerar código. Tente novamente.");
+            mostrarErro("Erro ao validar acesso. Tente novamente.");
         }
     } finally {
         btnEntrar.innerText = "Acessar Urna";
@@ -352,39 +463,40 @@ function iniciarTimerReenvio(segundos) {
 }
 
 // ==========================================
-// 6. LIBERAR VOTAÇÃO — busca dados do votante via RPC
+// 6. LIBERAR VOTAÇÃO
 // ==========================================
 async function liberarVotacao() {
     try {
         const email = dadosColaboradorPendente.email;
 
-        // 🔒 Busca os dados do votante via RPC (foto, setor, cargo, nome)
-        const { data: dados, error: errDados } = await clienteSupabase.rpc('dados_colaborador', {
-            p_email: email
-        });
-
-        if (errDados) throw errDados;
-
-        if (!dados || dados.length === 0) {
-            throw new Error('Dados do colaborador não encontrados.');
+        // Se ainda não temos dados completos, busca
+        if (!dadosColaboradorPendente.nome) {
+            const { data: dados, error } = await clienteSupabase.rpc('dados_colaborador', {
+                p_email: email
+            });
+            if (error) throw error;
+            if (!dados || dados.length === 0) throw new Error('Dados não encontrados');
+            Object.assign(dadosColaboradorPendente, dados[0]);
         }
 
-        const info = dados[0];
+        const info = dadosColaboradorPendente;
 
-        // 🔒 Carrega candidatos (exclui o próprio votante)
         await carregarCandidatos(email);
 
         window.emailUsuarioValido = email;
         window.nomeUsuarioValido = formatarNome(info.nome);
 
+        // 🔑 Salva sessão persistente
+        salvarSessao(info);
+
         Object.keys(escolhas).forEach(k => delete escolhas[k]);
         etapaAtual = 0;
         renderizarCandidatos();
 
+        document.getElementById('tela-login').style.display = 'none';
         document.getElementById('tela-codigo').style.display = 'none';
         document.getElementById('tela-urna').style.display = 'block';
 
-        // ✅ Preenche os dados do votante no cabeçalho
         document.getElementById('saudacao-usuario').innerText = `Olá, ${nomeCurto(info.nome)}!`;
         document.getElementById('badge-setor-usuario').innerText = info.setor || '';
         document.getElementById('badge-cargo-usuario').innerText = info.cargo || '';
@@ -571,7 +683,7 @@ document.getElementById('btn-voltar-edicao').addEventListener('click', () => {
 });
 
 // ==========================================
-// 12. ENVIO FINAL — via RPC registrar_voto
+// 12. ENVIO FINAL
 // ==========================================
 document.getElementById('btn-confirmar-final').addEventListener('click', async function () {
     const btnVoltar = document.getElementById('btn-voltar-edicao');
@@ -596,6 +708,9 @@ document.getElementById('btn-confirmar-final').addEventListener('click', async f
         if (error) throw error;
 
         if (data === true) {
+            // 🔑 Limpa sessão persistente após votar
+            limparSessao();
+
             this.style.display = 'none';
             document.getElementById('header-resumo').innerHTML =
                 `<h2>Comprovante de Votação</h2><p>Votos enviados por <strong>${esc(window.nomeUsuarioValido)}</strong>.</p>`;
@@ -645,3 +760,10 @@ function mostrarEcraRecibo(dadosDB) {
     document.getElementById('botoes-resumo').style.display = 'none';
     document.getElementById('mensagem-sucesso').style.display = 'none';
 }
+
+// ==========================================
+// 🚀 Start — tenta restaurar sessão ao carregar
+// ==========================================
+document.addEventListener('DOMContentLoaded', async () => {
+    await restaurarSessao();
+});
