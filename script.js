@@ -31,15 +31,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// 📧 CONFIGURAÇÃO EMAILJS
+// 📧 CONFIGURAÇÃO EMAILJS (credenciais preenchidas)
 // ==========================================
-const EMAILJS_PUBLIC_KEY  = 'SUA_PUBLIC_KEY_AQUI';
-const EMAILJS_SERVICE_ID  = 'SEU_SERVICE_ID_AQUI';
-const EMAILJS_TEMPLATE_ID = 'SEU_TEMPLATE_ID_AQUI';
+const EMAILJS_PUBLIC_KEY  = 'TRc_bmFL_d8s4e7vg';
+const EMAILJS_SERVICE_ID  = 'service_v7hu19x';
+const EMAILJS_TEMPLATE_ID = 'template_jnjq8ma';
 
 (function initEmailJS() {
     if (typeof emailjs !== 'undefined') {
         emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+        console.log('✅ EmailJS inicializado');
+    } else {
+        console.error('❌ EmailJS não carregado — verifique o <script> no index.html');
     }
 })();
 
@@ -166,7 +169,7 @@ function modalConfirmacao(titulo, mensagem, textoSim = 'Sim, trocar', textoNao =
 }
 
 // ==========================================
-// 3. CARREGAR CANDIDATOS (via RPC listar_candidatos)
+// 3. CARREGAR CANDIDATOS (via RPC)
 // ==========================================
 async function carregarCandidatos(emailVotante) {
     const { data, error } = await clienteSupabase.rpc('listar_candidatos', {
@@ -185,7 +188,6 @@ async function carregarCandidatos(emailVotante) {
                 cargo: p.cargo,
                 foto: p.foto,
                 categoria
-                // SEM email — o RPC já excluiu o próprio votante
             });
         }
     });
@@ -214,27 +216,32 @@ async function validarAcesso() {
     btnEntrar.disabled = true;
 
     try {
-        // 🔒 Gera código NO SERVIDOR (valida email + já votou)
+        // 🔒 Gera código NO SERVIDOR
         const { data: codigo, error } = await clienteSupabase.rpc('gerar_codigo', {
             p_email: emailLimpo
         });
 
         if (error) throw error;
 
-        // Guarda dados para o próximo passo
+        // Guarda email para o próximo passo
         dadosColaboradorPendente = { email: emailLimpo };
 
-        // Envia por e-mail (via EmailJS)
+        // Envia por e-mail
         try {
             await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
                 to_email: emailLimpo,
                 codigo: codigo,
                 to_name: 'Colaborador'
             });
+            console.log('📧 E-mail enviado para', emailLimpo);
         } catch (emailErr) {
             console.error('Erro no envio:', emailErr);
-            await modalAviso('Erro ao enviar e-mail',
-                'Não foi possível enviar o código para o seu e-mail.<br><br>Verifique se o EmailJS está configurado.');
+            await modalAviso(
+                'Erro ao enviar e-mail',
+                'Não foi possível enviar o código para o seu e-mail.<br><br>' +
+                '<small style="color:#888; font-size:12px;">Detalhes: ' +
+                (emailErr.text || emailErr.message || JSON.stringify(emailErr)) + '</small>'
+            );
             btnEntrar.innerText = "Acessar Urna";
             btnEntrar.disabled = false;
             return;
@@ -300,7 +307,6 @@ async function confirmarCodigo() {
     try {
         const emailPendente = (dadosColaboradorPendente.email || '').trim().toLowerCase();
 
-        // 🔒 Valida NO SERVIDOR
         const { data, error } = await clienteSupabase.rpc('validar_codigo', {
             p_email: emailPendente,
             p_codigo: codigoDigitado
@@ -320,7 +326,6 @@ async function confirmarCodigo() {
 
 async function reenviarCodigo() {
     if (!dadosColaboradorPendente) return;
-    const email = dadosColaboradorPendente.email;
     await validarAcesso();
 }
 
@@ -353,20 +358,15 @@ async function liberarVotacao() {
     try {
         const email = dadosColaboradorPendente.email;
 
-        // 🔒 Carrega candidatos SEM email, SEM o próprio votante
         await carregarCandidatos(email);
 
-        // Nome do votante (buscado na view pública — só nome)
-        const { data: nomes } = await clienteSupabase
-            .from('colaboradores_publico')
-            .select('nome')
-            .ilike('nome', '%')
-            .limit(0); // não busca nome do votante aqui, usamos direto do retorno do RPC se necessário
-
         window.emailUsuarioValido = email;
-        // Busca o nome completo do votante via RPC implícito:
-        // usando o próprio carregarCandidatos não tem o votante. Então pegamos do formulário anterior:
-        window.nomeUsuarioValido = formatarNome(window.nomeUsuarioValido || email.split('@')[0]);
+
+        // ⚠️ Nome do votante: como não temos acesso ao nome aqui sem expor email,
+        // usamos apenas o prefixo do e-mail
+        if (!window.nomeUsuarioValido) {
+            window.nomeUsuarioValido = formatarNome(email.split('@')[0].replace(/[._-]/g, ' '));
+        }
 
         Object.keys(escolhas).forEach(k => delete escolhas[k]);
         etapaAtual = 0;
@@ -375,8 +375,6 @@ async function liberarVotacao() {
         document.getElementById('tela-codigo').style.display = 'none';
         document.getElementById('tela-urna').style.display = 'block';
         document.getElementById('saudacao-usuario').innerText = `Olá, ${nomeCurto(window.nomeUsuarioValido)}!`;
-        document.getElementById('badge-setor-usuario').innerText = '';
-        document.getElementById('badge-cargo-usuario').innerText = '';
 
         const fotoUsuario = document.getElementById('foto-usuario');
         fotoUsuario.src = avatarIniciais(window.nomeUsuarioValido);
@@ -556,7 +554,7 @@ document.getElementById('btn-voltar-edicao').addEventListener('click', () => {
 });
 
 // ==========================================
-// 12. ENVIO FINAL — via RPC registrar_voto
+// 12. ENVIO FINAL
 // ==========================================
 document.getElementById('btn-confirmar-final').addEventListener('click', async function () {
     const btnVoltar = document.getElementById('btn-voltar-edicao');
@@ -630,8 +628,3 @@ function mostrarEcraRecibo(dadosDB) {
     document.getElementById('botoes-resumo').style.display = 'none';
     document.getElementById('mensagem-sucesso').style.display = 'none';
 }
-
-// ==========================================
-// 🚀 Start
-// ==========================================
-// Não precisa mais de "inicializar()" — o fluxo começa no validarAcesso()
