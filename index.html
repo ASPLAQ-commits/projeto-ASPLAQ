@@ -6,6 +6,7 @@
     <title>Premiação Quem Faz a Diferença 2026 - COREN-PE</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -45,14 +46,48 @@
 </div>
 
 <!-- ============================================================
-     TELA 2: URNA  (logos apenas ao lado do nome — sem topo)
+     TELA 1.5: VERIFICAÇÃO POR CÓDIGO
+     ============================================================ -->
+<div id="tela-codigo" class="container" style="display: none;">
+
+    <div class="logos-evento logos-login">
+        <img src="coren_logo.png" alt="Logo COREN-PE" class="logo-evento-item">
+        <span class="logos-divisor"></span>
+        <img src="meeting_logo_preto.png"
+             data-light="meeting_logo_preto.png"
+             data-dark="meeting_logo.png"
+             alt="Logo Meeting COREN-PE"
+             class="logo-evento-item logo-meeting">
+    </div>
+
+    <h2>Verificação por E-mail</h2>
+    <p>Enviamos um código de 6 dígitos para:<br><strong id="email-verificacao"></strong></p>
+
+    <div class="codigo-input-wrap">
+        <input type="text"
+               id="input-codigo"
+               maxlength="6"
+               inputmode="numeric"
+               pattern="[0-9]*"
+               placeholder="000000"
+               autocomplete="one-time-code">
+    </div>
+
+    <button onclick="confirmarCodigo()" id="btn-confirmar-codigo">Verificar e Acessar</button>
+    <button type="button" onclick="reenviarCodigo()" id="btn-reenviar" class="btn-secundario" disabled>
+        Reenviar código <span id="timer-reenvio"></span>
+    </button>
+
+    <div id="msg-erro-codigo" class="mensagem-erro" style="display: none;"></div>
+</div>
+
+<!-- ============================================================
+     TELA 2: URNA
      ============================================================ -->
 <div id="tela-urna" class="container" style="display: none;">
 
-    <!-- Cabeçalho do colaborador — com logos à direita do nome -->
     <div class="cabecalho-usuario">
         <img id="foto-usuario" class="foto-usuario-header" src="" alt="">
-
         <div class="info-usuario-header">
             <h2 id="saudacao-usuario">Olá, Colaborador!</h2>
             <p class="badge-setor">
@@ -61,11 +96,8 @@
             </p>
         </div>
 
-        <!-- Logos à direita -->
         <div class="logos-cabecalho">
-            <img src="coren_logo.png"
-                 alt="COREN-PE"
-                 class="logo-cabecalho-item">
+            <img src="coren_logo.png" alt="COREN-PE" class="logo-cabecalho-item">
             <span class="logos-cabecalho-divisor"></span>
             <img src="meeting_logo_preto.png"
                  data-light="meeting_logo_preto.png"
@@ -120,7 +152,7 @@
 
     <div id="mensagem-sucesso" style="display: none;">
         <h3>Voto confirmado com sucesso!</h3>
-        <p>Obrigado por participar da Votação Destaques 2026.</p>
+        <p>Obrigado por participar da Premiação Quem Faz a Diferença 2026.</p>
         <button type="button" onclick="window.location.reload()">Encerrar</button>
     </div>
 
