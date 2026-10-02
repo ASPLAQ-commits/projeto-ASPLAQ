@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// 📧 CONFIGURAÇÃO EMAILJS (credenciais preenchidas)
+// 📧 CONFIGURAÇÃO EMAILJS
 // ==========================================
 const EMAILJS_PUBLIC_KEY  = 'TRc_bmFL_d8s4e7vg';
 const EMAILJS_SERVICE_ID  = 'service_v7hu19x';
@@ -352,21 +352,30 @@ function iniciarTimerReenvio(segundos) {
 }
 
 // ==========================================
-// 6. LIBERAR VOTAÇÃO
+// 6. LIBERAR VOTAÇÃO — busca dados do votante via RPC
 // ==========================================
 async function liberarVotacao() {
     try {
         const email = dadosColaboradorPendente.email;
 
+        // 🔒 Busca os dados do votante via RPC (foto, setor, cargo, nome)
+        const { data: dados, error: errDados } = await clienteSupabase.rpc('dados_colaborador', {
+            p_email: email
+        });
+
+        if (errDados) throw errDados;
+
+        if (!dados || dados.length === 0) {
+            throw new Error('Dados do colaborador não encontrados.');
+        }
+
+        const info = dados[0];
+
+        // 🔒 Carrega candidatos (exclui o próprio votante)
         await carregarCandidatos(email);
 
         window.emailUsuarioValido = email;
-
-        // ⚠️ Nome do votante: como não temos acesso ao nome aqui sem expor email,
-        // usamos apenas o prefixo do e-mail
-        if (!window.nomeUsuarioValido) {
-            window.nomeUsuarioValido = formatarNome(email.split('@')[0].replace(/[._-]/g, ' '));
-        }
+        window.nomeUsuarioValido = formatarNome(info.nome);
 
         Object.keys(escolhas).forEach(k => delete escolhas[k]);
         etapaAtual = 0;
@@ -374,11 +383,19 @@ async function liberarVotacao() {
 
         document.getElementById('tela-codigo').style.display = 'none';
         document.getElementById('tela-urna').style.display = 'block';
-        document.getElementById('saudacao-usuario').innerText = `Olá, ${nomeCurto(window.nomeUsuarioValido)}!`;
+
+        // ✅ Preenche os dados do votante no cabeçalho
+        document.getElementById('saudacao-usuario').innerText = `Olá, ${nomeCurto(info.nome)}!`;
+        document.getElementById('badge-setor-usuario').innerText = info.setor || '';
+        document.getElementById('badge-cargo-usuario').innerText = info.cargo || '';
 
         const fotoUsuario = document.getElementById('foto-usuario');
-        fotoUsuario.src = avatarIniciais(window.nomeUsuarioValido);
-        fotoUsuario.alt = window.nomeUsuarioValido;
+        fotoUsuario.src = info.foto || avatarIniciais(info.nome);
+        fotoUsuario.alt = formatarNome(info.nome);
+        fotoUsuario.onerror = () => {
+            fotoUsuario.onerror = null;
+            fotoUsuario.src = avatarIniciais(info.nome);
+        };
 
         atualizarNavegacao();
 
@@ -554,7 +571,7 @@ document.getElementById('btn-voltar-edicao').addEventListener('click', () => {
 });
 
 // ==========================================
-// 12. ENVIO FINAL
+// 12. ENVIO FINAL — via RPC registrar_voto
 // ==========================================
 document.getElementById('btn-confirmar-final').addEventListener('click', async function () {
     const btnVoltar = document.getElementById('btn-voltar-edicao');
