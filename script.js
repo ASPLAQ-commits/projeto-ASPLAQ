@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
 const EMAILJS_PUBLIC_KEY        = 'TRc_bmFL_d8s4e7vg';
 const EMAILJS_SERVICE_ID        = 'service_v7hu19x';
 const EMAILJS_TEMPLATE_ID       = 'template_jnjq8ma';
-const EMAILJS_TEMPLATE_SOLICITA = 'template_ey79bns';  // ⚠️ SUBSTITUIR PELO TEMPLATE DE SOLICITAÇÃO
+const EMAILJS_TEMPLATE_SOLICITA = 'template_ey79bns';
 
 (function initEmailJS() {
     if (typeof emailjs !== 'undefined') {
@@ -60,7 +60,7 @@ let dadosColaboradorPendente = null;
 let intervaloReenvio = null;
 
 const SESSION_KEY = 'votacao_sessao';
-const SESSION_DURATION_MS = 4 * 60 * 60 * 1000;
+const SESSION_DURATION_MS = 4 * 60 * 60 * 1000; // 4 horas
 
 const ordemCargos = ["Estagiário", "Terceirizado", "Comissionado", "Conselheiro", "Funcionário"];
 let candidatos = [];
@@ -257,7 +257,7 @@ async function carregarCandidatos(emailVotante) {
 }
 
 // ==========================================
-// 4. LOGIN — com bypass para e-mails de teste
+// 4. LOGIN — com modal para e-mail não encontrado
 // ==========================================
 async function validarAcesso() {
     const emailLimpo = document.getElementById('input-email').value.trim().toLowerCase();
@@ -289,7 +289,8 @@ async function validarAcesso() {
 
             if (errDados) throw errDados;
             if (!dados || dados.length === 0) {
-                mostrarErro("E-mail não localizado na base do COREN-PE.");
+                // 🔔 Modal: não encontrado
+                await tratarEmailNaoEncontrado(emailLimpo);
                 return;
             }
 
@@ -321,7 +322,15 @@ async function validarAcesso() {
             p_email: emailLimpo
         });
 
-        if (error) throw error;
+        if (error) {
+            // Se for e-mail não encontrado, mostra modal customizado
+            const msg = (error.message || '').toLowerCase();
+            if (msg.includes('não encontrado')) {
+                await tratarEmailNaoEncontrado(emailLimpo);
+                return;
+            }
+            throw error;
+        }
 
         dadosColaboradorPendente = { email: emailLimpo };
 
@@ -355,8 +364,9 @@ async function validarAcesso() {
     } catch (err) {
         console.error(err);
         const msg = (err.message || '').toLowerCase();
+
         if (msg.includes('não encontrado')) {
-            mostrarErro("E-mail não localizado na base do COREN-PE. Verifique ou solicite inclusão.");
+            await tratarEmailNaoEncontrado(emailLimpo);
         } else if (msg.includes('já registrou')) {
             mostrarErro("Este e-mail já registrou um voto.");
         } else if (msg.includes('@coren-pe.gov.br')) {
@@ -370,17 +380,50 @@ async function validarAcesso() {
     }
 }
 
+// ==========================================
+// 🎯 MODAL: E-mail não encontrado
+// ==========================================
+async function tratarEmailNaoEncontrado(emailLimpo) {
+    const irParaSolicitacao = await abrirModal({
+        tipo: 'aviso',
+        titulo: 'E-mail não encontrado',
+        mensagem:
+            'O e-mail <strong>' + emailLimpo + '</strong> não está cadastrado na base de votação.<br><br>' +
+            'Deseja solicitar a inclusão do seu cadastro para verificação?<br><br>' +
+            '<small style="color:#888; font-size:13px; line-height:1.4;">' +
+            'Você precisará informar:<br>' +
+            '• <strong>Nome completo</strong><br>' +
+            '• <strong>Setor</strong><br>' +
+            '• <strong>E-mail institucional</strong>' +
+            '</small>',
+        botoes: [
+            { texto: 'Tentar outro e-mail', valor: false, estilo: 'cancelar' },
+            { texto: 'Solicitar inclusão', valor: true, estilo: 'primary' }
+        ]
+    });
+
+    if (irParaSolicitacao) {
+        mostrarTelaSolicitacao();
+        document.getElementById('solic-email').value = emailLimpo;
+        document.getElementById('solic-nome').focus();
+    } else {
+        // Foco de volta no campo de e-mail
+        const inputEmail = document.getElementById('input-email');
+        inputEmail.focus();
+        inputEmail.select();
+    }
+}
+
 function mostrarErro(mensagem) {
     const msgErro = document.getElementById('msg-erro');
     msgErro.innerText = mensagem;
     msgErro.style.display = 'block';
 }
 
+// Auto-completar e-mail (compatível com input type="email")
 document.getElementById('input-email').addEventListener('input', function () {
-    if (this.value.endsWith('@')) {
-        const p = this.value.length;
+    if (this.value.endsWith('@') && !this.value.toLowerCase().includes('coren-pe.gov.br')) {
         this.value += 'coren-pe.gov.br';
-        this.setSelectionRange(p, this.value.length);
     }
 });
 
@@ -764,9 +807,7 @@ document.getElementById('btn-voltar-login').addEventListener('click', voltarPara
 
 document.getElementById('solic-email').addEventListener('input', function () {
     if (this.value.endsWith('@') && !this.value.toLowerCase().includes('coren-pe.gov.br')) {
-        const p = this.value.length;
         this.value += 'coren-pe.gov.br';
-        this.setSelectionRange(p, this.value.length);
     }
 });
 
@@ -815,14 +856,19 @@ document.getElementById('form-solicitacao').addEventListener('submit', async fun
 
         // 2. Envia e-mail de notificação
         try {
-            await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_SOLICITA, {
+            const resp = await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_SOLICITA, {
                 nome_completo: nome,
                 setor: setor,
-                email_institucional: email
+                email_institucional: email,
+                to_email: 'planejamento.qualidade@coren-pe.gov.br'
             });
-            console.log('📧 Solicitação enviada por e-mail');
+            console.log('📧 Solicitação enviada com sucesso:', resp);
         } catch (emailErr) {
-            console.warn('Erro ao enviar e-mail de notificação:', emailErr);
+            console.error('❌ Erro EmailJS detalhado:', emailErr);
+            console.error('   text:', emailErr.text);
+            console.error('   status:', emailErr.status);
+            console.error('   message:', emailErr.message);
+            // Não bloqueia — a solicitação já foi salva
         }
 
         // 3. Mostra mensagem de sucesso
@@ -854,7 +900,7 @@ document.getElementById('form-solicitacao').addEventListener('submit', async fun
 });
 
 // ==========================================
-// 🚀 Start
+// 🚀 Start — tenta restaurar sessão ao carregar
 // ==========================================
 document.addEventListener('DOMContentLoaded', async () => {
     await restaurarSessao();
