@@ -5,6 +5,9 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
 
+/* ============================================================
+   TEMA CLARO (padrão)
+   ============================================================ */
 :root {
     --primary-color: #8B1E5C;
     --primary-hover: #A62270;
@@ -47,6 +50,9 @@
     --transition-fast: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ============================================================
+   TEMA ESCURO
+   ============================================================ */
 body.dark-mode {
     --primary-color: #E89BC0;
     --primary-hover: #F5B0D0;
@@ -102,10 +108,16 @@ body.dark-mode #mensagem-sucesso {
     border-color: rgba(52, 211, 153, 0.35);
 }
 
+/* ============================================================
+   RESET
+   ============================================================ */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 ::selection { background: var(--gold-color); color: #1F1309; }
 
+/* ============================================================
+   BODY
+   ============================================================ */
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--bg-gradient);
@@ -135,6 +147,9 @@ body::before {
 
 body.dark-mode::before { opacity: 0.35; mix-blend-mode: screen; }
 
+/* ============================================================
+   CONTAINER
+   ============================================================ */
 .container {
     background: var(--card-bg);
     width: 100%;
@@ -194,6 +209,9 @@ body.dark-mode::before { opacity: 0.35; mix-blend-mode: screen; }
     100% { transform: translateX(-50%) scale(1) rotate(-6deg); opacity: 1; }
 }
 
+/* ============================================================
+   🌙 BOTÃO DE TEMA
+   ============================================================ */
 .theme-toggle {
     position: fixed;
     top: 24px; right: 24px;
@@ -233,6 +251,9 @@ body.dark-mode::before { opacity: 0.35; mix-blend-mode: screen; }
 body.dark-mode .theme-toggle .icon-sun  { opacity: 1; transform: rotate(0deg) scale(1); }
 body.dark-mode .theme-toggle .icon-moon { opacity: 0; transform: rotate(90deg) scale(0.5); }
 
+/* ============================================================
+   TÍTULOS
+   ============================================================ */
 h1 {
     font-family: 'Cinzel', serif;
     font-size: 32px; font-weight: 800;
@@ -272,6 +293,9 @@ h3 {
     text-transform: uppercase;
 }
 
+/* ============================================================
+   TELAS
+   ============================================================ */
 #tela-login {
     max-width: 460px;
     margin: 0 auto;
@@ -325,6 +349,9 @@ h3 {
     line-height: 1.5;
 }
 
+/* ============================================================
+   FORMULÁRIOS
+   ============================================================ */
 label {
     font-size: 13px; font-weight: 600;
     color: var(--text-muted);
@@ -401,6 +428,9 @@ input::placeholder {
     color: var(--primary-hover);
 }
 
+/* ============================================================
+   BOTÕES
+   ============================================================ */
 button {
     width: 100%;
     padding: 17px 24px;
@@ -456,6 +486,9 @@ button:disabled {
     opacity: 0.7;
 }
 
+/* ============================================================
+   MENSAGEM DE ERRO
+   ============================================================ */
 .mensagem-erro {
     margin-top: 20px;
     padding: 14px 18px;
@@ -469,6 +502,9 @@ button:disabled {
     animation: slideIn 0.3s ease;
 }
 
+/* ============================================================
+   LOGOS DO EVENTO (login e resumo)
+   ============================================================ */
 .logos-evento {
     display: flex;
     align-items: center;
@@ -528,6 +564,9 @@ button:disabled {
 .logos-resumo .logo-evento-item { height: 36px; max-width: 120px; }
 .logos-resumo .logos-divisor { height: 28px; }
 
+/* ============================================================
+   CABEÇALHO DO COLABORADOR
+   ============================================================ */
 .cabecalho-usuario {
     display: flex;
     align-items: center;
@@ -592,6 +631,9 @@ button:disabled {
     border: 1px solid rgba(139,30,92,0.15);
 }
 
+/* ============================================================
+   LOGOS À DIREITA DO NOME
+   ============================================================ */
 .logos-cabecalho {
     display: flex;
     align-items: center;
@@ -634,6 +676,9 @@ button:disabled {
     flex-shrink: 0;
 }
 
+/* ============================================================
+   TÍTULO DO EVENTO
+   ============================================================ */
 .titulo-evento-urna {
     text-align: center;
     margin: 8px 0 32px;
@@ -677,6 +722,9 @@ button:disabled {
     font-weight: 500;
 }
 
+/* ============================================================
+   PROGRESSO
+   ============================================================ */
 .progress-wrapper {
     margin-bottom: 36px;
     background: linear-gradient(135deg, var(--primary-light), var(--card-bg-soft));
@@ -728,6 +776,9 @@ button:disabled {
     100% { transform: translateX(100%); }
 }
 
+/* ============================================================
+   GRID DE CANDIDATOS
+   ============================================================ */
 .grid-candidatos {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -852,6 +903,7 @@ label:not(.bloqueado):hover .card-candidato img {
     z-index: 1;
 }
 
+/* Badge de seleção */
 .grid-candidatos label[data-cat]::after {
     content: '';
     position: absolute;
@@ -902,6 +954,289 @@ label:not(.bloqueado):hover .card-candidato img {
     100% { transform: translateX(-50%) scale(1) rotate(0deg); opacity: 1; }
 }
 
+/* ============================================================
+   🔍 BARRA DE PESQUISA
+   ============================================================ */
+.barra-pesquisa-wrapper {
+    position: relative;
+    margin-bottom: 28px;
+}
+
+#barra-pesquisa {
+    width: 100%;
+    padding: 15px 52px 15px 52px;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-pill);
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--text-dark);
+    background-color: var(--input-bg);
+    transition: var(--transition-fast);
+    font-weight: 500;
+}
+
+#barra-pesquisa:focus {
+    outline: none;
+    border-color: var(--gold-color);
+    background-color: var(--input-bg-focus);
+    box-shadow: 0 0 0 4px rgba(201,153,42,0.15), var(--shadow-sm);
+}
+
+#barra-pesquisa::placeholder {
+    color: var(--text-muted);
+    opacity: 0.7;
+    font-weight: 400;
+}
+
+.search-icon {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    color: var(--gold-color);
+    pointer-events: none;
+    stroke: currentColor;
+}
+
+.btn-limpar {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-fast);
+    box-shadow: none;
+}
+
+.btn-limpar::before { display: none; }
+
+.btn-limpar:hover {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.btn-limpar svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    fill: none;
+}
+
+/* ============================================================
+   👁️ BOTÃO DE VER PERFIL NO CARD
+   ============================================================ */
+.btn-ver-perfil {
+    position: absolute;
+    top: 32px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--card-bg);
+    border: 1.5px solid var(--border-color);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+    z-index: 6;
+    transition: var(--transition-fast);
+    box-shadow: 0 2px 6px rgba(31,19,9,0.08);
+    opacity: 0.85;
+}
+
+.btn-ver-perfil::before { display: none; }
+
+.btn-ver-perfil:hover {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    color: white;
+    border-color: var(--primary-color);
+    transform: scale(1.12);
+    opacity: 1;
+    box-shadow: 0 4px 12px -2px rgba(139,30,92,0.4);
+}
+
+.btn-ver-perfil svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    fill: none;
+}
+
+body.dark-mode .btn-ver-perfil {
+    background: var(--card-bg-soft);
+    border-color: var(--border-color);
+}
+
+/* ============================================================
+   🎬 MODAL DE PERFIL DO CANDIDATO
+   ============================================================ */
+.modal-perfil-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 12, 6, 0.72);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9998;
+    padding: 20px;
+    animation: modalFadeIn 0.3s ease;
+}
+
+.modal-perfil-box {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    padding: 50px 40px 36px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow:
+        var(--shadow-md),
+        0 30px 80px -20px rgba(20, 12, 6, 0.5),
+        0 0 0 1px var(--border-color);
+    text-align: center;
+    position: relative;
+    animation: modalPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-perfil-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--card-bg-soft);
+    border: 1.5px solid var(--border-color);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+    transition: var(--transition-fast);
+    box-shadow: none;
+    z-index: 2;
+}
+
+.modal-perfil-close::before { display: none; }
+
+.modal-perfil-close:hover {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    transform: rotate(90deg) scale(1.05);
+}
+
+.modal-perfil-close svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    fill: none;
+}
+
+.modal-perfil-foto-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.modal-perfil-foto {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--card-bg);
+    box-shadow:
+        0 8px 24px -6px rgba(31,19,9,0.2),
+        0 0 0 3px var(--gold-color);
+    background: var(--primary-light);
+}
+
+.modal-perfil-nome {
+    font-family: 'Cinzel', serif;
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin: 0 0 8px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    line-height: 1.2;
+}
+
+.modal-perfil-nome::after { display: none; }
+
+.modal-perfil-setor {
+    font-family: 'Cinzel', serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--gold-color);
+    margin: 0 0 6px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.modal-perfil-cargo {
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin: 0 0 32px;
+    letter-spacing: 0.01em;
+}
+
+.modal-perfil-botoes {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.modal-perfil-botoes button {
+    margin-top: 0;
+    flex: 1;
+    padding: 14px 20px;
+    font-size: 15px;
+    letter-spacing: 0.02em;
+}
+
+.btn-escolher-perfil {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-escolher-perfil::before { display: none; }
+
+.btn-escolher-perfil svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    fill: none;
+}
+
+/* ============================================================
+   CABEÇALHO DA CATEGORIA
+   ============================================================ */
 .cargo-header {
     text-align: center;
     margin-bottom: 36px;
@@ -932,6 +1267,9 @@ label:not(.bloqueado):hover .card-candidato img {
     letter-spacing: 0.01em;
 }
 
+/* ============================================================
+   NAVEGAÇÃO
+   ============================================================ */
 .etapa-votacao {
     animation: slideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -979,6 +1317,9 @@ label:not(.bloqueado):hover .card-candidato img {
     transform: translateY(-2px);
 }
 
+/* ============================================================
+   RESUMO
+   ============================================================ */
 .resumo-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1039,6 +1380,9 @@ label:not(.bloqueado):hover .card-candidato img {
     letter-spacing: -0.01em;
 }
 
+/* ============================================================
+   MENSAGEM DE SUCESSO
+   ============================================================ */
 #mensagem-sucesso {
     text-align: center;
     padding: 28px 24px;
@@ -1067,6 +1411,9 @@ label:not(.bloqueado):hover .card-candidato img {
     opacity: 0.9;
 }
 
+/* ============================================================
+   MODAL CUSTOMIZADO (aviso/confirmação)
+   ============================================================ */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -1296,6 +1643,9 @@ label:not(.bloqueado):hover .card-candidato img {
     font-size: 13px;
 }
 
+/* ============================================================
+   RESPONSIVO
+   ============================================================ */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         animation-duration: 0.01ms !important;
@@ -1367,4 +1717,50 @@ label:not(.bloqueado):hover .card-candidato img {
     .titulo-evento-urna p { font-size: 13px; }
     #input-codigo { font-size: 26px; letter-spacing: 8px; padding: 16px; }
     #input-codigo::placeholder { letter-spacing: 8px; }
+
+    /* Busca mobile */
+    #barra-pesquisa { padding: 13px 48px 13px 46px; font-size: 14px; }
+    .search-icon { left: 16px; width: 16px; height: 16px; }
+    .btn-limpar { width: 30px; height: 30px; right: 8px; }
+    .btn-limpar svg { width: 14px; height: 14px; }
+
+    /* Modal perfil mobile */
+    .modal-perfil-box {
+        padding: 44px 24px 28px;
+    }
+    .modal-perfil-foto {
+        width: 130px;
+        height: 130px;
+    }
+    .modal-perfil-nome {
+        font-size: 22px;
+    }
+    .modal-perfil-setor {
+        font-size: 13px;
+    }
+    .modal-perfil-cargo {
+        font-size: 14px;
+        margin-bottom: 24px;
+    }
+    .modal-perfil-botoes {
+        flex-direction: column-reverse;
+    }
+    .modal-perfil-close {
+        top: 12px;
+        right: 12px;
+        width: 34px;
+        height: 34px;
+    }
+
+    /* Botão ver perfil mobile */
+    .btn-ver-perfil {
+        width: 28px;
+        height: 28px;
+        top: 26px;
+        right: 10px;
+    }
+    .btn-ver-perfil svg {
+        width: 14px;
+        height: 14px;
+    }
 }

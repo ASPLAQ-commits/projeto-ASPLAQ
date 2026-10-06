@@ -157,6 +157,21 @@
         <div class="progress-bar-bg"><div class="progress-bar-fill" id="progresso-barra"></div></div>
     </div>
 
+    <!-- 🔍 BARRA DE PESQUISA -->
+    <div class="barra-pesquisa-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="barra-pesquisa" placeholder="Buscar candidato pelo nome..." autocomplete="off">
+        <button type="button" id="limpar-pesquisa" class="btn-limpar" aria-label="Limpar busca" style="display: none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+        </button>
+    </div>
+
     <form id="form-voto" onsubmit="revisarVoto(event)">
         <div id="secoes-votacao"></div>
 
@@ -203,7 +218,7 @@
 </div>
 
 <!-- ============================================================
-     MODAL CUSTOMIZADO
+     MODAL CUSTOMIZADO (avisos, confirmações)
      ============================================================ -->
 <div id="modal-custom" class="modal-overlay" style="display: none;">
     <div class="modal-box">
@@ -213,6 +228,38 @@
         <h3 id="modal-titulo">Atenção</h3>
         <p id="modal-mensagem">Mensagem</p>
         <div class="modal-botoes" id="modal-botoes"></div>
+    </div>
+</div>
+
+<!-- ============================================================
+     🎬 MODAL DE PERFIL DO CANDIDATO
+     ============================================================ -->
+<div id="modal-perfil" class="modal-perfil-overlay" style="display: none;">
+    <div class="modal-perfil-box">
+        <button type="button" class="modal-perfil-close" onclick="fecharPerfilCandidato()" aria-label="Fechar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+        </button>
+
+        <div class="modal-perfil-foto-wrapper">
+            <img id="perfil-foto" class="modal-perfil-foto" src="" alt="">
+        </div>
+
+        <h2 id="perfil-nome" class="modal-perfil-nome">Nome do Candidato</h2>
+        <p id="perfil-setor" class="modal-perfil-setor">Setor</p>
+        <p id="perfil-cargo" class="modal-perfil-cargo">Cargo</p>
+
+        <div class="modal-perfil-botoes">
+            <button type="button" class="btn-secundario" onclick="fecharPerfilCandidato()">Fechar</button>
+            <button type="button" class="btn-escolher-perfil" onclick="escolherDoPerfil()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Escolher este
+            </button>
+        </div>
     </div>
 </div>
 

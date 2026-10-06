@@ -59,8 +59,11 @@ window.nomeUsuarioValido = "";
 let dadosColaboradorPendente = null;
 let intervaloReenvio = null;
 
+// Estado do perfil ativo (para o botão "Escolher este")
+let perfilAtual = null;
+
 const SESSION_KEY = 'votacao_sessao';
-const SESSION_DURATION_MS = 4 * 60 * 60 * 1000; // 4 horas
+const SESSION_DURATION_MS = 4 * 60 * 60 * 1000;
 
 const ordemCargos = ["Estagiário", "Terceirizado", "Comissionado", "Conselheiro", "Funcionário"];
 let candidatos = [];
@@ -289,7 +292,6 @@ async function validarAcesso() {
 
             if (errDados) throw errDados;
             if (!dados || dados.length === 0) {
-                // 🔔 Modal: não encontrado
                 await tratarEmailNaoEncontrado(emailLimpo);
                 return;
             }
@@ -323,7 +325,6 @@ async function validarAcesso() {
         });
 
         if (error) {
-            // Se for e-mail não encontrado, mostra modal customizado
             const msg = (error.message || '').toLowerCase();
             if (msg.includes('não encontrado')) {
                 await tratarEmailNaoEncontrado(emailLimpo);
@@ -407,7 +408,6 @@ async function tratarEmailNaoEncontrado(emailLimpo) {
         document.getElementById('solic-email').value = emailLimpo;
         document.getElementById('solic-nome').focus();
     } else {
-        // Foco de volta no campo de e-mail
         const inputEmail = document.getElementById('input-email');
         inputEmail.focus();
         inputEmail.select();
@@ -420,7 +420,6 @@ function mostrarErro(mensagem) {
     msgErro.style.display = 'block';
 }
 
-// Auto-completar e-mail (compatível com input type="email")
 document.getElementById('input-email').addEventListener('input', function () {
     if (this.value.endsWith('@') && !this.value.toLowerCase().includes('coren-pe.gov.br')) {
         this.value += 'coren-pe.gov.br';
@@ -544,7 +543,7 @@ async function liberarVotacao() {
 }
 
 // ==========================================
-// 7. RENDERIZAR CANDIDATOS
+// 7. RENDERIZAR CANDIDATOS (com botão de ver perfil)
 // ==========================================
 function renderizarCandidatos() {
     let html = '';
@@ -563,6 +562,12 @@ function renderizarCandidatos() {
                 const foto = c.foto || avatarIniciais(c.nome);
                 html += `<label data-cat="${chaveCargo}" data-nome="${esc(c.nome)}">
                     <input type="radio" name="${chaveCargo}" value="${esc(c.nome)}">
+                    <button type="button" class="btn-ver-perfil" aria-label="Ver perfil completo" title="Ver perfil completo">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
                     <div class="card-candidato">
                         <img src="${esc(foto)}" alt="${esc(c.nome)}">
                         <p>${esc(formatarNome(c.nome))}</p>
@@ -577,8 +582,19 @@ function renderizarCandidatos() {
     const container = document.getElementById('secoes-votacao');
     container.innerHTML = html;
 
+    // Tratamento de erro de imagem
     container.querySelectorAll('img').forEach(img =>
         img.addEventListener('error', () => { img.src = avatarIniciais(img.alt); }, { once: true }));
+
+    // 👁️ Eventos do botão de ver perfil
+    container.querySelectorAll('.btn-ver-perfil').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const label = btn.closest('label[data-cat]');
+            if (label) abrirPerfilCandidato(label.dataset.cat, label.dataset.nome);
+        });
+    });
 }
 
 // ==========================================
@@ -596,25 +612,19 @@ function sincronizarVisual() {
 }
 
 // ==========================================
-// 9. DELEGAÇÃO DE EVENTOS
+// 9. SELEÇÃO DE CANDIDATO (extraído para reuso)
 // ==========================================
-document.getElementById('secoes-votacao').addEventListener('click', async function(e) {
-    const label = e.target.closest('label[data-cat]');
-    if (!label) return;
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    const catKey = label.dataset.cat;
-    const nome = label.dataset.nome;
+async function selecionarCandidato(catKey, nome) {
     const anterior = escolhas[catKey];
 
+    // Clicou no mesmo → desmarcar
     if (anterior === nome) {
         delete escolhas[catKey];
         sincronizarVisual();
         return;
     }
 
+    // Já tem outro → confirmação
     if (anterior && anterior !== nome) {
         const confirmou = await modalConfirmacao(
             'Trocar de candidato?',
@@ -627,12 +637,119 @@ document.getElementById('secoes-votacao').addEventListener('click', async functi
         return;
     }
 
+    // Primeira escolha
     escolhas[catKey] = nome;
     sincronizarVisual();
+}
+
+// ==========================================
+// 10. DELEGAÇÃO DE EVENTOS
+// ==========================================
+document.getElementById('secoes-votacao').addEventListener('click', async function(e) {
+    // Ignora cliques no botão de ver perfil (já tratado no render)
+    if (e.target.closest('.btn-ver-perfil')) return;
+
+    const label = e.target.closest('label[data-cat]');
+    if (!label) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    await selecionarCandidato(label.dataset.cat, label.dataset.nome);
 });
 
 // ==========================================
-// 10. NAVEGAÇÃO
+// 🎬 11. MODAL DE PERFIL DO CANDIDATO
+// ==========================================
+function abrirPerfilCandidato(catKey, nome) {
+    const cand = candidatos.find(c =>
+        c.nome === nome && chave(c.categoria) === catKey
+    );
+    if (!cand) return;
+
+    perfilAtual = { cat: catKey, nome: nome };
+
+    const fotoEl = document.getElementById('perfil-foto');
+    fotoEl.src = cand.foto || avatarIniciais(cand.nome);
+    fotoEl.onerror = function() {
+        this.onerror = null;
+        this.src = avatarIniciais(cand.nome);
+    };
+    fotoEl.alt = formatarNome(cand.nome);
+
+    document.getElementById('perfil-nome').innerText = formatarNome(cand.nome);
+    document.getElementById('perfil-setor').innerText = cand.setor;
+    document.getElementById('perfil-cargo').innerText = cand.cargo;
+
+    document.getElementById('modal-perfil').style.display = 'flex';
+}
+
+function fecharPerfilCandidato() {
+    document.getElementById('modal-perfil').style.display = 'none';
+    perfilAtual = null;
+}
+
+async function escolherDoPerfil() {
+    if (!perfilAtual) return;
+    const { cat, nome } = perfilAtual;
+    fecharPerfilCandidato();
+    await selecionarCandidato(cat, nome);
+}
+
+// Fecha o modal de perfil com ESC
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const modalPerfil = document.getElementById('modal-perfil');
+        if (modalPerfil && modalPerfil.style.display === 'flex') {
+            fecharPerfilCandidato();
+        }
+    }
+});
+
+// ==========================================
+// 🔍 12. BARRA DE PESQUISA
+// ==========================================
+document.getElementById('barra-pesquisa').addEventListener('input', function() {
+    const termo = this.value.trim();
+    document.getElementById('limpar-pesquisa').style.display = termo ? 'flex' : 'none';
+    filtrarCandidatos(termo);
+});
+
+document.getElementById('limpar-pesquisa').addEventListener('click', function() {
+    document.getElementById('barra-pesquisa').value = '';
+    this.style.display = 'none';
+    filtrarCandidatos('');
+    document.getElementById('barra-pesquisa').focus();
+});
+
+function filtrarCandidatos(termo) {
+    const termoNorm = norm(termo);
+
+    // Filtra cada card
+    document.querySelectorAll('#secoes-votacao label[data-cat]').forEach(label => {
+        const nomeNorm = norm(label.dataset.nome || '');
+        const match = !termoNorm || nomeNorm.includes(termoNorm);
+        label.style.display = match ? '' : 'none';
+    });
+
+    // Esconde blocos (h3 + grid) que ficaram sem candidatos visíveis
+    document.querySelectorAll('#secoes-votacao .grid-candidatos').forEach(grid => {
+        const visiveis = Array.from(grid.querySelectorAll('label[data-cat]'))
+            .filter(l => l.style.display !== 'none');
+        const h3 = grid.previousElementSibling;
+
+        if (visiveis.length === 0) {
+            grid.style.display = 'none';
+            if (h3 && h3.tagName === 'H3') h3.style.display = 'none';
+        } else {
+            grid.style.display = '';
+            if (h3 && h3.tagName === 'H3') h3.style.display = '';
+        }
+    });
+}
+
+// ==========================================
+// 13. NAVEGAÇÃO
 // ==========================================
 function atualizarNavegacao() {
     const ultima = etapaAtual === etapas.length - 1;
@@ -647,6 +764,15 @@ function irParaEtapa(nova) {
     document.getElementById(`etapa-${etapaAtual}`).style.display = 'none';
     etapaAtual = nova;
     document.getElementById(`etapa-${etapaAtual}`).style.display = 'block';
+
+    // 🔄 Limpa a pesquisa ao mudar de categoria
+    const barra = document.getElementById('barra-pesquisa');
+    if (barra) {
+        barra.value = '';
+        document.getElementById('limpar-pesquisa').style.display = 'none';
+        filtrarCandidatos('');
+    }
+
     atualizarNavegacao();
     window.scrollTo(0, 0);
 }
@@ -669,7 +795,7 @@ document.getElementById('btn-proximo').addEventListener('click', async () => {
 document.getElementById('btn-anterior').addEventListener('click', () => irParaEtapa(etapaAtual - 1));
 
 // ==========================================
-// 11. REVISÃO
+// 14. REVISÃO
 // ==========================================
 function fotoDoCandidato(nome) {
     const c = candidatos.find(x => x.nome === nome);
@@ -709,7 +835,7 @@ document.getElementById('btn-voltar-edicao').addEventListener('click', () => {
 });
 
 // ==========================================
-// 12. ENVIO FINAL
+// 15. ENVIO FINAL
 // ==========================================
 document.getElementById('btn-confirmar-final').addEventListener('click', async function () {
     const btnVoltar = document.getElementById('btn-voltar-edicao');
@@ -770,7 +896,7 @@ document.getElementById('btn-confirmar-final').addEventListener('click', async f
 });
 
 // ==========================================
-// 13. RECIBO PARA QUEM JÁ VOTOU
+// 16. RECIBO PARA QUEM JÁ VOTOU
 // ==========================================
 function mostrarEcraRecibo(dadosDB) {
     document.getElementById('tela-login').style.display = 'none';
@@ -786,7 +912,7 @@ function mostrarEcraRecibo(dadosDB) {
 }
 
 // ==========================================
-// 14. SOLICITAÇÃO DE CADASTRO
+// 17. SOLICITAÇÃO DE CADASTRO
 // ==========================================
 function mostrarTelaSolicitacao() {
     document.getElementById('tela-login').style.display = 'none';
@@ -845,7 +971,6 @@ document.getElementById('form-solicitacao').addEventListener('submit', async fun
     btn.disabled = true;
 
     try {
-        // 1. Salva no banco de dados
         const { data, error } = await clienteSupabase.rpc('registrar_solicitacao', {
             p_nome_completo: nome,
             p_setor: setor,
@@ -854,7 +979,6 @@ document.getElementById('form-solicitacao').addEventListener('submit', async fun
 
         if (error) throw error;
 
-        // 2. Envia e-mail de notificação
         try {
             const resp = await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_SOLICITA, {
                 nome_completo: nome,
@@ -865,13 +989,8 @@ document.getElementById('form-solicitacao').addEventListener('submit', async fun
             console.log('📧 Solicitação enviada com sucesso:', resp);
         } catch (emailErr) {
             console.error('❌ Erro EmailJS detalhado:', emailErr);
-            console.error('   text:', emailErr.text);
-            console.error('   status:', emailErr.status);
-            console.error('   message:', emailErr.message);
-            // Não bloqueia — a solicitação já foi salva
         }
 
-        // 3. Mostra mensagem de sucesso
         await modalAviso(
             'Solicitação Enviada!',
             'A comissão organizadora recebeu a sua solicitação.<br><br>' +
