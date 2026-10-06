@@ -33,9 +33,10 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==========================================
 // 📧 CONFIGURAÇÃO EMAILJS
 // ==========================================
-const EMAILJS_PUBLIC_KEY  = 'TRc_bmFL_d8s4e7vg';
-const EMAILJS_SERVICE_ID  = 'service_v7hu19x';
-const EMAILJS_TEMPLATE_ID = 'template_jnjq8ma';
+const EMAILJS_PUBLIC_KEY        = 'TRc_bmFL_d8s4e7vg';
+const EMAILJS_SERVICE_ID        = 'service_v7hu19x';
+const EMAILJS_TEMPLATE_ID       = 'template_jnjq8ma';
+const EMAILJS_TEMPLATE_SOLICITA = 'template_ey79bns';  // ⚠️ SUBSTITUIR PELO TEMPLATE DE SOLICITAÇÃO
 
 (function initEmailJS() {
     if (typeof emailjs !== 'undefined') {
@@ -58,9 +59,8 @@ window.nomeUsuarioValido = "";
 let dadosColaboradorPendente = null;
 let intervaloReenvio = null;
 
-// 🔑 Chave do localStorage para persistir sessão
 const SESSION_KEY = 'votacao_sessao';
-const SESSION_DURATION_MS = 4 * 60 * 60 * 1000; // 4 horas
+const SESSION_DURATION_MS = 4 * 60 * 60 * 1000;
 
 const ordemCargos = ["Estagiário", "Terceirizado", "Comissionado", "Conselheiro", "Funcionário"];
 let candidatos = [];
@@ -110,7 +110,7 @@ function avatarIniciais(nome) {
 }
 
 // ==========================================
-// 🔑 SESSÃO PERSISTENTE — salvar, restaurar, limpar
+// 🔑 SESSÃO PERSISTENTE
 // ==========================================
 function salvarSessao(info) {
     try {
@@ -122,17 +122,12 @@ function salvarSessao(info) {
             foto: info.foto,
             expira: Date.now() + SESSION_DURATION_MS
         }));
-    } catch (e) {
-        console.warn('Erro ao salvar sessão:', e);
-    }
+    } catch (e) { console.warn('Erro ao salvar sessão:', e); }
 }
 
 function limparSessao() {
-    try {
-        localStorage.removeItem(SESSION_KEY);
-    } catch (e) {
-        console.warn('Erro ao limpar sessão:', e);
-    }
+    try { localStorage.removeItem(SESSION_KEY); }
+    catch (e) { console.warn('Erro ao limpar sessão:', e); }
 }
 
 async function restaurarSessao() {
@@ -141,18 +136,13 @@ async function restaurarSessao() {
         const raw = localStorage.getItem(SESSION_KEY);
         if (!raw) return false;
         sessao = JSON.parse(raw);
-    } catch (e) {
-        limparSessao();
-        return false;
-    }
+    } catch (e) { limparSessao(); return false; }
 
-    // Verifica expiração
     if (!sessao.expira || sessao.expira < Date.now()) {
         limparSessao();
         return false;
     }
 
-    // Verifica se o votante ainda não votou
     try {
         const { data: jaVotou, error } = await clienteSupabase.rpc('verificar_voto_existente', {
             p_email: sessao.email
@@ -169,7 +159,6 @@ async function restaurarSessao() {
         return false;
     }
 
-    // ✅ Sessão válida — restaura
     dadosColaboradorPendente = sessao;
     await liberarVotacao();
     return true;
@@ -294,7 +283,6 @@ async function validarAcesso() {
         if (!errTeste && ehTeste === true) {
             console.log('🧪 E-mail de teste detectado — pulando OTP');
 
-            // Busca dados do colaborador
             const { data: dados, error: errDados } = await clienteSupabase.rpc('dados_colaborador', {
                 p_email: emailLimpo
             });
@@ -307,7 +295,6 @@ async function validarAcesso() {
 
             const info = dados[0];
 
-            // Verifica se já votou
             const { data: jaVotou } = await clienteSupabase.rpc('verificar_voto_existente', {
                 p_email: emailLimpo
             });
@@ -317,7 +304,6 @@ async function validarAcesso() {
                 return;
             }
 
-            // Libera direto
             dadosColaboradorPendente = {
                 email: emailLimpo,
                 nome: info.nome,
@@ -339,7 +325,6 @@ async function validarAcesso() {
 
         dadosColaboradorPendente = { email: emailLimpo };
 
-        // Envia por e-mail
         try {
             await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
                 to_email: emailLimpo,
@@ -358,7 +343,6 @@ async function validarAcesso() {
             return;
         }
 
-        // Tela de código
         document.getElementById('tela-login').style.display = 'none';
         document.getElementById('tela-codigo').style.display = 'block';
         document.getElementById('email-verificacao').innerText = emailLimpo;
@@ -372,7 +356,7 @@ async function validarAcesso() {
         console.error(err);
         const msg = (err.message || '').toLowerCase();
         if (msg.includes('não encontrado')) {
-            mostrarErro("E-mail não localizado na base do COREN-PE.");
+            mostrarErro("E-mail não localizado na base do COREN-PE. Verifique ou solicite inclusão.");
         } else if (msg.includes('já registrou')) {
             mostrarErro("Este e-mail já registrou um voto.");
         } else if (msg.includes('@coren-pe.gov.br')) {
@@ -469,7 +453,6 @@ async function liberarVotacao() {
     try {
         const email = dadosColaboradorPendente.email;
 
-        // Se ainda não temos dados completos, busca
         if (!dadosColaboradorPendente.nome) {
             const { data: dados, error } = await clienteSupabase.rpc('dados_colaborador', {
                 p_email: email
@@ -486,7 +469,6 @@ async function liberarVotacao() {
         window.emailUsuarioValido = email;
         window.nomeUsuarioValido = formatarNome(info.nome);
 
-        // 🔑 Salva sessão persistente
         salvarSessao(info);
 
         Object.keys(escolhas).forEach(k => delete escolhas[k]);
@@ -495,6 +477,7 @@ async function liberarVotacao() {
 
         document.getElementById('tela-login').style.display = 'none';
         document.getElementById('tela-codigo').style.display = 'none';
+        document.getElementById('tela-solicitacao').style.display = 'none';
         document.getElementById('tela-urna').style.display = 'block';
 
         document.getElementById('saudacao-usuario').innerText = `Olá, ${nomeCurto(info.nome)}!`;
@@ -708,9 +691,7 @@ document.getElementById('btn-confirmar-final').addEventListener('click', async f
         if (error) throw error;
 
         if (data === true) {
-            // 🔑 Limpa sessão persistente após votar
             limparSessao();
-
             this.style.display = 'none';
             document.getElementById('header-resumo').innerHTML =
                 `<h2>Comprovante de Votação</h2><p>Votos enviados por <strong>${esc(window.nomeUsuarioValido)}</strong>.</p>`;
@@ -762,7 +743,118 @@ function mostrarEcraRecibo(dadosDB) {
 }
 
 // ==========================================
-// 🚀 Start — tenta restaurar sessão ao carregar
+// 14. SOLICITAÇÃO DE CADASTRO
+// ==========================================
+function mostrarTelaSolicitacao() {
+    document.getElementById('tela-login').style.display = 'none';
+    document.getElementById('tela-codigo').style.display = 'none';
+    document.getElementById('tela-solicitacao').style.display = 'block';
+    document.getElementById('form-solicitacao').reset();
+    document.getElementById('msg-solicitacao').style.display = 'none';
+    document.getElementById('solic-nome').focus();
+}
+
+function voltarParaLogin() {
+    document.getElementById('tela-solicitacao').style.display = 'none';
+    document.getElementById('tela-login').style.display = 'block';
+    document.getElementById('msg-erro').style.display = 'none';
+}
+
+document.getElementById('btn-voltar-login').addEventListener('click', voltarParaLogin);
+
+document.getElementById('solic-email').addEventListener('input', function () {
+    if (this.value.endsWith('@') && !this.value.toLowerCase().includes('coren-pe.gov.br')) {
+        const p = this.value.length;
+        this.value += 'coren-pe.gov.br';
+        this.setSelectionRange(p, this.value.length);
+    }
+});
+
+document.getElementById('form-solicitacao').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const nome = document.getElementById('solic-nome').value.trim();
+    const setor = document.getElementById('solic-setor').value.trim();
+    const email = document.getElementById('solic-email').value.trim().toLowerCase();
+    const msg = document.getElementById('msg-solicitacao');
+    const btn = document.getElementById('btn-enviar-solicitacao');
+
+    msg.style.display = 'none';
+
+    if (!nome) {
+        msg.innerText = "Por favor, preencha o seu nome completo.";
+        msg.style.display = 'block';
+        return;
+    }
+
+    if (!setor) {
+        msg.innerText = "Por favor, informe o seu setor.";
+        msg.style.display = 'block';
+        return;
+    }
+
+    if (!email.endsWith('@coren-pe.gov.br')) {
+        msg.innerText = "⚠️ Use apenas o e-mail institucional do COREN-PE (terminado em @coren-pe.gov.br).";
+        msg.style.display = 'block';
+        return;
+    }
+
+    const htmlOriginal = btn.innerHTML;
+    btn.innerHTML = "Enviando...";
+    btn.disabled = true;
+
+    try {
+        // 1. Salva no banco de dados
+        const { data, error } = await clienteSupabase.rpc('registrar_solicitacao', {
+            p_nome_completo: nome,
+            p_setor: setor,
+            p_email_institucional: email
+        });
+
+        if (error) throw error;
+
+        // 2. Envia e-mail de notificação
+        try {
+            await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_SOLICITA, {
+                nome_completo: nome,
+                setor: setor,
+                email_institucional: email
+            });
+            console.log('📧 Solicitação enviada por e-mail');
+        } catch (emailErr) {
+            console.warn('Erro ao enviar e-mail de notificação:', emailErr);
+        }
+
+        // 3. Mostra mensagem de sucesso
+        await modalAviso(
+            'Solicitação Enviada!',
+            'A comissão organizadora recebeu a sua solicitação.<br><br>' +
+            'Você receberá uma resposta em breve por e-mail. ' +
+            'Assim que o seu cadastro for corrigido, tente fazer login novamente.'
+        );
+
+        voltarParaLogin();
+
+    } catch (err) {
+        console.error(err);
+        const erroTxt = (err.message || '').toLowerCase();
+
+        if (erroTxt.includes('já existe')) {
+            msg.innerText = "Já existe uma solicitação pendente para este e-mail. Aguarde o retorno da comissão.";
+        } else if (erroTxt.includes('@coren-pe.gov.br')) {
+            msg.innerText = "⚠️ Use apenas o e-mail institucional do COREN-PE.";
+        } else {
+            msg.innerText = "Erro ao enviar solicitação. Tente novamente em instantes.";
+        }
+        msg.style.display = 'block';
+    } finally {
+        btn.innerHTML = htmlOriginal;
+        btn.disabled = false;
+    }
+});
+
+// ==========================================
+// 🚀 Start
 // ==========================================
 document.addEventListener('DOMContentLoaded', async () => {
     await restaurarSessao();

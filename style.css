@@ -5,9 +5,6 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
 
-/* ============================================================
-   TEMA CLARO (padrão)
-   ============================================================ */
 :root {
     --primary-color: #8B1E5C;
     --primary-hover: #A62270;
@@ -50,9 +47,6 @@
     --transition-fast: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ============================================================
-   TEMA ESCURO
-   ============================================================ */
 body.dark-mode {
     --primary-color: #E89BC0;
     --primary-hover: #F5B0D0;
@@ -108,16 +102,10 @@ body.dark-mode #mensagem-sucesso {
     border-color: rgba(52, 211, 153, 0.35);
 }
 
-/* ============================================================
-   RESET
-   ============================================================ */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 ::selection { background: var(--gold-color); color: #1F1309; }
 
-/* ============================================================
-   BODY
-   ============================================================ */
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--bg-gradient);
@@ -147,9 +135,6 @@ body::before {
 
 body.dark-mode::before { opacity: 0.35; mix-blend-mode: screen; }
 
-/* ============================================================
-   CONTAINER
-   ============================================================ */
 .container {
     background: var(--card-bg);
     width: 100%;
@@ -209,9 +194,6 @@ body.dark-mode::before { opacity: 0.35; mix-blend-mode: screen; }
     100% { transform: translateX(-50%) scale(1) rotate(-6deg); opacity: 1; }
 }
 
-/* ============================================================
-   🌙 BOTÃO DE TEMA
-   ============================================================ */
 .theme-toggle {
     position: fixed;
     top: 24px; right: 24px;
@@ -251,9 +233,6 @@ body.dark-mode::before { opacity: 0.35; mix-blend-mode: screen; }
 body.dark-mode .theme-toggle .icon-sun  { opacity: 1; transform: rotate(0deg) scale(1); }
 body.dark-mode .theme-toggle .icon-moon { opacity: 0; transform: rotate(90deg) scale(0.5); }
 
-/* ============================================================
-   TÍTULOS
-   ============================================================ */
 h1 {
     font-family: 'Cinzel', serif;
     font-size: 32px; font-weight: 800;
@@ -293,9 +272,6 @@ h3 {
     text-transform: uppercase;
 }
 
-/* ============================================================
-   TELAS
-   ============================================================ */
 #tela-login {
     max-width: 460px;
     margin: 0 auto;
@@ -321,10 +297,34 @@ h3 {
 
 #tela-urna { display: none; }
 #tela-resumo { display: none; }
+#tela-codigo { display: none; }
+#tela-solicitacao { display: none; }
 
-/* ============================================================
-   FORMULÁRIOS
-   ============================================================ */
+/* Tela de solicitação */
+#tela-solicitacao {
+    max-width: 520px;
+    margin: 0 auto;
+}
+
+#tela-solicitacao h2 {
+    text-align: center;
+    margin-top: 0;
+    padding-bottom: 12px;
+}
+
+#tela-solicitacao h2::after {
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#tela-solicitacao > p {
+    text-align: center;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
 label {
     font-size: 13px; font-weight: 600;
     color: var(--text-muted);
@@ -365,9 +365,42 @@ input::placeholder {
     font-weight: 400;
 }
 
-/* ============================================================
-   BOTÕES
-   ============================================================ */
+/* Aviso sobre e-mail institucional */
+.aviso-email {
+    margin-top: 10px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, rgba(201,153,42,0.10), rgba(201,153,42,0.04));
+    border-left: 3px solid var(--gold-color);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    text-align: left;
+}
+
+.aviso-email strong {
+    color: var(--text-dark);
+}
+
+/* Link para solicitação */
+.link-solicitacao {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.link-solicitacao a {
+    color: var(--primary-color);
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.link-solicitacao a:hover {
+    color: var(--primary-hover);
+}
+
 button {
     width: 100%;
     padding: 17px 24px;
@@ -423,9 +456,6 @@ button:disabled {
     opacity: 0.7;
 }
 
-/* ============================================================
-   MENSAGEM DE ERRO
-   ============================================================ */
 .mensagem-erro {
     margin-top: 20px;
     padding: 14px 18px;
@@ -439,9 +469,6 @@ button:disabled {
     animation: slideIn 0.3s ease;
 }
 
-/* ============================================================
-   LOGOS DO EVENTO (login e resumo)
-   ============================================================ */
 .logos-evento {
     display: flex;
     align-items: center;
@@ -501,10 +528,6 @@ button:disabled {
 .logos-resumo .logo-evento-item { height: 36px; max-width: 120px; }
 .logos-resumo .logos-divisor { height: 28px; }
 
-/* ============================================================
-   CABEÇALHO DO COLABORADOR — layout flex
-   [foto] [nome + badges] .......... [COREN | Meeting]
-   ============================================================ */
 .cabecalho-usuario {
     display: flex;
     align-items: center;
@@ -515,7 +538,6 @@ button:disabled {
     flex-wrap: nowrap;
 }
 
-/* Foto */
 .foto-usuario-header {
     width: 62px;
     height: 62px;
@@ -529,7 +551,6 @@ button:disabled {
     background: var(--primary-light);
 }
 
-/* Bloco de info (nome + badges) cresce, mas trunca se faltar espaço */
 .info-usuario-header {
     display: flex;
     flex-direction: column;
@@ -571,20 +592,16 @@ button:disabled {
     border: 1px solid rgba(139,30,92,0.15);
 }
 
-/* ============================================================
-   LOGOS À DIREITA DO NOME
-   ============================================================ */
 .logos-cabecalho {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-left: auto;        /* empurra para a direita */
-    flex-shrink: 0;           /* nunca encolhe */
+    margin-left: auto;
+    flex-shrink: 0;
     padding-left: 16px;
     position: relative;
 }
 
-/* Divisor vertical sutil entre nome e logos */
 .logos-cabecalho::before {
     content: '';
     position: absolute;
@@ -600,7 +617,6 @@ button:disabled {
         transparent);
 }
 
-/* Cada logo — altura FIXA */
 .logo-cabecalho-item {
     height: 54px !important;
     width: auto !important;
@@ -610,7 +626,6 @@ button:disabled {
     display: block;
 }
 
-/* Divisor entre as duas logos */
 .logos-cabecalho-divisor {
     width: 1px;
     height: 20px;
@@ -619,9 +634,6 @@ button:disabled {
     flex-shrink: 0;
 }
 
-/* ============================================================
-   TÍTULO DO EVENTO
-   ============================================================ */
 .titulo-evento-urna {
     text-align: center;
     margin: 8px 0 32px;
@@ -665,9 +677,6 @@ button:disabled {
     font-weight: 500;
 }
 
-/* ============================================================
-   PROGRESSO
-   ============================================================ */
 .progress-wrapper {
     margin-bottom: 36px;
     background: linear-gradient(135deg, var(--primary-light), var(--card-bg-soft));
@@ -719,9 +728,6 @@ button:disabled {
     100% { transform: translateX(100%); }
 }
 
-/* ============================================================
-   GRID DE CANDIDATOS
-   ============================================================ */
 .grid-candidatos {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -846,7 +852,6 @@ label:not(.bloqueado):hover .card-candidato img {
     z-index: 1;
 }
 
-/* BADGE flutuante */
 .grid-candidatos label[data-cat]::after {
     content: '';
     position: absolute;
@@ -897,9 +902,6 @@ label:not(.bloqueado):hover .card-candidato img {
     100% { transform: translateX(-50%) scale(1) rotate(0deg); opacity: 1; }
 }
 
-/* ============================================================
-   CABEÇALHO DA CATEGORIA
-   ============================================================ */
 .cargo-header {
     text-align: center;
     margin-bottom: 36px;
@@ -930,9 +932,6 @@ label:not(.bloqueado):hover .card-candidato img {
     letter-spacing: 0.01em;
 }
 
-/* ============================================================
-   NAVEGAÇÃO
-   ============================================================ */
 .etapa-votacao {
     animation: slideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -980,9 +979,6 @@ label:not(.bloqueado):hover .card-candidato img {
     transform: translateY(-2px);
 }
 
-/* ============================================================
-   RESUMO
-   ============================================================ */
 .resumo-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1043,9 +1039,6 @@ label:not(.bloqueado):hover .card-candidato img {
     letter-spacing: -0.01em;
 }
 
-/* ============================================================
-   MENSAGEM DE SUCESSO
-   ============================================================ */
 #mensagem-sucesso {
     text-align: center;
     padding: 28px 24px;
@@ -1074,9 +1067,6 @@ label:not(.bloqueado):hover .card-candidato img {
     opacity: 0.9;
 }
 
-/* ============================================================
-   MODAL CUSTOMIZADO
-   ============================================================ */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -1240,8 +1230,72 @@ label:not(.bloqueado):hover .card-candidato img {
 }
 
 /* ============================================================
-   RESPONSIVO
+   CÓDIGO OTP
    ============================================================ */
+.codigo-input-wrap {
+    margin: 24px 0 8px;
+}
+
+#input-codigo {
+    width: 100%;
+    padding: 20px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 32px;
+    font-family: 'Courier New', monospace;
+    font-weight: 700;
+    letter-spacing: 12px;
+    text-align: center;
+    color: var(--text-dark);
+    background-color: var(--input-bg);
+    transition: var(--transition-fast);
+    caret-color: var(--gold-color);
+}
+
+#input-codigo:focus {
+    outline: none;
+    border-color: var(--gold-color);
+    background-color: var(--input-bg-focus);
+    box-shadow: 0 0 0 4px rgba(201,153,42,0.15), var(--shadow-sm);
+}
+
+#input-codigo::placeholder {
+    color: var(--border-color);
+    letter-spacing: 12px;
+    font-weight: 400;
+    opacity: 0.4;
+}
+
+#btn-reenviar {
+    margin-top: 12px;
+    padding: 12px 20px;
+    font-size: 14px;
+    background: transparent;
+    border: 1.5px solid var(--border-color);
+    color: var(--text-muted);
+    box-shadow: none;
+    font-weight: 600;
+}
+
+#btn-reenviar::before { display: none; }
+
+#btn-reenviar:hover:not(:disabled) {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+#btn-reenviar:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+#timer-reenvio {
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+}
+
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         animation-duration: 0.01ms !important;
@@ -1281,10 +1335,7 @@ label:not(.bloqueado):hover .card-candidato img {
     .theme-toggle { top: 12px; right: 12px; width: 42px; height: 42px; }
     .theme-toggle svg { width: 18px; height: 18px; }
 
-    /* Cabeçalho — quebra para 2 linhas em mobile */
-    .cabecalho-usuario {
-        flex-wrap: wrap;
-    }
+    .cabecalho-usuario { flex-wrap: wrap; }
     .foto-usuario-header { width: 52px; height: 52px; }
     .info-usuario-header h2 { font-size: 18px; }
 
@@ -1314,4 +1365,6 @@ label:not(.bloqueado):hover .card-candidato img {
     .titulo-evento-urna { margin: 4px 0 24px; padding: 18px 14px 22px; }
     .titulo-evento-urna h1 { font-size: 22px; }
     .titulo-evento-urna p { font-size: 13px; }
+    #input-codigo { font-size: 26px; letter-spacing: 8px; padding: 16px; }
+    #input-codigo::placeholder { letter-spacing: 8px; }
 }

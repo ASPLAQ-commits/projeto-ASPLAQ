@@ -10,7 +10,6 @@
 </head>
 <body>
 
-<!-- 🌙 Botão de tema -->
 <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Alternar tema" title="Alternar tema">
     <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
@@ -43,6 +42,11 @@
     <button onclick="validarAcesso()" id="btn-entrar">Acessar Urna</button>
 
     <div id="msg-erro" class="mensagem-erro" style="display: none;"></div>
+
+    <p class="link-solicitacao">
+        Não encontrou seu e-mail?
+        <a onclick="mostrarTelaSolicitacao(); return false;">Solicitar inclusão de cadastro</a>
+    </p>
 </div>
 
 <!-- ============================================================
@@ -79,6 +83,42 @@
     </button>
 
     <div id="msg-erro-codigo" class="mensagem-erro" style="display: none;"></div>
+</div>
+
+<!-- ============================================================
+     TELA 1.7: SOLICITAÇÃO DE CADASTRO
+     ============================================================ -->
+<div id="tela-solicitacao" class="container" style="display: none;">
+
+    <div class="logos-evento logos-login">
+        <img src="coren_logo.png" alt="Logo COREN-PE" class="logo-evento-item">
+        <span class="logos-divisor"></span>
+        <img src="meeting_logo_preto.png"
+             data-light="meeting_logo_preto.png"
+             data-dark="meeting_logo.png"
+             alt="Logo Meeting COREN-PE"
+             class="logo-evento-item logo-meeting">
+    </div>
+
+    <h2>Solicitar Inclusão de Cadastro</h2>
+    <p>Preencha os dados abaixo. A comissão organizadora irá incluir o seu e-mail na base de votação.</p>
+
+    <form id="form-solicitacao">
+        <label for="solic-nome">Nome Completo</label>
+        <input type="text" id="solic-nome" required placeholder="Digite o seu nome completo" maxlength="120">
+
+        <label for="solic-setor">Setor</label>
+        <input type="text" id="solic-setor" required placeholder="Ex: Assessoria de Planejamento e Qualidade" maxlength="120">
+
+        <label for="solic-email">E-mail Institucional <span style="color: var(--accent-color);">*</span></label>
+        <input type="email" id="solic-email" required placeholder="nome.sobrenome@coren-pe.gov.br" autocomplete="email">
+        <p class="aviso-email">⚠️ Use apenas o e-mail oficial do COREN-PE (terminado em <strong>@coren-pe.gov.br</strong>). E-mails pessoais (Gmail, Hotmail, etc.) não serão aceitos.</p>
+
+        <button type="submit" id="btn-enviar-solicitacao">Enviar Solicitação</button>
+        <button type="button" id="btn-voltar-login" class="btn-secundario" style="margin-top: 12px;">Voltar para o Login</button>
+    </form>
+
+    <div id="msg-solicitacao" class="mensagem-erro" style="display: none;"></div>
 </div>
 
 <!-- ============================================================
