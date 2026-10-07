@@ -58,8 +58,6 @@ window.emailUsuarioValido = "";
 window.nomeUsuarioValido = "";
 let dadosColaboradorPendente = null;
 let intervaloReenvio = null;
-
-// Estado do perfil ativo (para o botão "Escolher este")
 let perfilAtual = null;
 
 const SESSION_KEY = 'votacao_sessao';
@@ -278,7 +276,6 @@ async function validarAcesso() {
     btnEntrar.disabled = true;
 
     try {
-        // 🔍 1. Verifica se é e-mail de teste
         const { data: ehTeste, error: errTeste } = await clienteSupabase.rpc('email_e_teste', {
             p_email: emailLimpo
         });
@@ -319,7 +316,6 @@ async function validarAcesso() {
             return;
         }
 
-        // 🔒 2. Fluxo normal: gera OTP
         const { data: codigo, error } = await clienteSupabase.rpc('gerar_codigo', {
             p_email: emailLimpo
         });
@@ -513,6 +509,27 @@ async function liberarVotacao() {
 
         salvarSessao(info);
 
+        // 📊 Registra acesso do eleitor
+        try {
+            await clienteSupabase.rpc('registrar_acesso_eleitor', {
+                p_email: email,
+                p_nome: info.nome,
+                p_setor: info.setor,
+                p_cargo: info.cargo
+            });
+            console.log('📊 Acesso registrado');
+        } catch (e) { console.warn('Erro ao registrar acesso:', e); }
+
+        // 💓 Heartbeat a cada 30s
+        if (window._heartbeatInterval) clearInterval(window._heartbeatInterval);
+        window._heartbeatInterval = setInterval(async () => {
+            try {
+                await clienteSupabase.rpc('heartbeat_eleitor', {
+                    p_email: window.emailUsuarioValido
+                });
+            } catch (e) { /* silencioso */ }
+        }, 30000);
+
         Object.keys(escolhas).forEach(k => delete escolhas[k]);
         etapaAtual = 0;
         renderizarCandidatos();
@@ -543,7 +560,7 @@ async function liberarVotacao() {
 }
 
 // ==========================================
-// 7. RENDERIZAR CANDIDATOS (com botão de ver perfil)
+// 7. RENDERIZAR CANDIDATOS
 // ==========================================
 function renderizarCandidatos() {
     let html = '';
@@ -582,11 +599,9 @@ function renderizarCandidatos() {
     const container = document.getElementById('secoes-votacao');
     container.innerHTML = html;
 
-    // Tratamento de erro de imagem
     container.querySelectorAll('img').forEach(img =>
         img.addEventListener('error', () => { img.src = avatarIniciais(img.alt); }, { once: true }));
 
-    // 👁️ Eventos do botão de ver perfil
     container.querySelectorAll('.btn-ver-perfil').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -612,19 +627,17 @@ function sincronizarVisual() {
 }
 
 // ==========================================
-// 9. SELEÇÃO DE CANDIDATO (extraído para reuso)
+// 9. SELEÇÃO DE CANDIDATO
 // ==========================================
 async function selecionarCandidato(catKey, nome) {
     const anterior = escolhas[catKey];
 
-    // Clicou no mesmo → desmarcar
     if (anterior === nome) {
         delete escolhas[catKey];
         sincronizarVisual();
         return;
     }
 
-    // Já tem outro → confirmação
     if (anterior && anterior !== nome) {
         const confirmou = await modalConfirmacao(
             'Trocar de candidato?',
@@ -637,7 +650,6 @@ async function selecionarCandidato(catKey, nome) {
         return;
     }
 
-    // Primeira escolha
     escolhas[catKey] = nome;
     sincronizarVisual();
 }
@@ -646,7 +658,6 @@ async function selecionarCandidato(catKey, nome) {
 // 10. DELEGAÇÃO DE EVENTOS
 // ==========================================
 document.getElementById('secoes-votacao').addEventListener('click', async function(e) {
-    // Ignora cliques no botão de ver perfil (já tratado no render)
     if (e.target.closest('.btn-ver-perfil')) return;
 
     const label = e.target.closest('label[data-cat]');
@@ -659,7 +670,7 @@ document.getElementById('secoes-votacao').addEventListener('click', async functi
 });
 
 // ==========================================
-// 🎬 11. MODAL DE PERFIL DO CANDIDATO
+// 🎬 11. MODAL DE PERFIL
 // ==========================================
 function abrirPerfilCandidato(catKey, nome) {
     const cand = candidatos.find(c =>
@@ -696,7 +707,6 @@ async function escolherDoPerfil() {
     await selecionarCandidato(cat, nome);
 }
 
-// Fecha o modal de perfil com ESC
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         const modalPerfil = document.getElementById('modal-perfil');
@@ -725,14 +735,12 @@ document.getElementById('limpar-pesquisa').addEventListener('click', function() 
 function filtrarCandidatos(termo) {
     const termoNorm = norm(termo);
 
-    // Filtra cada card
     document.querySelectorAll('#secoes-votacao label[data-cat]').forEach(label => {
         const nomeNorm = norm(label.dataset.nome || '');
         const match = !termoNorm || nomeNorm.includes(termoNorm);
         label.style.display = match ? '' : 'none';
     });
 
-    // Esconde blocos (h3 + grid) que ficaram sem candidatos visíveis
     document.querySelectorAll('#secoes-votacao .grid-candidatos').forEach(grid => {
         const visiveis = Array.from(grid.querySelectorAll('label[data-cat]'))
             .filter(l => l.style.display !== 'none');
@@ -765,7 +773,6 @@ function irParaEtapa(nova) {
     etapaAtual = nova;
     document.getElementById(`etapa-${etapaAtual}`).style.display = 'block';
 
-    // 🔄 Limpa a pesquisa ao mudar de categoria
     const barra = document.getElementById('barra-pesquisa');
     if (barra) {
         barra.value = '';
@@ -860,6 +867,19 @@ document.getElementById('btn-confirmar-final').addEventListener('click', async f
         if (error) throw error;
 
         if (data === true) {
+            // 📊 Marca sessão como finalizada
+            try {
+                await clienteSupabase.rpc('marcar_voto_finalizado', {
+                    p_email: window.emailUsuarioValido
+                });
+            } catch (e) { console.warn('Erro ao finalizar sessão:', e); }
+
+            // Para o heartbeat
+            if (window._heartbeatInterval) {
+                clearInterval(window._heartbeatInterval);
+                window._heartbeatInterval = null;
+            }
+
             limparSessao();
             this.style.display = 'none';
             document.getElementById('header-resumo').innerHTML =
@@ -885,6 +905,8 @@ document.getElementById('btn-confirmar-final').addEventListener('click', async f
             msg = 'Apenas e-mails institucionais podem votar.';
         } else if (erroTxt.includes('em si mesmo')) {
             msg = 'Não é permitido votar em si mesmo.';
+        } else if (erroTxt.includes('assessoria de planejamento')) {
+            msg = 'Não é permitido votar em membros da Assessoria de Planejamento e Qualidade.';
         }
 
         await modalAviso('Erro ao enviar', msg);
@@ -1019,7 +1041,7 @@ document.getElementById('form-solicitacao').addEventListener('submit', async fun
 });
 
 // ==========================================
-// 🚀 Start — tenta restaurar sessão ao carregar
+// 🚀 Start
 // ==========================================
 document.addEventListener('DOMContentLoaded', async () => {
     await restaurarSessao();
