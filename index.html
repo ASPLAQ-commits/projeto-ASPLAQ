@@ -8,6 +8,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <!-- 🆕 Biblioteca para gerar imagem do comprovante -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -209,7 +211,14 @@
     <div id="mensagem-sucesso" style="display: none;">
         <h3>Voto confirmado com sucesso!</h3>
         <p>Obrigado por participar da Premiação Quem Faz a Diferença 2026.</p>
-        <button type="button" onclick="window.location.reload()">Encerrar</button>
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px;">
+            <button type="button" onclick="baixarComprovante()" style="width: auto; padding: 14px 24px;">
+                📥 Baixar comprovante
+            </button>
+            <button type="button" onclick="window.location.reload()" style="width: auto; padding: 14px 24px;">
+                Encerrar
+            </button>
+        </div>
     </div>
 
     <div class="navegacao-botoes" id="botoes-resumo">

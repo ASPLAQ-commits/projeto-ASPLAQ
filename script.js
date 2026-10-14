@@ -111,7 +111,7 @@ function avatarIniciais(nome) {
 }
 
 // ==========================================
-// 🎉 ANIMAÇÃO DE CONFETE
+// 🎉 ANIMAÇÃO DE CONFETE PREMIUM
 // ==========================================
 function lancarConfete() {
     if (typeof confetti === 'undefined') {
@@ -119,54 +119,179 @@ function lancarConfete() {
         return;
     }
 
-    const cores = ['#C9992A', '#E8B93B', '#8B1E5C', '#E89BC0', '#14B892', '#FF6B49'];
-    const duracao = 3500;
-    const fim = Date.now() + duracao;
-
-    const padrao = {
-        startVelocity: 35,
-        spread: 360,
-        ticks: 80,
-        zIndex: 10000,
-        colors: cores
-    };
-
+    const cores = ['#C9992A', '#E8B93B', '#FFE27A', '#8B1E5C', '#E89BC0', '#14B892', '#FF6B49', '#FFFFFF'];
     const randomInRange = (min, max) => Math.random() * (max - min) + min;
 
-    // Explosão central inicial
+    // 1️⃣ Explosão central com estrelas, círculos e quadrados
     confetti({
-        ...padrao,
-        particleCount: 120,
+        particleCount: 180,
         spread: 100,
-        origin: { x: 0.5, y: 0.5 }
+        origin: { x: 0.5, y: 0.55 },
+        colors: cores,
+        startVelocity: 55,
+        scalar: 1.2,
+        shapes: ['star', 'circle', 'square'],
+        zIndex: 10000,
+        disableForReducedMotion: true
     });
 
-    // Chuva contínua lateral
-    const interval = setInterval(() => {
+    // 2️⃣ Segundo estouro só de estrelas douradas
+    setTimeout(() => {
+        confetti({
+            particleCount: 90,
+            spread: 130,
+            origin: { x: 0.5, y: 0.5 },
+            colors: ['#E8B93B', '#FFE27A', '#C9992A', '#FFD966'],
+            shapes: ['star'],
+            scalar: 1.6,
+            startVelocity: 45,
+            ticks: 260,
+            zIndex: 10000,
+            disableForReducedMotion: true
+        });
+    }, 180);
+
+    // 3️⃣ Canhões laterais (efeito "abre-alas")
+    setTimeout(() => {
+        // Esquerda
+        confetti({
+            particleCount: 70,
+            angle: 60,
+            spread: 60,
+            origin: { x: 0, y: 0.75 },
+            colors: cores,
+            startVelocity: 60,
+            zIndex: 10000,
+            disableForReducedMotion: true
+        });
+        // Direita
+        confetti({
+            particleCount: 70,
+            angle: 120,
+            spread: 60,
+            origin: { x: 1, y: 0.75 },
+            colors: cores,
+            startVelocity: 60,
+            zIndex: 10000,
+            disableForReducedMotion: true
+        });
+    }, 400);
+
+    // 4️⃣ Chuva contínua + rajadas esparsas por 6 segundos
+    const duracao = 6000;
+    const fim = Date.now() + duracao;
+
+    (function loopChuva() {
         const restante = fim - Date.now();
-        if (restante <= 0) {
-            clearInterval(interval);
-            return;
+        if (restante <= 0) return;
+
+        // Confetes caindo suavemente de cima
+        confetti({
+            particleCount: 4,
+            startVelocity: 0,
+            ticks: 220,
+            origin: { x: Math.random(), y: -0.1 },
+            colors: cores,
+            gravity: 0.6,
+            scalar: randomInRange(0.7, 1.1),
+            drift: randomInRange(-0.5, 0.5),
+            shapes: ['circle', 'square'],
+            zIndex: 10000,
+            disableForReducedMotion: true
+        });
+
+        // Rajadas laterais esparsas para dar vida
+        if (Math.random() < 0.3) {
+            confetti({
+                particleCount: 15,
+                angle: Math.random() < 0.5 ? 60 : 120,
+                spread: 50,
+                origin: { x: Math.random() < 0.5 ? 0 : 1, y: randomInRange(0.6, 0.9) },
+                colors: cores,
+                startVelocity: randomInRange(40, 60),
+                zIndex: 10000,
+                disableForReducedMotion: true
+            });
         }
 
-        const quantidade = 40 * (restante / duracao);
+        requestAnimationFrame(loopChuva);
+    })();
+}
 
-        // Lado esquerdo
-        confetti({
-            ...padrao,
-            particleCount: quantidade,
-            origin: { x: randomInRange(0.05, 0.25), y: Math.random() * 0.3 },
-            angle: randomInRange(55, 125)
+// ==========================================
+// 📥 BAIXAR COMPROVANTE (usa html2canvas)
+// ==========================================
+async function baixarComprovante() {
+    if (typeof html2canvas === 'undefined') {
+        alert('Aguarde... a biblioteca ainda está sendo carregada.');
+        return;
+    }
+
+    const elemento = document.getElementById('tela-resumo');
+    if (!elemento) return;
+
+    // Feedback visual no botão
+    const btn = event?.target?.closest('button');
+    const textoOriginal = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.innerHTML = 'Gerando imagem...';
+        btn.disabled = true;
+    }
+
+    // Esconde temporariamente os botões de ação para não aparecerem na imagem
+    const botoesResumo = document.getElementById('botoes-resumo');
+    const displayBotoes = botoesResumo ? botoesResumo.style.display : '';
+    if (botoesResumo) botoesResumo.style.display = 'none';
+
+    const containerBotoes = document.querySelector('#mensagem-sucesso > div');
+    const displayContainerBotoes = containerBotoes ? containerBotoes.style.display : '';
+    if (containerBotoes) containerBotoes.style.display = 'none';
+
+    try {
+        const isDark = document.body.classList.contains('dark-mode');
+        const canvas = await html2canvas(elemento, {
+            backgroundColor: isDark ? '#1A0F1F' : '#FAF6EE',
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            logging: false,
+            windowWidth: elemento.scrollWidth,
+            windowHeight: elemento.scrollHeight
         });
 
-        // Lado direito
-        confetti({
-            ...padrao,
-            particleCount: quantidade,
-            origin: { x: randomInRange(0.75, 0.95), y: Math.random() * 0.3 },
-            angle: randomInRange(55, 125)
-        });
-    }, 250);
+        const link = document.createElement('a');
+        const nome = (window.nomeUsuarioValido || 'eleitor')
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            .replace(/\s+/g, '-').toLowerCase();
+        const dataStr = new Date().toISOString().slice(0, 10);
+        link.download = `comprovante-votacao-${nome}-${dataStr}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+
+        // 🎉 Confete bônus após o download!
+        if (typeof confetti !== 'undefined') {
+            confetti({
+                particleCount: 60,
+                spread: 80,
+                origin: { y: 0.6 },
+                colors: ['#E8B93B', '#8B1E5C', '#14B892', '#FFE27A'],
+                zIndex: 10000
+            });
+        }
+
+    } catch (err) {
+        console.error('Erro ao gerar imagem:', err);
+        alert('Não foi possível gerar a imagem do comprovante. Tente novamente.');
+    } finally {
+        // Restaura os botões
+        if (botoesResumo) botoesResumo.style.display = displayBotoes;
+        if (containerBotoes) containerBotoes.style.display = displayContainerBotoes;
+
+        if (btn) {
+            btn.innerHTML = textoOriginal;
+            btn.disabled = false;
+        }
+    }
 }
 
 // ==========================================
@@ -945,7 +1070,7 @@ document.getElementById('btn-confirmar-final').addEventListener('click', async f
                 `<h2>Comprovante de Votação</h2><p>Votos enviados por <strong>${esc(window.nomeUsuarioValido)}</strong>.</p>`;
             document.getElementById('mensagem-sucesso').style.display = 'block';
 
-            // 🎉 Confete!
+            // 🎉 CONFETE PREMIUM!
             lancarConfete();
         } else {
             await modalAviso('Erro ao enviar', 'Não foi possível registrar o seu voto.');

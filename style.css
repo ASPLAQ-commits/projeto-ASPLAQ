@@ -1,6 +1,6 @@
 /* ============================================================
    🏆 VOTAÇÃO DESTAQUES 2026 — COREN-PE
-   Estilo cinematográfico premium
+   Estilo cinematográfico premium — v2 (dark mode refinado)
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
@@ -38,6 +38,7 @@
     --text-dark: #1F1309;
     --text-muted: #6E5A47;
     --border-color: #E8DBC3;
+    --table-row-hover: #FBF6EA;
 
     --shadow-sm: 0 1px 2px rgba(31,19,9,0.05), 0 2px 6px rgba(31,19,9,0.04);
     --shadow-md: 0 1px 2px rgba(31,19,9,0.06), 0 8px 24px rgba(139,30,92,0.08), 0 24px 48px -12px rgba(31,19,9,0.10);
@@ -51,61 +52,842 @@
 }
 
 /* ============================================================
-   TEMA ESCURO
+   🌙 TEMA ESCURO — REFINADO
+   Paleta profunda com açoite de ametista, ouro e âmbar
    ============================================================ */
 body.dark-mode {
-    --primary-color: #E89BC0;
-    --primary-hover: #F5B0D0;
-    --primary-light: #3A1D33;
-    --accent-color: #FF8E5C;
-    --gold-color: #E8B93B;
-    --gold-bright: #FFD966;
-    --gold-deep: #6B4B00;
-    --gold-light: #2E2415;
-    --mint-color: #34D399;
-    --error-color: #FF6B6B;
+    /* Cores de identidade — mais luminosas em dark */
+    --primary-color: #F0A8CC;
+    --primary-hover: #FFC2DE;
+    --primary-light: #35172E;
+    --accent-color: #FF9A6B;
+    --gold-color: #F5C84D;
+    --gold-bright: #FFDD7A;
+    --gold-deep: #B8861F;
+    --gold-light: #2E2210;
+    --mint-color: #4ADE80;
+    --error-color: #FF7A7A;
 
+    /* Fundo com atmosfera cênica */
     --bg-gradient:
-        radial-gradient(circle at 50% -10%, rgba(232,185,59,0.15) 0%, transparent 50%),
-        radial-gradient(circle at 0% 100%, rgba(232,155,192,0.10) 0%, transparent 45%),
-        radial-gradient(circle at 100% 0%, rgba(255,142,92,0.06) 0%, transparent 45%),
-        linear-gradient(180deg, #0D0810 0%, #1A0F1F 100%);
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(245,200,77,0.14) 0%, transparent 55%),
+        radial-gradient(circle at 0% 100%, rgba(240,168,204,0.12) 0%, transparent 50%),
+        radial-gradient(circle at 100% 20%, rgba(255,154,107,0.10) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(139,30,92,0.06) 0%, transparent 70%),
+        linear-gradient(180deg, #0A0610 0%, #150B1A 45%, #1A0F22 100%);
 
+    /* Superfícies em camadas — do mais profundo ao mais elevado */
     --card-bg: #1A1220;
     --card-bg-soft: #221830;
     --input-bg: #221830;
     --input-bg-focus: #2A1E3A;
-    --chart-box-bg: #221830;
+    --chart-box-bg: #1E1528;
     --resumo-card-bg: #221830;
 
-    --text-dark: #F5EDE0;
-    --text-muted: #B8A891;
-    --border-color: #35263D;
+    /* Texto — hierarquia clara */
+    --text-dark: #F8F1E4;
+    --text-muted: #C4B49A;
+    --border-color: #3A2844;
+    --table-row-hover: #241833;
 
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.3);
-    --shadow-md: 0 1px 2px rgba(0,0,0,0.5), 0 8px 24px rgba(0,0,0,0.45), 0 24px 48px -12px rgba(0,0,0,0.55);
-    --shadow-hover: 0 2px 4px rgba(0,0,0,0.5), 0 16px 40px -8px rgba(232,155,192,0.20), 0 32px 64px -16px rgba(0,0,0,0.6);
+    /* Sombras multicamada para profundidade real */
+    --shadow-sm:
+        0 1px 2px rgba(0,0,0,0.4),
+        0 2px 8px rgba(0,0,0,0.25);
+    --shadow-md:
+        0 1px 3px rgba(0,0,0,0.5),
+        0 12px 28px -6px rgba(0,0,0,0.5),
+        0 32px 64px -16px rgba(139,30,92,0.18);
+    --shadow-hover:
+        0 2px 6px rgba(0,0,0,0.5),
+        0 20px 48px -10px rgba(240,168,204,0.22),
+        0 40px 80px -20px rgba(0,0,0,0.7),
+        0 0 0 1px rgba(245,200,77,0.10);
 }
 
-body.dark-mode .container::after {
+/* ------------------------------------------------------------
+   BODY — fundo com vinheta extra + ruído sutil
+   ------------------------------------------------------------ */
+body.dark-mode::before {
+    opacity: 0.28;
+    mix-blend-mode: overlay;
+}
+
+body.dark-mode::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse 120% 80% at 50% 50%, transparent 40%, rgba(0,0,0,0.35) 100%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ------------------------------------------------------------
+   CONTAINER — superfície elevada com brilho superior
+   ------------------------------------------------------------ */
+body.dark-mode .container {
+    background:
+        linear-gradient(180deg, rgba(255,255,255,0.025) 0%, transparent 15%),
+        var(--card-bg);
+    border-color: var(--border-color);
     box-shadow:
-        0 8px 16px rgba(232,185,59,0.45),
-        0 0 0 4px var(--card-bg),
-        -42px -14px 0 -21px var(--primary-color),
-        38px -18px 0 -22px var(--accent-color),
-        -30px 20px 0 -23px var(--mint-color),
-        34px 22px 0 -22px var(--gold-color);
+        0 1px 0 rgba(255,255,255,0.04) inset,
+        0 0 0 1px rgba(255,255,255,0.02) inset,
+        0 1px 3px rgba(0,0,0,0.6),
+        0 20px 40px -8px rgba(0,0,0,0.55),
+        0 40px 80px -20px rgba(139,30,92,0.15);
 }
 
-body.dark-mode button { color: #1F1309; }
-body.dark-mode .card-candidato img { border-color: #3F2E4A; }
-body.dark-mode .resumo-card img { border-color: #3F2E4A; }
-body.dark-mode .btn-secundario { color: var(--text-dark); }
-body.dark-mode .modal-botoes button.btn-primary { color: #1F1309; }
-body.dark-mode .modal-overlay { background: rgba(0, 0, 0, 0.85); }
+/* Medalha dourada — brilho intensificado */
+body.dark-mode .container::after {
+    background-image:
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23321D00' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9H4.5a2.5 2.5 0 0 1 0-5H6'/><path d='M18 9h1.5a2.5 2.5 0 0 0 0-5H18'/><path d='M4 22h16'/><path d='M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22'/><path d='M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22'/><path d='M18 2H6v7a6 6 0 0 0 12 0V2Z'/></svg>"),
+        radial-gradient(circle at 30% 25%, #FFF3B0 0%, var(--gold-bright) 35%, var(--gold-color) 70%, var(--gold-deep) 100%);
+    box-shadow:
+        0 0 32px 6px rgba(245,200,77,0.35),
+        0 10px 28px -4px rgba(245,200,77,0.5),
+        0 0 0 4px var(--card-bg),
+        0 0 0 5px rgba(245,200,77,0.22),
+        -46px -16px 0 -21px rgba(240,168,204,0.85),
+        42px -20px 0 -22px rgba(255,154,107,0.85),
+        -34px 22px 0 -23px rgba(74,222,128,0.75),
+        38px 24px 0 -22px rgba(245,200,77,0.85);
+}
+
+body.dark-mode h1,
+body.dark-mode h2 {
+    color: var(--text-dark);
+    text-shadow: 0 1px 0 rgba(0,0,0,0.4);
+}
+
+body.dark-mode h2::after {
+    box-shadow: 0 1px 8px rgba(245,200,77,0.6);
+}
+
+body.dark-mode h3 {
+    color: var(--text-muted);
+}
+
+/* ------------------------------------------------------------
+   LOGOS — leve glow dourado
+   ------------------------------------------------------------ */
+body.dark-mode .logo-evento-item {
+    filter: drop-shadow(0 2px 8px rgba(245,200,77,0.15));
+}
+
+body.dark-mode .logo-evento-item:hover {
+    filter: drop-shadow(0 4px 14px rgba(245,200,77,0.45)) brightness(1.08);
+}
+
+body.dark-mode .logos-divisor,
+body.dark-mode .logos-cabecalho-divisor {
+    background: linear-gradient(180deg, transparent, var(--gold-color) 30%, var(--gold-color) 70%, transparent);
+    opacity: 0.6;
+}
+
+body.dark-mode .logos-cabecalho::before {
+    background: linear-gradient(180deg, transparent, var(--border-color) 25%, var(--border-color) 75%, transparent);
+}
+
+/* ------------------------------------------------------------
+   INPUTS — foco com halo dourado mais quente
+   ------------------------------------------------------------ */
+body.dark-mode input[type="text"],
+body.dark-mode input[type="email"],
+body.dark-mode input[type="password"],
+body.dark-mode .input-modal {
+    background-color: var(--input-bg);
+    border-color: var(--border-color);
+    color: var(--text-dark);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.35);
+}
+
+body.dark-mode input[type="text"]:focus,
+body.dark-mode input[type="email"]:focus,
+body.dark-mode input[type="password"]:focus,
+body.dark-mode .input-modal:focus {
+    background-color: var(--input-bg-focus);
+    border-color: var(--gold-color);
+    box-shadow:
+        inset 0 1px 2px rgba(0,0,0,0.35),
+        0 0 0 4px rgba(245,200,77,0.18),
+        0 0 20px -4px rgba(245,200,77,0.35);
+}
+
+body.dark-mode input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.55;
+}
+
+body.dark-mode #barra-pesquisa {
+    background-color: var(--input-bg);
+    border-color: var(--border-color);
+}
+
+body.dark-mode #barra-pesquisa:focus {
+    background-color: var(--input-bg-focus);
+    box-shadow:
+        0 0 0 4px rgba(245,200,77,0.15),
+        0 0 20px -4px rgba(245,200,77,0.35);
+}
+
+body.dark-mode #input-codigo {
+    background-color: var(--input-bg);
+    border-color: var(--border-color);
+    color: var(--text-dark);
+    caret-color: var(--gold-color);
+}
+
+body.dark-mode #input-codigo:focus {
+    background-color: var(--input-bg-focus);
+    border-color: var(--gold-color);
+    box-shadow:
+        0 0 0 4px rgba(245,200,77,0.15),
+        0 0 24px -4px rgba(245,200,77,0.4);
+}
+
+body.dark-mode #input-codigo::placeholder {
+    color: var(--border-color);
+    opacity: 0.5;
+}
+
+/* ------------------------------------------------------------
+   BOTÕES — brilho de ouro no hover
+   ------------------------------------------------------------ */
+body.dark-mode button:not(.btn-secundario):not(.btn-limpar):not(.btn-ver-perfil):not(.modal-perfil-close):not(.theme-toggle):not(#btn-reenviar) {
+    color: #1F1309;
+}
+
+body.dark-mode button {
+    color: #1F1309;
+}
+
+body.dark-mode button:hover {
+    box-shadow:
+        0 1px 0 rgba(255,255,255,0.25) inset,
+        0 16px 40px -8px rgba(240,168,204,0.5),
+        0 6px 18px -4px rgba(240,168,204,0.35),
+        0 0 24px -6px rgba(245,200,77,0.3);
+}
+
+body.dark-mode button:disabled {
+    background: #3A2E42;
+    color: #7A6E80;
+    opacity: 0.6;
+    box-shadow: none;
+}
+
+/* Botão secundário em dark */
+body.dark-mode .btn-secundario {
+    color: var(--text-dark);
+    border-color: var(--border-color);
+    background: rgba(255,255,255,0.02);
+}
+
+body.dark-mode .btn-secundario:hover {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 16px -4px rgba(240,168,204,0.4);
+}
+
+/* Reenviar código */
+body.dark-mode #btn-reenviar {
+    color: var(--text-muted);
+    border-color: var(--border-color);
+}
+
+body.dark-mode #btn-reenviar:hover:not(:disabled) {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* ------------------------------------------------------------
+   TEMA TOGGLE
+   ------------------------------------------------------------ */
+body.dark-mode .theme-toggle {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--gold-bright);
+    box-shadow:
+        0 1px 2px rgba(0,0,0,0.5),
+        0 8px 24px -6px rgba(245,200,77,0.25),
+        0 0 0 1px rgba(245,200,77,0.15);
+}
+
+body.dark-mode .theme-toggle:hover {
+    box-shadow:
+        0 1px 2px rgba(0,0,0,0.5),
+        0 12px 32px -6px rgba(245,200,77,0.45),
+        0 0 0 4px rgba(245,200,77,0.18);
+    border-color: var(--gold-color);
+}
+
+/* ------------------------------------------------------------
+   PROGRESSO
+   ------------------------------------------------------------ */
+body.dark-mode .progress-wrapper {
+    background:
+        linear-gradient(135deg, rgba(240,168,204,0.06), rgba(255,255,255,0.02));
+    border-color: var(--border-color);
+    box-shadow:
+        inset 0 1px 2px rgba(0,0,0,0.3),
+        0 2px 8px rgba(0,0,0,0.25);
+}
+
+body.dark-mode .progress-bar-bg {
+    background: rgba(0,0,0,0.35);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);
+}
+
+body.dark-mode .progress-bar-fill {
+    box-shadow:
+        0 0 16px rgba(245,200,77,0.7),
+        0 0 32px rgba(245,200,77,0.35);
+}
+
+/* ------------------------------------------------------------
+   CANDIDATOS
+   ------------------------------------------------------------ */
+body.dark-mode .card-candidato {
+    background:
+        linear-gradient(180deg, rgba(245,200,77,0.05) 0%, transparent 50%),
+        var(--card-bg);
+    border-color: var(--border-color);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.03),
+        0 1px 3px rgba(0,0,0,0.4);
+}
+
+body.dark-mode label:not(.bloqueado):hover .card-candidato {
+    border-color: var(--gold-color);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.05),
+        0 0 0 1px var(--gold-color),
+        0 12px 32px -8px rgba(245,200,77,0.3),
+        0 24px 48px -16px rgba(0,0,0,0.6);
+}
+
+body.dark-mode .card-candidato img {
+    box-shadow:
+        0 4px 12px -2px rgba(0,0,0,0.5),
+        0 0 0 3px var(--card-bg),
+        0 0 0 4.5px var(--border-color);
+}
+
+body.dark-mode label:not(.bloqueado):hover .card-candidato img {
+    box-shadow:
+        0 8px 24px -4px rgba(245,200,77,0.4),
+        0 0 0 3px var(--card-bg),
+        0 0 0 5px var(--gold-color);
+}
+
+body.dark-mode .card-candidato p {
+    color: var(--text-dark);
+}
+
+body.dark-mode .grid-candidatos label.selecionado .card-candidato {
+    background:
+        linear-gradient(180deg, rgba(245,200,77,0.18) 0%, transparent 65%),
+        var(--card-bg);
+    border-color: var(--gold-color);
+    box-shadow:
+        0 0 0 2px var(--gold-color),
+        0 12px 32px -8px rgba(245,200,77,0.4),
+        0 0 40px -8px rgba(245,200,77,0.3);
+}
+
+/* ------------------------------------------------------------
+   RESUMO
+   ------------------------------------------------------------ */
+body.dark-mode .resumo-card {
+    background:
+        linear-gradient(180deg, rgba(245,200,77,0.06) 0%, transparent 55%),
+        var(--resumo-card-bg);
+    border-color: var(--border-color);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.03),
+        0 1px 3px rgba(0,0,0,0.4);
+}
+
+body.dark-mode .resumo-card:hover {
+    border-color: var(--gold-color);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.05),
+        0 0 0 1px rgba(245,200,77,0.4),
+        0 12px 32px -8px rgba(245,200,77,0.25),
+        0 20px 40px -16px rgba(0,0,0,0.6);
+}
+
+body.dark-mode .resumo-card img {
+    box-shadow:
+        0 4px 12px -2px rgba(0,0,0,0.5),
+        0 0 0 3px var(--card-bg),
+        0 0 0 4.5px var(--border-color);
+}
+
+body.dark-mode .nome-label {
+    color: var(--text-dark);
+}
+
+body.dark-mode .cargo-label {
+    color: var(--text-muted);
+}
+
+/* ------------------------------------------------------------
+   BADGES DE SETOR / CARGO
+   ------------------------------------------------------------ */
+body.dark-mode .badge-setor span {
+    background: linear-gradient(135deg, var(--primary-light), var(--card-bg-soft));
+    color: var(--primary-color);
+    border-color: rgba(240,168,204,0.25);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+body.dark-mode .foto-usuario-header {
+    border-color: var(--card-bg);
+    box-shadow:
+        0 4px 16px -2px rgba(0,0,0,0.5),
+        0 0 0 4px var(--gold-color),
+        0 0 20px -2px rgba(245,200,77,0.5);
+    background: var(--primary-light);
+}
+
+/* ------------------------------------------------------------
+   MENSAGEM DE SUCESSO
+   ------------------------------------------------------------ */
 body.dark-mode #mensagem-sucesso {
-    background: rgba(52, 211, 153, 0.10);
-    border-color: rgba(52, 211, 153, 0.35);
+    background: linear-gradient(135deg, rgba(74,222,128,0.14), rgba(74,222,128,0.05));
+    border-color: rgba(74,222,128,0.4);
+    box-shadow:
+        0 0 24px -6px rgba(74,222,128,0.25),
+        inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+body.dark-mode #mensagem-sucesso h3 {
+    color: var(--mint-color);
+    text-shadow: 0 0 20px rgba(74,222,128,0.4);
+}
+
+body.dark-mode #mensagem-sucesso p {
+    color: var(--text-dark);
+}
+
+/* ------------------------------------------------------------
+   MENSAGEM DE ERRO
+   ------------------------------------------------------------ */
+body.dark-mode .mensagem-erro {
+    background: linear-gradient(135deg, rgba(255,122,122,0.14), rgba(255,122,122,0.05));
+    border-color: rgba(255,122,122,0.4);
+    color: var(--error-color);
+    box-shadow: 0 0 20px -6px rgba(255,122,122,0.25);
+}
+
+/* ------------------------------------------------------------
+   MODAL CUSTOMIZADO
+   ------------------------------------------------------------ */
+body.dark-mode .modal-overlay {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+body.dark-mode .modal-overlay-admin {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+body.dark-mode .modal-box,
+body.dark-mode .modal-content {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+    box-shadow:
+        0 1px 0 rgba(255,255,255,0.04) inset,
+        0 32px 80px -20px rgba(0,0,0,0.8),
+        0 0 0 1px rgba(245,200,77,0.1),
+        0 0 80px -20px rgba(245,200,77,0.15);
+}
+
+body.dark-mode .modal-box h3,
+body.dark-mode .modal-content h3 {
+    color: var(--text-dark);
+}
+
+body.dark-mode .modal-box p {
+    color: var(--text-muted);
+}
+
+body.dark-mode .modal-box p strong {
+    color: var(--text-dark);
+}
+
+body.dark-mode .modal-botoes button.btn-cancelar {
+    background: rgba(255,255,255,0.03);
+    color: var(--text-muted);
+    border-color: var(--border-color);
+}
+
+body.dark-mode .modal-botoes button.btn-cancelar:hover {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+body.dark-mode .modal-botoes button.btn-primary {
+    color: #1F1309;
+}
+
+/* Modal perfil */
+body.dark-mode .modal-perfil-overlay {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+body.dark-mode .modal-perfil-box {
+    background: var(--card-bg);
+    box-shadow:
+        0 1px 0 rgba(255,255,255,0.04) inset,
+        0 32px 80px -20px rgba(0,0,0,0.8),
+        0 0 0 1px rgba(245,200,77,0.15),
+        0 0 80px -20px rgba(245,200,77,0.2);
+}
+
+body.dark-mode .modal-perfil-nome {
+    color: var(--text-dark);
+    text-shadow: 0 1px 0 rgba(0,0,0,0.4);
+}
+
+body.dark-mode .modal-perfil-setor {
+    color: var(--gold-bright);
+    text-shadow: 0 0 20px rgba(245,200,77,0.4);
+}
+
+body.dark-mode .modal-perfil-cargo {
+    color: var(--text-muted);
+}
+
+body.dark-mode .modal-perfil-foto {
+    border-color: var(--card-bg);
+    box-shadow:
+        0 8px 32px -6px rgba(0,0,0,0.6),
+        0 0 0 3px var(--gold-color),
+        0 0 30px -4px rgba(245,200,77,0.55);
+    background: var(--primary-light);
+}
+
+body.dark-mode .modal-perfil-close {
+    background: var(--card-bg-soft);
+    color: var(--text-muted);
+    border-color: var(--border-color);
+}
+
+body.dark-mode .modal-perfil-close:hover {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* ------------------------------------------------------------
+   BOTÃO VER PERFIL
+   ------------------------------------------------------------ */
+body.dark-mode .btn-ver-perfil {
+    background: var(--card-bg-soft);
+    border-color: var(--border-color);
+    color: var(--text-muted);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+body.dark-mode .btn-ver-perfil:hover {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    color: #1F1309;
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 16px -4px rgba(240,168,204,0.5);
+}
+
+/* ------------------------------------------------------------
+   BARRA DE PESQUISA
+   ------------------------------------------------------------ */
+body.dark-mode .btn-limpar {
+    color: var(--text-muted);
+}
+
+body.dark-mode .btn-limpar:hover {
+    background: var(--primary-light);
+    color: var(--primary-color);
+}
+
+/* ------------------------------------------------------------
+   TABS (admin)
+   ------------------------------------------------------------ */
+body.dark-mode .tab-btn {
+    color: var(--text-muted);
+}
+
+body.dark-mode .tab-btn:hover {
+    background: var(--primary-light);
+    color: var(--primary-color);
+}
+
+body.dark-mode .tab-btn.active {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+    color: #1F1309;
+    box-shadow:
+        0 1px 0 rgba(255,255,255,0.3) inset,
+        0 8px 20px -6px rgba(240,168,204,0.5),
+        0 0 24px -6px rgba(240,168,204,0.35);
+}
+
+/* ------------------------------------------------------------
+   TABELAS (admin)
+   ------------------------------------------------------------ */
+body.dark-mode th {
+    color: var(--text-dark);
+    background-color: var(--primary-light);
+    border-bottom-color: var(--border-color);
+}
+
+body.dark-mode td {
+    color: var(--text-dark);
+    border-bottom-color: var(--border-color);
+}
+
+body.dark-mode tr:hover td {
+    background-color: var(--table-row-hover);
+}
+
+body.dark-mode .table-container {
+    background: var(--chart-box-bg);
+    border-color: var(--border-color);
+}
+
+/* ------------------------------------------------------------
+   CHART BOXES (admin)
+   ------------------------------------------------------------ */
+body.dark-mode .chart-box {
+    background: var(--chart-box-bg);
+    border-color: var(--border-color);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+body.dark-mode .chart-box h3 {
+    color: var(--primary-color);
+    border-bottom-color: var(--gold-light);
+}
+
+/* ------------------------------------------------------------
+   INSIGHT CARDS (admin)
+   ------------------------------------------------------------ */
+body.dark-mode .insight-card {
+    box-shadow:
+        0 1px 3px rgba(0,0,0,0.5),
+        0 12px 28px -8px rgba(240,168,204,0.2);
+}
+
+body.dark-mode .insight-card.bad {
+    background: linear-gradient(135deg, #4A4258, #1A1230);
+}
+
+/* ------------------------------------------------------------
+   STAT CARDS (admin)
+   ------------------------------------------------------------ */
+body.dark-mode .stat-card {
+    background: var(--chart-box-bg);
+    border-color: var(--border-color);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.03),
+        0 1px 3px rgba(0,0,0,0.4);
+}
+
+body.dark-mode .stat-card:hover {
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.05),
+        0 8px 24px -6px rgba(0,0,0,0.6),
+        0 0 32px -12px rgba(245,200,77,0.2);
+}
+
+body.dark-mode .stat-card-votos {
+    background: linear-gradient(135deg, rgba(240,168,204,0.10) 0%, rgba(255,154,107,0.05) 100%);
+    border-color: rgba(240,168,204,0.28);
+}
+
+body.dark-mode .stat-card-entraram {
+    background: linear-gradient(135deg, rgba(74,222,128,0.10) 0%, rgba(74,222,128,0.03) 100%);
+    border-color: rgba(74,222,128,0.3);
+}
+
+body.dark-mode .stat-card-pendentes {
+    background: linear-gradient(135deg, rgba(255,154,107,0.10) 0%, rgba(255,154,107,0.03) 100%);
+    border-color: rgba(255,154,107,0.3);
+}
+
+body.dark-mode .stat-card-online {
+    background: linear-gradient(135deg, rgba(74,222,128,0.14) 0%, rgba(74,222,128,0.04) 100%);
+    border-color: rgba(74,222,128,0.35);
+}
+
+body.dark-mode .stat-card-fotos {
+    background: linear-gradient(135deg, rgba(245,200,77,0.12) 0%, rgba(255,221,122,0.05) 100%);
+    border-color: rgba(245,200,77,0.32);
+}
+
+body.dark-mode .stat-card-value {
+    color: var(--text-dark);
+    text-shadow: 0 1px 0 rgba(0,0,0,0.3);
+}
+
+body.dark-mode .stat-card-label {
+    color: var(--text-muted);
+}
+
+body.dark-mode .stat-card-detail {
+    color: var(--text-muted);
+}
+
+body.dark-mode .stat-card-detail strong {
+    color: var(--text-dark);
+}
+
+body.dark-mode .stat-card-percent {
+    color: var(--gold-bright);
+    background: rgba(245,200,77,0.15);
+    box-shadow: 0 0 12px -2px rgba(245,200,77,0.35);
+}
+
+body.dark-mode .stat-card-progress {
+    background: rgba(245,200,77,0.12);
+}
+
+body.dark-mode .stat-card-progress-fill {
+    box-shadow:
+        0 0 12px rgba(245,200,77,0.7),
+        0 0 24px rgba(245,200,77,0.35);
+}
+
+body.dark-mode .online-dot {
+    border-color: var(--card-bg);
+    box-shadow: 0 0 12px rgba(74,222,128,0.8);
+}
+
+/* ------------------------------------------------------------
+   HEADER ADMIN
+   ------------------------------------------------------------ */
+body.dark-mode .header-admin {
+    border-bottom-color: var(--border-color);
+}
+
+/* ------------------------------------------------------------
+   AVISO DE E-MAIL
+   ------------------------------------------------------------ */
+body.dark-mode .aviso-email {
+    background: linear-gradient(135deg, rgba(245,200,77,0.12), rgba(245,200,77,0.04));
+    border-left-color: var(--gold-color);
+    color: var(--text-muted);
+}
+
+body.dark-mode .aviso-email strong {
+    color: var(--text-dark);
+}
+
+/* ------------------------------------------------------------
+   LINK DE SOLICITAÇÃO
+   ------------------------------------------------------------ */
+body.dark-mode .link-solicitacao {
+    color: var(--text-muted);
+}
+
+body.dark-mode .link-solicitacao a {
+    color: var(--primary-color);
+}
+
+body.dark-mode .link-solicitacao a:hover {
+    color: var(--primary-hover);
+}
+
+/* ------------------------------------------------------------
+   TÍTULO DO EVENTO
+   ------------------------------------------------------------ */
+body.dark-mode .titulo-evento-urna {
+    background: linear-gradient(180deg, rgba(245,200,77,0.08) 0%, transparent 100%);
+}
+
+body.dark-mode .titulo-evento-urna h1 {
+    color: var(--text-dark);
+    text-shadow:
+        0 1px 0 rgba(0,0,0,0.5),
+        0 0 40px rgba(245,200,77,0.15);
+}
+
+body.dark-mode .titulo-evento-urna h1::after {
+    box-shadow: 0 1px 8px rgba(245,200,77,0.6);
+}
+
+body.dark-mode .titulo-evento-urna p {
+    color: var(--text-muted);
+}
+
+/* ------------------------------------------------------------
+   CARGO HEADER
+   ------------------------------------------------------------ */
+body.dark-mode .cargo-header h2 {
+    color: var(--text-dark);
+}
+
+body.dark-mode .cargo-header h2::after {
+    box-shadow: 0 1px 8px rgba(245,200,77,0.7);
+}
+
+body.dark-mode .cargo-header p {
+    color: var(--text-muted);
+}
+
+/* ------------------------------------------------------------
+   NAVEGAÇÃO
+   ------------------------------------------------------------ */
+body.dark-mode .navegacao-botoes {
+    border-top-color: var(--border-color);
+}
+
+/* ------------------------------------------------------------
+   SELECTION
+   ------------------------------------------------------------ */
+body.dark-mode ::selection {
+    background: var(--gold-color);
+    color: #1F1309;
+}
+
+/* ------------------------------------------------------------
+   SCROLLBAR CUSTOMIZADA
+   ------------------------------------------------------------ */
+body.dark-mode {
+    scrollbar-color: var(--primary-color) var(--card-bg);
+    scrollbar-width: thin;
+}
+
+body.dark-mode ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+body.dark-mode ::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--primary-color), var(--primary-hover));
+    border-radius: 8px;
+    border: 3px solid var(--card-bg);
+    box-shadow: inset 0 1px 2px rgba(255,255,255,0.15);
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, var(--primary-hover), var(--gold-color));
+    box-shadow:
+        inset 0 1px 2px rgba(255,255,255,0.2),
+        0 0 12px rgba(245,200,77,0.4);
 }
 
 /* ============================================================
@@ -121,6 +903,7 @@ body.dark-mode #mensagem-sucesso {
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--bg-gradient);
+    background-attachment: fixed;
     color: var(--text-dark);
     min-height: 100vh;
     display: flex;
@@ -143,9 +926,8 @@ body::before {
     z-index: 0;
     opacity: 0.5;
     mix-blend-mode: multiply;
+    transition: opacity 0.5s ease, mix-blend-mode 0.5s ease;
 }
-
-body.dark-mode::before { opacity: 0.35; mix-blend-mode: screen; }
 
 /* ============================================================
    CONTAINER
@@ -161,7 +943,7 @@ body.dark-mode::before { opacity: 0.35; mix-blend-mode: screen; }
     overflow: visible;
     z-index: 1;
     border: 1px solid var(--border-color);
-    transition: background-color 0.4s ease, border-color 0.4s ease;
+    transition: background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
 }
 
 .container::before {
@@ -324,7 +1106,6 @@ h3 {
 #tela-codigo { display: none; }
 #tela-solicitacao { display: none; }
 
-/* Tela de solicitação */
 #tela-solicitacao {
     max-width: 520px;
     margin: 0 auto;
@@ -392,7 +1173,6 @@ input::placeholder {
     font-weight: 400;
 }
 
-/* Aviso sobre e-mail institucional */
 .aviso-email {
     margin-top: 10px;
     padding: 12px 16px;
@@ -405,11 +1185,8 @@ input::placeholder {
     text-align: left;
 }
 
-.aviso-email strong {
-    color: var(--text-dark);
-}
+.aviso-email strong { color: var(--text-dark); }
 
-/* Link para solicitação */
 .link-solicitacao {
     text-align: center;
     margin-top: 24px;
@@ -424,9 +1201,7 @@ input::placeholder {
     cursor: pointer;
 }
 
-.link-solicitacao a:hover {
-    color: var(--primary-hover);
-}
+.link-solicitacao a:hover { color: var(--primary-hover); }
 
 /* ============================================================
    BOTÕES
@@ -503,7 +1278,7 @@ button:disabled {
 }
 
 /* ============================================================
-   LOGOS DO EVENTO (login e resumo)
+   LOGOS DO EVENTO
    ============================================================ */
 .logos-evento {
     display: flex;
@@ -844,12 +1619,6 @@ button:disabled {
     flex: 1;
 }
 
-body.dark-mode .card-candidato {
-    background:
-        linear-gradient(180deg, rgba(232,185,59,0.04) 0%, transparent 40%),
-        var(--card-bg);
-}
-
 .card-candidato::before {
     content: '';
     position: absolute;
@@ -903,7 +1672,6 @@ label:not(.bloqueado):hover .card-candidato img {
     z-index: 1;
 }
 
-/* Badge de seleção */
 .grid-candidatos label[data-cat]::after {
     content: '';
     position: absolute;
@@ -1077,11 +1845,6 @@ label:not(.bloqueado):hover .card-candidato img {
     height: 16px;
     stroke: currentColor;
     fill: none;
-}
-
-body.dark-mode .btn-ver-perfil {
-    background: var(--card-bg-soft);
-    border-color: var(--border-color);
 }
 
 /* ============================================================
@@ -1412,7 +2175,7 @@ body.dark-mode .btn-ver-perfil {
 }
 
 /* ============================================================
-   MODAL CUSTOMIZADO (aviso/confirmação)
+   MODAL CUSTOMIZADO
    ============================================================ */
 .modal-overlay {
     position: fixed;
@@ -1718,49 +2481,19 @@ body.dark-mode .btn-ver-perfil {
     #input-codigo { font-size: 26px; letter-spacing: 8px; padding: 16px; }
     #input-codigo::placeholder { letter-spacing: 8px; }
 
-    /* Busca mobile */
     #barra-pesquisa { padding: 13px 48px 13px 46px; font-size: 14px; }
     .search-icon { left: 16px; width: 16px; height: 16px; }
     .btn-limpar { width: 30px; height: 30px; right: 8px; }
     .btn-limpar svg { width: 14px; height: 14px; }
 
-    /* Modal perfil mobile */
-    .modal-perfil-box {
-        padding: 44px 24px 28px;
-    }
-    .modal-perfil-foto {
-        width: 130px;
-        height: 130px;
-    }
-    .modal-perfil-nome {
-        font-size: 22px;
-    }
-    .modal-perfil-setor {
-        font-size: 13px;
-    }
-    .modal-perfil-cargo {
-        font-size: 14px;
-        margin-bottom: 24px;
-    }
-    .modal-perfil-botoes {
-        flex-direction: column-reverse;
-    }
-    .modal-perfil-close {
-        top: 12px;
-        right: 12px;
-        width: 34px;
-        height: 34px;
-    }
+    .modal-perfil-box { padding: 44px 24px 28px; }
+    .modal-perfil-foto { width: 130px; height: 130px; }
+    .modal-perfil-nome { font-size: 22px; }
+    .modal-perfil-setor { font-size: 13px; }
+    .modal-perfil-cargo { font-size: 14px; margin-bottom: 24px; }
+    .modal-perfil-botoes { flex-direction: column-reverse; }
+    .modal-perfil-close { top: 12px; right: 12px; width: 34px; height: 34px; }
 
-    /* Botão ver perfil mobile */
-    .btn-ver-perfil {
-        width: 28px;
-        height: 28px;
-        top: 26px;
-        right: 10px;
-    }
-    .btn-ver-perfil svg {
-        width: 14px;
-        height: 14px;
-    }
+    .btn-ver-perfil { width: 28px; height: 28px; top: 26px; right: 10px; }
+    .btn-ver-perfil svg { width: 14px; height: 14px; }
 }
