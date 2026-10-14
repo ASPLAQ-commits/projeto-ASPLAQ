@@ -111,6 +111,65 @@ function avatarIniciais(nome) {
 }
 
 // ==========================================
+// 🎉 ANIMAÇÃO DE CONFETE
+// ==========================================
+function lancarConfete() {
+    if (typeof confetti === 'undefined') {
+        console.warn('confetti não carregado');
+        return;
+    }
+
+    const cores = ['#C9992A', '#E8B93B', '#8B1E5C', '#E89BC0', '#14B892', '#FF6B49'];
+    const duracao = 3500;
+    const fim = Date.now() + duracao;
+
+    const padrao = {
+        startVelocity: 35,
+        spread: 360,
+        ticks: 80,
+        zIndex: 10000,
+        colors: cores
+    };
+
+    const randomInRange = (min, max) => Math.random() * (max - min) + min;
+
+    // Explosão central inicial
+    confetti({
+        ...padrao,
+        particleCount: 120,
+        spread: 100,
+        origin: { x: 0.5, y: 0.5 }
+    });
+
+    // Chuva contínua lateral
+    const interval = setInterval(() => {
+        const restante = fim - Date.now();
+        if (restante <= 0) {
+            clearInterval(interval);
+            return;
+        }
+
+        const quantidade = 40 * (restante / duracao);
+
+        // Lado esquerdo
+        confetti({
+            ...padrao,
+            particleCount: quantidade,
+            origin: { x: randomInRange(0.05, 0.25), y: Math.random() * 0.3 },
+            angle: randomInRange(55, 125)
+        });
+
+        // Lado direito
+        confetti({
+            ...padrao,
+            particleCount: quantidade,
+            origin: { x: randomInRange(0.75, 0.95), y: Math.random() * 0.3 },
+            angle: randomInRange(55, 125)
+        });
+    }, 250);
+}
+
+// ==========================================
 // 🔑 SESSÃO PERSISTENTE
 // ==========================================
 function salvarSessao(info) {
@@ -885,6 +944,9 @@ document.getElementById('btn-confirmar-final').addEventListener('click', async f
             document.getElementById('header-resumo').innerHTML =
                 `<h2>Comprovante de Votação</h2><p>Votos enviados por <strong>${esc(window.nomeUsuarioValido)}</strong>.</p>`;
             document.getElementById('mensagem-sucesso').style.display = 'block';
+
+            // 🎉 Confete!
+            lancarConfete();
         } else {
             await modalAviso('Erro ao enviar', 'Não foi possível registrar o seu voto.');
             this.innerHTML = htmlOriginal;
