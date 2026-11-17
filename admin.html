@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Apuração - Destaques 2026 COREN-PE</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        .dashboard-container { max-width: 1240px; }
+
+        .header-admin {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .modal-overlay-admin {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(20, 12, 6, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 35px 30px;
+            border-radius: var(--radius-lg);
+            width: 90%;
+            max-width: 420px;
+            box-shadow: var(--shadow-md);
+            text-align: center;
+        }
+
+        .modal-content h3 {
+            color: var(--primary-color);
+            font-size: 22px;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-family: 'Cinzel', serif;
+        }
+
+        .input-modal {
+            width: 100%;
+            padding: 14px 16px;
+            margin-bottom: 15px;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: 16px;
+            background-color: var(--input-bg);
+            color: var(--text-dark);
+        }
+
+        .input-modal:focus {
+            outline: none;
+            border-color: var(--gold-color);
+            background-color: var(--input-bg-focus);
+            box-shadow: 0 0 0 4px rgba(201,153,42,0.15);
+        }
+
+        .btn-modal { margin-top: 10px; }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tab-btn {
+            background: transparent;
+            color: var(--text-muted);
+            border: none;
+            font-family: 'Cinzel', serif;
+            font-size: 15px;
+            font-weight: 600;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: var(--radius-md);
+            box-shadow: none;
+            margin: 0;
+            width: auto;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            background: var(--primary-light);
+            color: var(--primary-color);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        body.dark-mode .tab-btn.active { color: #1F1309; }
+
+        .tab-content { display: none; animation: fadeIn 0.4s ease; }
+        .tab-content.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .chart-box {
+            background: var(--chart-box-bg);
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .chart-box h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+            text-align: center;
+            border-bottom: 2px solid var(--gold-light);
+            padding-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .insight-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .insight-card {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            padding: 20px;
+            border-radius: var(--radius-md);
+            text-align: center;
+            box-shadow: var(--shadow-md);
+        }
+
+        .insight-card h4 {
+            font-family: 'Cinzel', serif;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .insight-card .valor { font-size: 24px; font-weight: 700; }
+        .insight-card.bad { background: linear-gradient(135deg, #6D6483, #17122B); }
+
+        .table-container {
+            overflow-x: auto;
+            background: var(--chart-box-bg);
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            color: var(--text-dark);
+            font-family: 'Cinzel', serif;
+            font-weight: 600;
+            background-color: var(--primary-light);
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        td { color: var(--text-dark); font-size: 14px; }
+        tr:hover td { background-color: var(--table-row-hover); }
+
+        .btn-excluir {
+            background: linear-gradient(135deg, #EF4444, #DC2626);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            box-shadow: none;
+            margin: 0;
+            width: auto;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-excluir:hover {
+            background: linear-gradient(135deg, #DC2626, #B91C1C);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(229, 62, 62, 0.3);
+        }
+
+        .inline-icon {
+            width: 1.15em;
+            height: 1.15em;
+            flex-shrink: 0;
+            vertical-align: middle;
+        }
+
+        .logos-evento { margin-bottom: 32px; padding-bottom: 20px; }
+        .logo-evento-item { height: 48px !important; max-width: 160px !important; }
+
+        .badge-solicitacoes {
+            background: #DC2626;
+            color: white;
+            border-radius: 999px;
+            padding: 1px 8px;
+            font-size: 11px;
+            margin-left: 4px;
+            display: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* ============================================================
+           📊 CARDS DE ESTATÍSTICAS
+           ============================================================ */
+        .stats-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 20px 22px;
+            border-radius: var(--radius-md);
+            background: var(--chart-box-bg);
+            border: 1.5px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-card-votos {
+            background: linear-gradient(135deg, rgba(139,30,92,0.08) 0%, rgba(194,65,12,0.05) 100%);
+            border-color: rgba(139,30,92,0.25);
+        }
+
+        .stat-card-entraram {
+            background: linear-gradient(135deg, rgba(20,184,146,0.08) 0%, rgba(20,184,146,0.03) 100%);
+            border-color: rgba(20,184,146,0.3);
+        }
+
+        .stat-card-pendentes {
+            background: linear-gradient(135deg, rgba(194,65,12,0.08) 0%, rgba(194,65,12,0.03) 100%);
+            border-color: rgba(194,65,12,0.25);
+        }
+
+        .stat-card-online {
+            background: linear-gradient(135deg, rgba(21,128,61,0.10) 0%, rgba(21,128,61,0.03) 100%);
+            border-color: rgba(21,128,61,0.3);
+            position: relative;
+        }
+
+        .stat-card-fotos {
+            background: linear-gradient(135deg, rgba(201,153,42,0.10) 0%, rgba(232,185,59,0.04) 100%);
+            border-color: rgba(201,153,42,0.3);
+        }
+
+        .stat-card-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .stat-card-votos .stat-card-icon {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            color: white;
+            box-shadow: 0 6px 16px -4px rgba(139,30,92,0.45);
+        }
+
+        .stat-card-entraram .stat-card-icon {
+            background: linear-gradient(135deg, #26D0A8, var(--mint-color));
+            color: white;
+            box-shadow: 0 6px 16px -4px rgba(20,184,146,0.5);
+        }
+
+        .stat-card-pendentes .stat-card-icon {
+            background: linear-gradient(135deg, var(--accent-color), #9A3412);
+            color: white;
+            box-shadow: 0 6px 16px -4px rgba(194,65,12,0.5);
+        }
+
+        .stat-card-online .stat-card-icon {
+            background: linear-gradient(135deg, #34D399, #059669);
+            color: white;
+            box-shadow: 0 6px 16px -4px rgba(21,128,61,0.55);
+        }
+
+        .stat-card-fotos .stat-card-icon {
+            background: linear-gradient(135deg, var(--gold-bright), var(--gold-color));
+            color: #3A2700;
+            box-shadow: 0 6px 16px -4px rgba(201,153,42,0.5);
+        }
+
+        .stat-card-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .stat-card-content {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .stat-card-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+        }
+
+        .stat-card-value {
+            font-family: 'Space Grotesk', 'Cinzel', sans-serif;
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--text-dark);
+            line-height: 1.1;
+        }
+
+        .stat-card-foto-info {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card-percent {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--gold-deep);
+            background: var(--gold-light);
+            padding: 2px 10px;
+            border-radius: var(--radius-pill);
+            align-self: center;
+        }
+
+        .stat-card-progress {
+            height: 6px;
+            background: rgba(201,153,42,0.15);
+            border-radius: var(--radius-pill);
+            overflow: hidden;
+            margin-top: 6px;
+            margin-bottom: 4px;
+        }
+
+        .stat-card-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--gold-deep), var(--gold-bright), var(--gold-color));
+            border-radius: var(--radius-pill);
+            transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 0 8px rgba(201,153,42,0.5);
+        }
+
+        .stat-card-detail {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .stat-card-detail strong {
+            color: var(--text-dark);
+            font-weight: 700;
+        }
+
+        /* Bolinha verde pulsante */
+        .online-dot {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #10B981;
+            border: 2px solid white;
+            z-index: 2;
+            animation: pulseDot 1.5s ease-in-out infinite;
+        }
+
+        body.dark-mode .online-dot {
+            border-color: var(--card-bg);
+        }
+
+        @keyframes pulseDot {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16,185,129,0.7); }
+            50%      { transform: scale(1.15); box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+        }
+
+        @media (max-width: 900px) {
+            .stats-cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .stats-cards-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+            .stat-card {
+                padding: 16px 18px;
+                gap: 14px;
+            }
+            .stat-card-icon {
+                width: 46px;
+                height: 46px;
+            }
+            .stat-card-icon svg {
+                width: 20px;
+                height: 20px;
+            }
+            .stat-card-value {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<button type="button" class="theme-toggle" id="theme-toggle" aria-label="Alternar tema" title="Alternar tema">
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+    </svg>
+</button>
+
+<div class="container dashboard-container">
+    <h1>Painel de Apuração 🏆</h1>
+
+    <div class="logos-evento">
+        <img src="coren_logo.png" alt="Logo COREN-PE" class="logo-evento-item">
+        <span class="logos-divisor"></span>
+        <img src="meeting_logo_preto.png"
+             data-light="meeting_logo_preto.png"
+             data-dark="meeting_logo.png"
+             alt="Logo Meeting COREN-PE"
+             class="logo-evento-item logo-meeting">
+    </div>
+
+    <div id="admin-login-section">
+        <h2>Acesso Restrito</h2>
+        <p style="text-align: center; color: var(--text-muted); margin-bottom: 20px;">Área exclusiva para a comissão organizadora.</p>
+        <form id="form-admin-login">
+            <label for="admin-email">E-mail de Administrador</label>
+            <input type="email" id="admin-email" required placeholder="admin@coren-pe.gov.br">
+
+            <label for="admin-senha">Senha do Painel</label>
+            <input type="password" id="admin-senha" required placeholder="Digite a senha de acesso ao painel">
+
+            <button type="submit" id="btn-admin-login">Acessar Apuração</button>
+        </form>
+    </div>
+
+    <div id="admin-dashboard-section" style="display: none;">
+
+        <div class="header-admin">
+            <div style="display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 15px;">
+                👤 Logado como: <strong id="nome-admin-logado" style="color: var(--primary-color);"></strong>
+            </div>
+            <div>
+                <button type="button" class="btn-secundario" style="padding: 10px 20px; margin-top: 0; border-radius: var(--radius-pill); font-size: 14px; width: auto;" onclick="abrirModalSenha(false)">🔑 Alterar Minha Senha</button>
+            </div>
+        </div>
+
+        <!-- 📊 Cards de estatísticas -->
+        <div class="stats-cards-grid">
+            <!-- TOTAL DE VOTOS -->
+            <div class="stat-card stat-card-votos">
+                <div class="stat-card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 11l3 3L22 4"/>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                    </svg>
+                </div>
+                <div class="stat-card-content">
+                    <span class="stat-card-label">Total de Votos</span>
+                    <span class="stat-card-value" id="total-votos">0</span>
+                    <span class="stat-card-detail" id="votos-percent">— % dos elegíveis</span>
+                </div>
+            </div>
+
+            <!-- ENTRARAM -->
+            <div class="stat-card stat-card-entraram">
+                <div class="stat-card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                        <polyline points="10 17 15 12 10 7"/>
+                        <line x1="15" y1="12" x2="3" y2="12"/>
+                    </svg>
+                </div>
+                <div class="stat-card-content">
+                    <span class="stat-card-label">Entraram na Urna</span>
+                    <span class="stat-card-value" id="total-entraram">0</span>
+                    <span class="stat-card-detail" id="entraram-detail">— % dos elegíveis</span>
+                </div>
+            </div>
+
+            <!-- NÃO FINALIZARAM -->
+            <div class="stat-card stat-card-pendentes">
+                <div class="stat-card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                </div>
+                <div class="stat-card-content">
+                    <span class="stat-card-label">Entraram e Não Votaram</span>
+                    <span class="stat-card-value" id="total-nao-finalizaram">0</span>
+                    <span class="stat-card-detail" id="abandono-detail">— % de abandono</span>
+                </div>
+            </div>
+
+            <!-- ONLINE AGORA -->
+            <div class="stat-card stat-card-online">
+                <div class="stat-card-icon">
+                    <span class="online-dot"></span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+                        <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+                        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+                        <line x1="12" y1="20" x2="12.01" y2="20"/>
+                    </svg>
+                </div>
+                <div class="stat-card-content">
+                    <span class="stat-card-label">Online Agora</span>
+                    <span class="stat-card-value" id="total-online">0</span>
+                    <span class="stat-card-detail">Últimos 2 minutos</span>
+                </div>
+            </div>
+
+            <!-- CANDIDATOS COM FOTO -->
+            <div class="stat-card stat-card-fotos">
+                <div class="stat-card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                        <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                </div>
+                <div class="stat-card-content">
+                    <span class="stat-card-label">Candidatos com Foto</span>
+                    <div class="stat-card-foto-info">
+                        <span class="stat-card-value" id="fotos-info">— / —</span>
+                        <span class="stat-card-percent" id="fotos-percent">0%</span>
+                    </div>
+                    <div class="stat-card-progress">
+                        <div class="stat-card-progress-fill" id="fotos-progress" style="width: 0%;"></div>
+                    </div>
+                    <span class="stat-card-detail" id="fotos-detail"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="abrirAba('aba-candidatos', this)">🏆 Candidatos Mais Votados</button>
+            <button class="tab-btn" onclick="abrirAba('aba-setores', this)">📊 Métricas por Setor</button>
+            <button class="tab-btn" onclick="abrirAba('aba-eleitores', this)">👥 Registo de Eleitores</button>
+            <button class="tab-btn" onclick="abrirAba('aba-sessoes', this)">📡 Sessões</button>
+            <button class="tab-btn" onclick="abrirAba('aba-solicitacoes', this)">📩 Solicitações <span class="badge-solicitacoes" id="badge-solicitacoes">0</span></button>
+            <button class="tab-btn" onclick="abrirAba('aba-logs', this)">📋 Logs de Auditoria</button>
+        </div>
+
+        <div id="aba-candidatos" class="tab-content active">
+            <div class="dashboard-grid" id="container-ranking-candidatos"></div>
+        </div>
+
+        <div id="aba-setores" class="tab-content">
+            <div class="insight-cards">
+                <div class="insight-card">
+                    <h4>🌟 Setor Mais Votado</h4>
+                    <div class="valor" id="insight-setor-mais">N/A</div>
+                </div>
+                <div class="insight-card bad">
+                    <h4>📉 Setor Menos Votado</h4>
+                    <div class="valor" id="insight-setor-menos">N/A</div>
+                </div>
+            </div>
+            <h3 style="text-align: center; color: var(--text-dark); margin-bottom: 20px;">Setores Mais Votados por Categoria</h3>
+            <div class="dashboard-grid">
+                <div class="chart-box"><h3>Estagiário</h3><canvas id="chart-setor-estagiario"></canvas></div>
+                <div class="chart-box"><h3>Terceirizado</h3><canvas id="chart-setor-terceirizado"></canvas></div>
+                <div class="chart-box"><h3>Comissionado</h3><canvas id="chart-setor-comissionado"></canvas></div>
+                <div class="chart-box"><h3>Funcionário</h3><canvas id="chart-setor-funcionario"></canvas></div>
+            </div>
+        </div>
+
+        <div id="aba-eleitores" class="tab-content">
+            <h2 style="font-size: 18px; margin-bottom: 15px; color: var(--text-dark);">Auditoria e Gestão de Votos</h2>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Caso algum voto precise ser anulado, pode excluí-lo abaixo para liberar o eleitor a votar novamente.</p>
+
+            <div class="table-container">
+                <table id="tabela-eleitores">
+                    <thead>
+                        <tr>
+                            <th>Nome do Eleitor</th>
+                            <th>E-mail</th>
+                            <th>Data e Hora</th>
+                            <th style="text-align: center;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ABA SESSÕES -->
+        <div id="aba-sessoes" class="tab-content">
+            <h2 style="font-size: 18px; margin-bottom: 15px; color: var(--text-dark);">Sessões de Eleitores</h2>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Acompanhamento em tempo real de quem entrou, quem está online e quem não terminou de votar.</p>
+
+            <div class="table-container">
+                <table id="tabela-sessoes">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Nome</th>
+                            <th>Setor</th>
+                            <th>Entrou em</th>
+                            <th>Último acesso</th>
+                            <th>Finalizou em</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="aba-solicitacoes" class="tab-content">
+            <h2 style="font-size: 18px; margin-bottom: 15px; color: var(--text-dark);">Solicitações de Cadastro</h2>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Colaboradores que tentaram votar mas o e-mail não estava na base. Verifique e inclua no banco de dados.</p>
+
+            <div class="table-container">
+                <table id="tabela-solicitacoes">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Nome Completo</th>
+                            <th>Setor</th>
+                            <th>E-mail Institucional</th>
+                            <th>Data/Hora</th>
+                            <th style="text-align: center;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="aba-logs" class="tab-content">
+            <h2 style="font-size: 18px; margin-bottom: 15px; color: var(--text-dark);">Histórico de Anulações (Logs)</h2>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Registo imutável de quais administradores anularam votos e quando.</p>
+
+            <div class="table-container">
+                <table id="tabela-logs">
+                    <thead>
+                        <tr>
+                            <th>Administrador Responsável</th>
+                            <th>Eleitor Afetado</th>
+                            <th>Detalhes da Ação</th>
+                            <th>Data e Hora da Exclusão</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+            <button type="button" id="btn-atualizar" class="btn-secundario" style="width: auto; padding: 12px 24px;">🔄 Atualizar Resultados em Tempo Real</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-senha" class="modal-overlay-admin" style="display: none;">
+    <div class="modal-content">
+        <h3 id="titulo-modal-senha">Alterar Senha</h3>
+        <p id="desc-modal-senha" style="color: var(--text-muted); font-size: 14px; margin-bottom: 25px;">Por segurança, defina uma nova senha para o seu acesso.</p>
+        <form id="form-alterar-senha">
+            <input type="password" id="nova-senha" required placeholder="Digite a nova senha" class="input-modal">
+            <input type="password" id="confirma-nova-senha" required placeholder="Confirme a nova senha" class="input-modal">
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button type="button" id="btn-fechar-modal" class="btn-secundario btn-modal" style="display:none; width: 40%;">Cancelar</button>
+                <button type="submit" id="btn-salvar-senha" class="btn-modal" style="width: 100%;">Salvar Nova Senha</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function aplicarLogoTema() {
+        const isDark = document.body.classList.contains('dark-mode');
+        document.querySelectorAll('.logo-meeting').forEach(img => {
+            const novaSrc = isDark ? img.dataset.dark : img.dataset.light;
+            if (novaSrc && img.getAttribute('src') !== novaSrc) {
+                img.setAttribute('src', novaSrc);
+            }
+        });
+    }
+
+    (function initTema() {
+        const temaSalvo = localStorage.getItem('tema');
+        if (temaSalvo === 'dark') document.body.classList.add('dark-mode');
+    })();
+
+    document.addEventListener('DOMContentLoaded', () => {
+        aplicarLogoTema();
+        const btnTema = document.getElementById('theme-toggle');
+        if (!btnTema) return;
+        btnTema.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('tema', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            aplicarLogoTema();
+        });
+    });
+
+    const supabaseUrl = 'https://cnptvjdzqfsqbdkrnbbe.supabase.co';
+    const supabaseKey = 'sb_publishable_cCqmjnqgdSvOcKA6oyd28Q_4BpE1hQ6';
+    const clienteSupabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    let graficosAtivos = {};
+    let adminLogado = null;
+    let adminToken = null;
+    let candidatosData = [];
+    let mapaSetores = {};
+    let SERIES_LISTA = [];
+
+    const ICON = {
+        trophy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;vertical-align:-0.2em;flex-shrink:0;"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>',
+        trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:-0.15em;"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>'
+    };
+
+    function chaveCategoria(cargo) {
+        return cargo.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
+    }
+
+    async function carregarCandidatosDoBanco() {
+        const url = `${supabaseUrl}/rest/v1/colaboradores_publico?select=*&order=setor.asc,nome.asc`;
+        const resposta = await fetch(url, {
+            headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+        });
+        if (!resposta.ok) throw new Error("Falha ao buscar colaboradores");
+        candidatosData = await resposta.json();
+        mapaSetores = {};
+        candidatosData.forEach(c => mapaSetores[c.nome] = c.setor);
+        SERIES_LISTA = [...new Set(candidatosData.map(c => c.setor))].sort();
+    }
+
+    (async function init() {
+        try { await carregarCandidatosDoBanco(); }
+        catch (erro) {
+            console.error(erro);
+            alert("Erro ao carregar colaboradores. Recarregue a página.");
+        }
+    })();
+
+    function abrirAba(idAba, elBotao) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(idAba).classList.add('active');
+        if (elBotao) elBotao.classList.add('active');
+    }
+
+    document.getElementById('form-admin-login').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const email = document.getElementById('admin-email').value.trim().toLowerCase();
+        const senha = document.getElementById('admin-senha').value;
+        const btnLogin = document.getElementById('btn-admin-login');
+        const htmlOriginal = btnLogin.innerHTML;
+        btnLogin.innerText = "Autenticando...";
+        btnLogin.disabled = true;
+
+        try {
+            const { data, error } = await clienteSupabase.rpc('validar_admin', {
+                p_email: email,
+                p_senha: senha
+            });
+
+            if (error) throw error;
+
+            if (Array.isArray(data) && data.length > 0) {
+                adminLogado = data[0];
+                adminToken = data[0].token;
+                document.getElementById('admin-login-section').style.display = 'none';
+                mostrarDashboard();
+            } else {
+                alert("Acesso negado. Credenciais incorretas.");
+                btnLogin.innerHTML = htmlOriginal;
+                btnLogin.disabled = false;
+            }
+        } catch (erro) {
+            console.error(erro);
+            alert("Erro ao conectar ao servidor.\n\n" + erro.message);
+            btnLogin.innerHTML = htmlOriginal;
+            btnLogin.disabled = false;
+        }
+    });
+
+    function mostrarDashboard() {
+        document.getElementById('admin-dashboard-section').style.display = 'block';
+        document.getElementById('nome-admin-logado').innerText = adminLogado.nome;
+        carregarApuracao();
+
+        setInterval(async () => {
+            if (!adminToken) return;
+            try {
+                await clienteSupabase.rpc('renovar_sessao', { p_token: adminToken });
+                console.log('🔄 Sessão renovada');
+            } catch (e) {
+                console.warn('⚠️ Sessão expirada');
+                alert("Sua sessão expirou. Faça login novamente.");
+                location.reload();
+            }
+        }, 15 * 60 * 1000);
+
+        // 🔄 Auto-refresh a cada 30s
+        if (window._statsInterval) clearInterval(window._statsInterval);
+        window._statsInterval = setInterval(() => {
+            if (adminToken) carregarApuracao();
+        }, 30000);
+    }
+
+    function abrirModalSenha(obrigatorio = false) {
+        document.getElementById('modal-senha').style.display = 'flex';
+        document.getElementById('btn-fechar-modal').style.display = 'block';
+        document.getElementById('btn-salvar-senha').style.width = '60%';
+        document.getElementById('titulo-modal-senha').innerText = 'Alterar Senha';
+        document.getElementById('desc-modal-senha').innerText = 'Digite a sua nova senha secreta abaixo.';
+    }
+
+    document.getElementById('btn-fechar-modal').addEventListener('click', () => {
+        document.getElementById('modal-senha').style.display = 'none';
+        document.getElementById('form-alterar-senha').reset();
+    });
+
+    document.getElementById('form-alterar-senha').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const nova = document.getElementById('nova-senha').value;
+        const confirma = document.getElementById('confirma-nova-senha').value;
+        if (nova !== confirma) { alert("As senhas não coincidem."); return; }
+        if (nova.length < 8) { alert("A senha deve ter pelo menos 8 caracteres."); return; }
+
+        const senhaAtual = prompt("Por segurança, digite a SUA SENHA ATUAL:");
+        if (!senhaAtual) { alert("Operação cancelada."); return; }
+
+        const btnSalvar = document.getElementById('btn-salvar-senha');
+        btnSalvar.innerText = "Salvando...";
+        btnSalvar.disabled = true;
+
+        try {
+            const { data, error } = await clienteSupabase.rpc('alterar_senha_admin', {
+                p_email: adminLogado.email,
+                p_senha_atual: senhaAtual,
+                p_senha_nova: nova
+            });
+
+            if (error) throw error;
+            if (data === true) {
+                alert("Senha atualizada com sucesso!");
+                document.getElementById('modal-senha').style.display = 'none';
+                document.getElementById('form-alterar-senha').reset();
+            } else {
+                alert("Senha atual incorreta ou erro ao salvar.");
+            }
+        } catch (erro) {
+            console.error(erro);
+            alert("Erro: " + erro.message);
+        } finally {
+            btnSalvar.innerText = "Salvar Nova Senha";
+            btnSalvar.disabled = false;
+        }
+    });
+
+    async function carregarApuracao() {
+        const btnAtualizar = document.getElementById('btn-atualizar');
+        const htmlOriginal = btnAtualizar.innerHTML;
+        btnAtualizar.innerText = "A atualizar...";
+
+        try {
+            if (!adminToken) {
+                alert("Sessão expirada. Faça login novamente.");
+                location.reload();
+                return;
+            }
+
+            const [respVotos, respLogs] = await Promise.all([
+                clienteSupabase.rpc('admin_listar_votos', { p_token: adminToken }),
+                clienteSupabase.rpc('admin_listar_logs', { p_token: adminToken })
+            ]);
+
+            if (respVotos.error) throw respVotos.error;
+            if (respLogs.error) throw respLogs.error;
+
+            const votos = respVotos.data || [];
+            const logs = respLogs.data || [];
+
+            document.getElementById('total-votos').innerText = votos.length;
+            renderizarListasCandidatos(votos);
+            processarMetricasSetores(votos);
+            renderizarTabelaEleitores(votos);
+            renderizarTabelaLogs(logs);
+
+            await carregarSolicitacoes();
+            await carregarEstatisticasFotos();
+            await carregarEstatisticasParticipacao();
+            await carregarSessoes();
+
+        } catch (erro) {
+            console.error(erro);
+            if (erro.message && erro.message.includes('Sessão')) {
+                alert("Sua sessão expirou. Faça login novamente.");
+                location.reload();
+                return;
+            }
+        } finally {
+            btnAtualizar.innerHTML = htmlOriginal;
+        }
+    }
+
+    async function excluirVoto(idVoto, emailEleitor) {
+        if (!confirm(`Anular o voto de ${emailEleitor}?`)) return;
+
+        try {
+            const { data, error } = await clienteSupabase.rpc('admin_excluir_voto', {
+                p_token: adminToken,
+                p_id_voto: idVoto,
+                p_email_eleitor: emailEleitor
+            });
+
+            if (error) throw error;
+
+            if (data === true) {
+                alert("Voto anulado e registado na auditoria!");
+                carregarApuracao();
+            }
+        } catch (erro) {
+            console.error(erro);
+            if (erro.message && erro.message.includes('não encontrado')) {
+                alert("Este voto já foi removido por outro admin.");
+            } else {
+                alert("Erro ao anular: " + erro.message);
+            }
+        }
+    }
+
+    // ============================================================
+    // 📊 ESTATÍSTICAS DE FOTOS
+    // ============================================================
+    async function carregarEstatisticasFotos() {
+        try {
+            const { data, error } = await clienteSupabase.rpc('admin_estatisticas_fotos', {
+                p_token: adminToken
+            });
+
+            if (error) throw error;
+            if (!data || data.length === 0) return;
+
+            const stats = data[0];
+            const total = Number(stats.total_candidatos) || 0;
+            const comFoto = Number(stats.com_foto) || 0;
+            const semFoto = Number(stats.sem_foto) || 0;
+            const percentual = Number(stats.percentual) || 0;
+
+            document.getElementById('fotos-info').innerText = `${comFoto} / ${total}`;
+            document.getElementById('fotos-percent').innerText = `${percentual}%`;
+            document.getElementById('fotos-progress').style.width = `${percentual}%`;
+
+            if (semFoto === 0) {
+                document.getElementById('fotos-detail').innerHTML =
+                    '✓ <strong>Todos os candidatos têm foto</strong>';
+            } else {
+                document.getElementById('fotos-detail').innerHTML =
+                    `<strong>${semFoto}</strong> candidato(s) sem foto`;
+            }
+        } catch (erro) {
+            console.error('Erro ao carregar estatísticas de fotos:', erro);
+        }
+    }
+
+    // ============================================================
+    // 📊 ESTATÍSTICAS DE PARTICIPAÇÃO
+    // ============================================================
+    async function carregarEstatisticasParticipacao() {
+        try {
+            const { data, error } = await clienteSupabase.rpc('admin_estatisticas_participacao', {
+                p_token: adminToken
+            });
+
+            if (error) throw error;
+            if (!data || data.length === 0) return;
+
+            const s = data[0];
+            const eleg = Number(s.total_elegiveis) || 0;
+
+            const votos = Number(s.ja_votaram) || 0;
+            document.getElementById('total-votos').innerText = votos;
+            document.getElementById('votos-percent').innerHTML =
+                `<strong>${Number(s.percentual_votaram) || 0}%</strong> dos elegíveis (${eleg})`;
+
+            const entraram = Number(s.entraram) || 0;
+            document.getElementById('total-entraram').innerText = entraram;
+            document.getElementById('entraram-detail').innerHTML =
+                `<strong>${Number(s.percentual_entraram) || 0}%</strong> dos elegíveis`;
+
+            const naoFin = Number(s.nao_finalizaram) || 0;
+            document.getElementById('total-nao-finalizaram').innerText = naoFin;
+            document.getElementById('abandono-detail').innerHTML =
+                `<strong>${Number(s.percentual_abandono) || 0}%</strong> de abandono`;
+
+            document.getElementById('total-online').innerText = Number(s.online) || 0;
+
+        } catch (erro) {
+            console.error('Erro ao carregar estatísticas de participação:', erro);
+        }
+    }
+
+    // ============================================================
+    // 📡 SESSÕES DE ELEITORES
+    // ============================================================
+    async function carregarSessoes() {
+        try {
+            const { data, error } = await clienteSupabase.rpc('admin_listar_sessoes', {
+                p_token: adminToken
+            });
+
+            if (error) throw error;
+            renderizarTabelaSessoes(data || []);
+        } catch (erro) {
+            console.error('Erro ao carregar sessões:', erro);
+        }
+    }
+
+    function renderizarTabelaSessoes(sessoes) {
+        const tbody = document.querySelector('#tabela-sessoes tbody');
+        tbody.innerHTML = '';
+
+        if (sessoes.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nenhuma sessão registrada ainda.</td></tr>';
+            return;
+        }
+
+        const agora = Date.now();
+        const DOIS_MIN = 2 * 60 * 1000;
+
+        sessoes.forEach(s => {
+            const ultimoAcesso = new Date(s.ultimo_acesso);
+            const online = (s.status !== 'finalizado') && (agora - ultimoAcesso.getTime() < DOIS_MIN);
+
+            let statusBadge;
+            if (s.status === 'finalizado') {
+                statusBadge = '<span style="background: #D1FAE5; color: #065F46; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;">✓ FINALIZADO</span>';
+            } else if (online) {
+                statusBadge = '<span style="background: #DBEAFE; color: #1E40AF; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;">🟢 ONLINE</span>';
+            } else {
+                statusBadge = '<span style="background: #FEF3C7; color: #92400E; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;">⚠ NÃO FINALIZOU</span>';
+            }
+
+            const fmtData = (iso) => {
+                if (!iso) return '—';
+                return new Date(iso).toLocaleString('pt-BR', {
+                    day: '2-digit', month: '2-digit', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+            };
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${statusBadge}</td>
+                    <td><strong>${s.nome || '—'}</strong></td>
+                    <td>${s.setor || '—'}</td>
+                    <td>${fmtData(s.iniciou_em)}</td>
+                    <td>${fmtData(s.ultimo_acesso)}</td>
+                    <td>${fmtData(s.finalizou_em)}</td>
+                </tr>`;
+        });
+    }
+
+    // ============================================================
+    // 📩 SOLICITAÇÕES
+    // ============================================================
+    async function carregarSolicitacoes() {
+        try {
+            const { data, error } = await clienteSupabase.rpc('admin_listar_solicitacoes', {
+                p_token: adminToken
+            });
+
+            if (error) throw error;
+
+            const solicitacoes = data || [];
+            const pendentes = solicitacoes.filter(s => s.status === 'pendente').length;
+
+            const badge = document.getElementById('badge-solicitacoes');
+            if (pendentes > 0) {
+                badge.innerText = pendentes;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+
+            renderizarTabelaSolicitacoes(solicitacoes);
+        } catch (erro) {
+            console.error('Erro ao carregar solicitações:', erro);
+        }
+    }
+
+    function renderizarTabelaSolicitacoes(solicitacoes) {
+        const tbody = document.querySelector('#tabela-solicitacoes tbody');
+        tbody.innerHTML = '';
+
+        if (solicitacoes.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nenhuma solicitação recebida até o momento.</td></tr>';
+            return;
+        }
+
+        solicitacoes.forEach(s => {
+            const dataForm = new Date(s.criado_em).toLocaleString('pt-BR', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+            const statusBadge = s.status === 'pendente'
+                ? '<span style="background: #FEF3C7; color: #92400E; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;">PENDENTE</span>'
+                : '<span style="background: #D1FAE5; color: #065F46; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;">RESOLVIDO</span>';
+
+            const acoes = s.status === 'pendente'
+                ? `<button class="btn-excluir" style="background: linear-gradient(135deg, #10B981, #059669);" onclick="resolverSolicitacao(${s.id})">✓ Marcar resolvido</button>`
+                : `<span style="font-size: 12px; color: var(--text-muted);">${s.observacao || '—'}</span>`;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${statusBadge}</td>
+                    <td><strong>${s.nome_completo}</strong></td>
+                    <td>${s.setor}</td>
+                    <td><code style="color: var(--primary-color); font-size: 13px;">${s.email_institucional}</code></td>
+                    <td>${dataForm}</td>
+                    <td style="text-align: center;">${acoes}</td>
+                </tr>`;
+        });
+    }
+
+    async function resolverSolicitacao(id) {
+        const obs = prompt('Observação (opcional):\nEx: "E-mail incluído no banco em 05/10"');
+        if (obs === null) return;
+
+        try {
+            const { data, error } = await clienteSupabase.rpc('admin_resolver_solicitacao', {
+                p_token: adminToken,
+                p_id: id,
+                p_observacao: obs || null
+            });
+
+            if (error) throw error;
+
+            alert('Solicitação marcada como resolvida!');
+            carregarSolicitacoes();
+        } catch (erro) {
+            console.error(erro);
+            alert('Erro ao marcar como resolvida: ' + erro.message);
+        }
+    }
+
+    // ============================================================
+    // RENDERIZAÇÃO
+    // ============================================================
+    
+    // Função auxiliar para buscar a foto do candidato
+    function getFotoCandidatoAdmin(nome) {
+        const cand = candidatosData.find(c => c.nome === nome);
+        if (cand && cand.foto) return cand.foto;
+        // Fallback: gera um avatar com as iniciais caso não tenha foto
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(nome)}&background=8B1E5C&color=fff&bold=true&size=256`;
+    }
+
+    function renderizarListasCandidatos(votos) {
+        const container = document.getElementById('container-ranking-candidatos');
+        container.innerHTML = '';
+        const categorias = [
+            { chave: 'estagiario',  titulo: 'Estagiário' },
+            { chave: 'terceirizado', titulo: 'Terceirizado' },
+            { chave: 'comissionado', titulo: 'Comissionado' },
+            { chave: 'conselheiro',  titulo: 'Conselheiro' },
+            { chave: 'funcionario',  titulo: 'Funcionário' }
+        ];
+
+        categorias.forEach(cat => {
+            const contagem = {};
+            votos.forEach(v => { if (v[cat.chave]) contagem[v[cat.chave]] = (contagem[v[cat.chave]] || 0) + 1; });
+            const ranking = Object.entries(contagem).map(([nome, total]) => ({ nome, total })).sort((a, b) => b.total - a.total);
+            
+            let html = `<div class="chart-box"><h3>${cat.titulo}</h3>`;
+            
+            if (ranking.length === 0) {
+                html += `<p style="color: #999; text-align: center;">Nenhum voto.</p>`;
+            } else {
+                html += `<ul style="list-style: none; padding: 0;">`;
+                ranking.forEach((cand, i) => {
+                    const isPrimeiro = i === 0;
+                    const estiloLinha = isPrimeiro
+                        ? 'font-weight: bold; font-size: 16px; color: var(--text-dark); background: var(--gold-light); padding: 8px; border-radius: 4px;'
+                        : 'font-size: 14px; color: var(--text-muted); padding: 4px 8px; border-bottom: 1px solid #eee;';
+                    const prefixo = isPrimeiro ? `${ICON.trophy} ` : `${i + 1}º - `;
+                    
+                    // 👇 BUSCA A FOTO DO CANDIDATO AQUI
+                    const fotoUrl = getFotoCandidatoAdmin(cand.nome);
+
+                    // 👇 ADICIONA A TAG <img> NO HTML
+                    html += `<li style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 5px; ${estiloLinha}">
+                        <span style="display:flex; align-items:center; gap:8px;">
+                            <img src="${fotoUrl}" alt="${cand.nome}" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color);">
+                            <span>${prefixo}${cand.nome}</span>
+                        </span>
+                        <span>${cand.total} voto(s)</span>
+                    </li>`;
+                });
+                html += `</ul>`;
+            }
+            html += `</div>`;
+            container.innerHTML += html;
+        });
+    }
+
+    function processarMetricasSetores(votos) {
+        const categorias = ['estagiario', 'terceirizado', 'comissionado', 'funcionario'];
+        const votosSetorGeral = {};
+        SERIES_LISTA.forEach(s => votosSetorGeral[s] = 0);
+
+        const votosSetorPorCat = {};
+        categorias.forEach(cat => {
+            votosSetorPorCat[cat] = {};
+            SERIES_LISTA.forEach(s => votosSetorPorCat[cat][s] = 0);
+        });
+
+        votos.forEach(v => {
+            categorias.forEach(cat => {
+                const nomeVotado = v[cat];
+                if (nomeVotado && mapaSetores[nomeVotado]) {
+                    votosSetorGeral[mapaSetores[nomeVotado]]++;
+                    votosSetorPorCat[cat][mapaSetores[nomeVotado]]++;
+                }
+            });
+        });
+
+        const arrayGeral = Object.entries(votosSetorGeral).sort((a, b) => b[1] - a[1]);
+        if (arrayGeral.length > 0 && arrayGeral[0][1] > 0) {
+            document.getElementById('insight-setor-mais').innerHTML = `${arrayGeral[0][0]} <span style="font-size:16px; opacity:0.8;">(${arrayGeral[0][1]} votos)</span>`;
+            document.getElementById('insight-setor-menos').innerHTML = `${arrayGeral[arrayGeral.length - 1][0]} <span style="font-size:16px; opacity:0.8;">(${arrayGeral[arrayGeral.length - 1][1]} votos)</span>`;
+        } else {
+            document.getElementById('insight-setor-mais').innerText = 'N/A';
+            document.getElementById('insight-setor-menos').innerText = 'N/A';
+        }
+
+        categorias.forEach(cat => {
+            const rankingCat = Object.entries(votosSetorPorCat[cat]).sort((a, b) => b[1] - a[1]);
+            criarGrafico(`chart-setor-${cat}`, rankingCat.map(i => i[0]), rankingCat.map(i => i[1]), '#14B892');
+        });
+    }
+
+    function criarGrafico(canvasId, labels, data, color) {
+        if (graficosAtivos[canvasId]) graficosAtivos[canvasId].destroy();
+        const canvasEl = document.getElementById(canvasId);
+        if (!canvasEl) return;
+        graficosAtivos[canvasId] = new Chart(canvasEl.getContext('2d'), {
+            type: 'bar',
+            data: { labels, datasets: [{ data, backgroundColor: color, borderRadius: 4 }] },
+            options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+        });
+    }
+
+    function renderizarTabelaEleitores(votos) {
+        const tbody = document.querySelector('#tabela-eleitores tbody');
+        tbody.innerHTML = '';
+        const votosOrdenados = [...votos].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        if (votosOrdenados.length === 0) return tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nenhum voto registado ainda.</td></tr>';
+        votosOrdenados.forEach(voto => {
+            const dataForm = new Date(voto.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${voto.nome_completo}</strong></td>
+                    <td>${voto.email}</td>
+                    <td>${dataForm}</td>
+                    <td style="text-align: center;">
+                        <button class="btn-excluir" onclick="excluirVoto(${voto.id}, '${voto.email}')">${ICON.trash} Anular</button>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    function renderizarTabelaLogs(logs) {
+        const tbody = document.querySelector('#tabela-logs tbody');
+        tbody.innerHTML = '';
+        const logsOrdenados = [...logs].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        if (logsOrdenados.length === 0) return tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nenhum registo de auditoria até o momento.</td></tr>';
+        logsOrdenados.forEach(log => {
+            const dataForm = new Date(log.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${log.admin_email}</strong></td>
+                    <td>${log.eleitor_email}</td>
+                    <td>${log.detalhes}</td>
+                    <td>${dataForm}</td>
+                </tr>`;
+        });
+    }
+
+    document.getElementById('btn-atualizar').addEventListener('click', carregarApuracao);
+</script>
+</body>
+</html>

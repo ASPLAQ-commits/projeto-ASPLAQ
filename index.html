@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premiação Quem Faz a Diferença 2026 - COREN-PE</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <!-- 🆕 Biblioteca para gerar imagem do comprovante -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body>
+
+<button type="button" class="theme-toggle" id="theme-toggle" aria-label="Alternar tema" title="Alternar tema">
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+    </svg>
+</button>
+
+<!-- ============================================================
+     TELA 1: LOGIN
+     ============================================================ -->
+<div id="tela-login" class="container">
+
+    <div class="logos-evento logos-login">
+        <img src="coren_logo.png" alt="Logo COREN-PE" class="logo-evento-item">
+        <span class="logos-divisor"></span>
+        <img src="meeting_logo_preto.png"
+             data-light="meeting_logo_preto.png"
+             data-dark="meeting_logo.png"
+             alt="Logo Meeting COREN-PE"
+             class="logo-evento-item logo-meeting">
+    </div>
+
+    <h2>Premiação Quem Faz a Diferença 2026</h2>
+    <p>Insira seu e-mail institucional para acessar a urna.</p>
+
+    <input type="email" id="input-email" placeholder="E-mail (@coren-pe.gov.br)" required autocomplete="email">
+    <button onclick="validarAcesso()" id="btn-entrar">Acessar Urna</button>
+
+    <div id="msg-erro" class="mensagem-erro" style="display: none;"></div>
+
+    <p class="link-solicitacao">
+        Não encontrou seu e-mail?
+        <a onclick="mostrarTelaSolicitacao(); return false;">Solicitar inclusão de cadastro</a>
+    </p>
+</div>
+
+<!-- ============================================================
+     TELA 1.5: VERIFICAÇÃO POR CÓDIGO
+     ============================================================ -->
+<div id="tela-codigo" class="container" style="display: none;">
+
+    <div class="logos-evento logos-login">
+        <img src="coren_logo.png" alt="Logo COREN-PE" class="logo-evento-item">
+        <span class="logos-divisor"></span>
+        <img src="meeting_logo_preto.png"
+             data-light="meeting_logo_preto.png"
+             data-dark="meeting_logo.png"
+             alt="Logo Meeting COREN-PE"
+             class="logo-evento-item logo-meeting">
+    </div>
+
+    <h2>Verificação por E-mail</h2>
+    <p>Enviamos um código de 6 dígitos para:<br><strong id="email-verificacao"></strong></p>
+
+    <div class="codigo-input-wrap">
+        <input type="text"
+               id="input-codigo"
+               maxlength="6"
+               inputmode="numeric"
+               pattern="[0-9]*"
+               placeholder="000000"
+               autocomplete="one-time-code">
+    </div>
+
+    <button onclick="confirmarCodigo()" id="btn-confirmar-codigo">Verificar e Acessar</button>
+    <button type="button" onclick="reenviarCodigo()" id="btn-reenviar" class="btn-secundario" disabled>
+        Reenviar código <span id="timer-reenvio"></span>
+    </button>
+
+    <div id="msg-erro-codigo" class="mensagem-erro" style="display: none;"></div>
+</div>
+
+<!-- ============================================================
+     TELA 1.7: SOLICITAÇÃO DE CADASTRO
+     ============================================================ -->
+<div id="tela-solicitacao" class="container" style="display: none;">
+
+    <div class="logos-evento logos-login">
+        <img src="coren_logo.png" alt="Logo COREN-PE" class="logo-evento-item">
+        <span class="logos-divisor"></span>
+        <img src="meeting_logo_preto.png"
+             data-light="meeting_logo_preto.png"
+             data-dark="meeting_logo.png"
+             alt="Logo Meeting COREN-PE"
+             class="logo-evento-item logo-meeting">
+    </div>
+
+    <h2>Solicitar Inclusão de Cadastro</h2>
+    <p>Preencha os dados abaixo. A comissão organizadora irá incluir o seu e-mail na base de votação.</p>
+
+    <form id="form-solicitacao">
+        <label for="solic-nome">Nome Completo</label>
+        <input type="text" id="solic-nome" required placeholder="Digite o seu nome completo" maxlength="120">
+
+        <label for="solic-setor">Setor</label>
+        <input type="text" id="solic-setor" required placeholder="Ex: Assessoria de Planejamento e Qualidade" maxlength="120">
+
+        <label for="solic-email">E-mail Institucional <span style="color: var(--accent-color);">*</span></label>
+        <input type="email" id="solic-email" required placeholder="nome.sobrenome@coren-pe.gov.br" autocomplete="email">
+        <p class="aviso-email">⚠️ Use apenas o e-mail oficial do COREN-PE (terminado em <strong>@coren-pe.gov.br</strong>). E-mails pessoais (Gmail, Hotmail, etc.) não serão aceitos.</p>
+
+        <button type="submit" id="btn-enviar-solicitacao">Enviar Solicitação</button>
+        <button type="button" id="btn-voltar-login" class="btn-secundario" style="margin-top: 12px;">Voltar para o Login</button>
+    </form>
+
+    <div id="msg-solicitacao" class="mensagem-erro" style="display: none;"></div>
+</div>
+
+<!-- ============================================================
+     TELA 2: URNA
+     ============================================================ -->
+<div id="tela-urna" class="container" style="display: none;">
+
+    <div class="cabecalho-usuario">
+        <img id="foto-usuario" class="foto-usuario-header" src="" alt="">
+        <div class="info-usuario-header">
+            <h2 id="saudacao-usuario">Olá, Colaborador!</h2>
+            <p class="badge-setor">
+                <span id="badge-setor-usuario"></span>
+                <span id="badge-cargo-usuario"></span>
+            </p>
+        </div>
+
+        <div class="logos-cabecalho">
+            <img src="coren_logo.png" alt="COREN-PE" class="logo-cabecalho-item">
+            <span class="logos-cabecalho-divisor"></span>
+            <img src="meeting_logo_preto.png"
+                 data-light="meeting_logo_preto.png"
+                 data-dark="meeting_logo.png"
+                 alt="Meeting COREN-PE"
+                 class="logo-cabecalho-item logo-meeting">
+        </div>
+    </div>
+
+    <div class="titulo-evento-urna">
+        <h1>Premiação Quem Faz a Diferença 2026</h1>
+        <p>Escolha os profissionais que fazem a diferença</p>
+    </div>
+
+    <div class="progress-wrapper">
+        <div class="progress-info"><span id="progresso-texto"></span></div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progresso-barra"></div></div>
+    </div>
+
+    <!-- 🔍 BARRA DE PESQUISA -->
+    <div class="barra-pesquisa-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="barra-pesquisa" placeholder="Buscar candidato pelo nome..." autocomplete="off">
+        <button type="button" id="limpar-pesquisa" class="btn-limpar" aria-label="Limpar busca" style="display: none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+        </button>
+    </div>
+
+    <form id="form-voto" onsubmit="revisarVoto(event)">
+        <div id="secoes-votacao"></div>
+
+        <div class="navegacao-botoes">
+            <button type="button" id="btn-anterior" class="btn-secundario" style="display:none;">Voltar</button>
+            <button type="button" id="btn-proximo">Próxima categoria</button>
+            <button type="submit" id="btn-votar" style="display:none;">Revisar meus votos</button>
+        </div>
+    </form>
+</div>
+
+<!-- ============================================================
+     TELA 3: REVISÃO E COMPROVANTE
+     ============================================================ -->
+<div id="tela-resumo" class="container" style="display: none;">
+
+    <div class="logos-evento logos-resumo">
+        <img src="coren_logo.png" alt="Logo COREN-PE" class="logo-evento-item">
+        <span class="logos-divisor"></span>
+        <img src="meeting_logo_preto.png"
+             data-light="meeting_logo_preto.png"
+             data-dark="meeting_logo.png"
+             alt="Logo Meeting COREN-PE"
+             class="logo-evento-item logo-meeting">
+    </div>
+
+    <div class="cargo-header" id="header-resumo">
+        <h2>Revise seus votos</h2>
+        <p>Confira as escolhas abaixo. Depois de confirmado, o voto não poderá ser alterado.</p>
+    </div>
+
+    <div class="resumo-grid" id="lista-resumo"></div>
+
+    <div id="mensagem-sucesso" style="display: none;">
+        <h3>Voto confirmado com sucesso!</h3>
+        <p>Obrigado por participar da Premiação Quem Faz a Diferença 2026.</p>
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px;">
+            <button type="button" onclick="baixarComprovante()" style="width: auto; padding: 14px 24px;">
+                📥 Baixar comprovante
+            </button>
+            <button type="button" onclick="window.location.reload()" style="width: auto; padding: 14px 24px;">
+                Encerrar
+            </button>
+        </div>
+    </div>
+
+    <div class="navegacao-botoes" id="botoes-resumo">
+        <button type="button" id="btn-voltar-edicao" class="btn-secundario">Voltar e editar</button>
+        <button type="button" id="btn-confirmar-final">Confirmar voto</button>
+    </div>
+</div>
+
+<!-- ============================================================
+     MODAL CUSTOMIZADO
+     ============================================================ -->
+<div id="modal-custom" class="modal-overlay" style="display: none;">
+    <div class="modal-box">
+        <div class="modal-icon-wrapper" id="modal-icon-wrapper">
+            <svg id="modal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></svg>
+        </div>
+        <h3 id="modal-titulo">Atenção</h3>
+        <p id="modal-mensagem">Mensagem</p>
+        <div class="modal-botoes" id="modal-botoes"></div>
+    </div>
+</div>
+
+<!-- ============================================================
+     🎬 MODAL DE PERFIL DO CANDIDATO
+     ============================================================ -->
+<div id="modal-perfil" class="modal-perfil-overlay" style="display: none;">
+    <div class="modal-perfil-box">
+        <button type="button" class="modal-perfil-close" onclick="fecharPerfilCandidato()" aria-label="Fechar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+        </button>
+
+        <div class="modal-perfil-foto-wrapper">
+            <img id="perfil-foto" class="modal-perfil-foto" src="" alt="">
+        </div>
+
+        <h2 id="perfil-nome" class="modal-perfil-nome">Nome do Candidato</h2>
+        <p id="perfil-setor" class="modal-perfil-setor">Setor</p>
+        <p id="perfil-cargo" class="modal-perfil-cargo">Cargo</p>
+
+        <div class="modal-perfil-botoes">
+            <button type="button" class="btn-secundario" onclick="fecharPerfilCandidato()">Fechar</button>
+            <button type="button" class="btn-escolher-perfil" onclick="escolherDoPerfil()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Escolher este
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
