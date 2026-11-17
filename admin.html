@@ -426,6 +426,10 @@
             font-weight: 700;
         }
 
+<<<<<<< HEAD
+=======
+        /* Bolinha verde pulsante */
+>>>>>>> 89c7577e6c1bc5712dc0bd20df3854e5ceb4072b
         .online-dot {
             position: absolute;
             top: 0;
@@ -475,6 +479,7 @@
                 font-size: 22px;
             }
         }
+<<<<<<< HEAD
 
         /* ============================================================
            📸 GERENCIADOR DE FOTOS
@@ -625,6 +630,8 @@
             background: linear-gradient(90deg, var(--gold-deep), var(--gold-bright));
             transition: width 0.3s;
         }
+=======
+>>>>>>> 89c7577e6c1bc5712dc0bd20df3854e5ceb4072b
     </style>
 </head>
 <body>
@@ -679,6 +686,10 @@
 
         <!-- 📊 Cards de estatísticas -->
         <div class="stats-cards-grid">
+<<<<<<< HEAD
+=======
+            <!-- TOTAL DE VOTOS -->
+>>>>>>> 89c7577e6c1bc5712dc0bd20df3854e5ceb4072b
             <div class="stat-card stat-card-votos">
                 <div class="stat-card-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -693,6 +704,10 @@
                 </div>
             </div>
 
+<<<<<<< HEAD
+=======
+            <!-- ENTRARAM -->
+>>>>>>> 89c7577e6c1bc5712dc0bd20df3854e5ceb4072b
             <div class="stat-card stat-card-entraram">
                 <div class="stat-card-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -708,6 +723,10 @@
                 </div>
             </div>
 
+<<<<<<< HEAD
+=======
+            <!-- NÃO FINALIZARAM -->
+>>>>>>> 89c7577e6c1bc5712dc0bd20df3854e5ceb4072b
             <div class="stat-card stat-card-pendentes">
                 <div class="stat-card-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -722,6 +741,10 @@
                 </div>
             </div>
 
+<<<<<<< HEAD
+=======
+            <!-- ONLINE AGORA -->
+>>>>>>> 89c7577e6c1bc5712dc0bd20df3854e5ceb4072b
             <div class="stat-card stat-card-online">
                 <div class="stat-card-icon">
                     <span class="online-dot"></span>
@@ -739,6 +762,10 @@
                 </div>
             </div>
 
+<<<<<<< HEAD
+=======
+            <!-- CANDIDATOS COM FOTO -->
+>>>>>>> 89c7577e6c1bc5712dc0bd20df3854e5ceb4072b
             <div class="stat-card stat-card-fotos">
                 <div class="stat-card-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -767,7 +794,10 @@
             <button class="tab-btn" onclick="abrirAba('aba-sessoes', this)">📡 Sessões</button>
             <button class="tab-btn" onclick="abrirAba('aba-solicitacoes', this)">📩 Solicitações <span class="badge-solicitacoes" id="badge-solicitacoes">0</span></button>
             <button class="tab-btn" onclick="abrirAba('aba-logs', this)">📋 Logs de Auditoria</button>
+<<<<<<< HEAD
             <button class="tab-btn" onclick="abrirAba('aba-fotos', this)">📸 Gerenciar Fotos</button>
+=======
+>>>>>>> 89c7577e6c1bc5712dc0bd20df3854e5ceb4072b
         </div>
 
         <div id="aba-candidatos" class="tab-content active">
@@ -813,6 +843,10 @@
             </div>
         </div>
 
+<<<<<<< HEAD
+=======
+        <!-- ABA SESSÕES -->
+>>>>>>> 89c7577e6c1bc5712dc0bd20df3854e5ceb4072b
         <div id="aba-sessoes" class="tab-content">
             <h2 style="font-size: 18px; margin-bottom: 15px; color: var(--text-dark);">Sessões de Eleitores</h2>
             <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Acompanhamento em tempo real de quem entrou, quem está online e quem não terminou de votar.</p>
@@ -874,6 +908,7 @@
             </div>
         </div>
 
+<<<<<<< HEAD
         <!-- 📸 ABA GERENCIAR FOTOS -->
         <div id="aba-fotos" class="tab-content">
             <h2 style="font-size: 18px; margin-bottom: 15px; color: var(--text-dark);">Gerenciamento de Fotos</h2>
@@ -902,6 +937,8 @@
             </div>
         </div>
 
+=======
+>>>>>>> 89c7577e6c1bc5712dc0bd20df3854e5ceb4072b
         <div style="text-align: center; margin-top: 40px; border-top: 1px solid var(--border-color); padding-top: 20px;">
             <button type="button" id="btn-atualizar" class="btn-secundario" style="width: auto; padding: 12px 24px;">🔄 Atualizar Resultados em Tempo Real</button>
         </div>
@@ -995,11 +1032,14 @@
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         document.getElementById(idAba).classList.add('active');
         if (elBotao) elBotao.classList.add('active');
+<<<<<<< HEAD
 
         // 📸 Carrega gerenciador ao abrir a aba de fotos
         if (idAba === 'aba-fotos') {
             carregarGerenciadorFotos();
         }
+=======
+>>>>>>> 89c7577e6c1bc5712dc0bd20df3854e5ceb4072b
     }
 
     document.getElementById('form-admin-login').addEventListener('submit', async function(e) {
@@ -1054,6 +1094,10 @@
             }
         }, 15 * 60 * 1000);
 
+<<<<<<< HEAD
+=======
+        // 🔄 Auto-refresh a cada 30s
+>>>>>>> 89c7577e6c1bc5712dc0bd20df3854e5ceb4072b
         if (window._statsInterval) clearInterval(window._statsInterval);
         window._statsInterval = setInterval(() => {
             if (adminToken) carregarApuracao();
@@ -1183,6 +1227,12 @@
         }
     }
 
+<<<<<<< HEAD
+=======
+    // ============================================================
+    // 📊 ESTATÍSTICAS DE FOTOS
+    // ============================================================
+>>>>>>> 89c7577e6c1bc5712dc0bd20df3854e5ceb4072b
     async function carregarEstatisticasFotos() {
         try {
             const { data, error } = await clienteSupabase.rpc('admin_estatisticas_fotos', {
@@ -1214,6 +1264,12 @@
         }
     }
 
+<<<<<<< HEAD
+=======
+    // ============================================================
+    // 📊 ESTATÍSTICAS DE PARTICIPAÇÃO
+    // ============================================================
+>>>>>>> 89c7577e6c1bc5712dc0bd20df3854e5ceb4072b
     async function carregarEstatisticasParticipacao() {
         try {
             const { data, error } = await clienteSupabase.rpc('admin_estatisticas_participacao', {
@@ -1248,6 +1304,12 @@
         }
     }
 
+<<<<<<< HEAD
+=======
+    // ============================================================
+    // 📡 SESSÕES DE ELEITORES
+    // ============================================================
+>>>>>>> 89c7577e6c1bc5712dc0bd20df3854e5ceb4072b
     async function carregarSessoes() {
         try {
             const { data, error } = await clienteSupabase.rpc('admin_listar_sessoes', {
@@ -1306,6 +1368,12 @@
         });
     }
 
+<<<<<<< HEAD
+=======
+    // ============================================================
+    // 📩 SOLICITAÇÕES
+    // ============================================================
+>>>>>>> 89c7577e6c1bc5712dc0bd20df3854e5ceb4072b
     async function carregarSolicitacoes() {
         try {
             const { data, error } = await clienteSupabase.rpc('admin_listar_solicitacoes', {
@@ -1386,9 +1454,21 @@
         }
     }
 
+<<<<<<< HEAD
     function getFotoCandidatoAdmin(nome) {
         const cand = candidatosData.find(c => c.nome === nome);
         if (cand && cand.foto) return cand.foto;
+=======
+    // ============================================================
+    // RENDERIZAÇÃO
+    // ============================================================
+    
+    // Função auxiliar para buscar a foto do candidato
+    function getFotoCandidatoAdmin(nome) {
+        const cand = candidatosData.find(c => c.nome === nome);
+        if (cand && cand.foto) return cand.foto;
+        // Fallback: gera um avatar com as iniciais caso não tenha foto
+>>>>>>> 89c7577e6c1bc5712dc0bd20df3854e5ceb4072b
         return `https://ui-avatars.com/api/?name=${encodeURIComponent(nome)}&background=8B1E5C&color=fff&bold=true&size=256`;
     }
 
@@ -1407,9 +1487,15 @@
             const contagem = {};
             votos.forEach(v => { if (v[cat.chave]) contagem[v[cat.chave]] = (contagem[v[cat.chave]] || 0) + 1; });
             const ranking = Object.entries(contagem).map(([nome, total]) => ({ nome, total })).sort((a, b) => b.total - a.total);
+<<<<<<< HEAD
 
             let html = `<div class="chart-box"><h3>${cat.titulo}</h3>`;
 
+=======
+            
+            let html = `<div class="chart-box"><h3>${cat.titulo}</h3>`;
+            
+>>>>>>> 89c7577e6c1bc5712dc0bd20df3854e5ceb4072b
             if (ranking.length === 0) {
                 html += `<p style="color: #999; text-align: center;">Nenhum voto.</p>`;
             } else {
@@ -1420,8 +1506,16 @@
                         ? 'font-weight: bold; font-size: 16px; color: var(--text-dark); background: var(--gold-light); padding: 8px; border-radius: 4px;'
                         : 'font-size: 14px; color: var(--text-muted); padding: 4px 8px; border-bottom: 1px solid #eee;';
                     const prefixo = isPrimeiro ? `${ICON.trophy} ` : `${i + 1}º - `;
+<<<<<<< HEAD
                     const fotoUrl = getFotoCandidatoAdmin(cand.nome);
 
+=======
+                    
+                    // 👇 BUSCA A FOTO DO CANDIDATO AQUI
+                    const fotoUrl = getFotoCandidatoAdmin(cand.nome);
+
+                    // 👇 ADICIONA A TAG <img> NO HTML
+>>>>>>> 89c7577e6c1bc5712dc0bd20df3854e5ceb4072b
                     html += `<li style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 5px; ${estiloLinha}">
                         <span style="display:flex; align-items:center; gap:8px;">
                             <img src="${fotoUrl}" alt="${cand.nome}" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color);">
@@ -1520,6 +1614,7 @@
         });
     }
 
+<<<<<<< HEAD
     // ============================================================
     // 📸 GERENCIADOR DE FOTOS — Supabase Storage
     // ============================================================
@@ -1730,6 +1825,8 @@
         }
     }
 
+=======
+>>>>>>> 89c7577e6c1bc5712dc0bd20df3854e5ceb4072b
     document.getElementById('btn-atualizar').addEventListener('click', carregarApuracao);
 </script>
 </body>
