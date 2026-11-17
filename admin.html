@@ -426,7 +426,6 @@
             font-weight: 700;
         }
 
-        /* Bolinha verde pulsante */
         .online-dot {
             position: absolute;
             top: 0;
@@ -475,6 +474,156 @@
             .stat-card-value {
                 font-size: 22px;
             }
+        }
+
+        /* ============================================================
+           📸 GERENCIADOR DE FOTOS
+           ============================================================ */
+        .fotos-toolbar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .input-filtro-fotos, .select-filtro-fotos {
+            padding: 10px 14px;
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--input-bg);
+            color: var(--text-dark);
+            font-family: inherit;
+            font-size: 14px;
+            flex: 1;
+            min-width: 180px;
+            transition: var(--transition);
+        }
+        .input-filtro-fotos:focus, .select-filtro-fotos:focus {
+            outline: none;
+            border-color: var(--gold-color);
+            box-shadow: 0 0 0 4px rgba(201,153,42,0.15);
+        }
+
+        .grid-gerenciador-fotos {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .foto-card {
+            background: var(--chart-box-bg);
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            text-align: center;
+            transition: var(--transition);
+            position: relative;
+        }
+        .foto-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .foto-card-img-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            margin-bottom: 10px;
+            background: #f0f0f0;
+        }
+        .foto-card-img-wrapper img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .foto-card-status {
+            position: absolute;
+            top: 6px; right: 6px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .foto-card-status.com-foto { background: rgba(16,185,129,0.92); color: #fff; }
+        .foto-card-status.sem-foto { background: rgba(239,68,68,0.92);  color: #fff; }
+
+        .foto-card-nome {
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--text-dark);
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: 34px;
+        }
+
+        .foto-card-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .btn-upload-foto {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            box-shadow: none;
+            margin: 0;
+            width: 100%;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-upload-foto:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(139,30,92,0.3);
+        }
+        .btn-upload-foto:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .btn-remover-foto {
+            background: linear-gradient(135deg, #EF4444, #DC2626);
+            margin-top: 6px;
+        }
+        .btn-remover-foto:hover {
+            box-shadow: 0 4px 10px rgba(229,62,62,0.3);
+        }
+
+        .file-input-hidden { display: none; }
+
+        .upload-progress {
+            width: 100%;
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 8px;
+            display: none;
+        }
+        .upload-progress.active { display: block; }
+        .upload-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--gold-deep), var(--gold-bright));
+            transition: width 0.3s;
         }
     </style>
 </head>
@@ -530,7 +679,6 @@
 
         <!-- 📊 Cards de estatísticas -->
         <div class="stats-cards-grid">
-            <!-- TOTAL DE VOTOS -->
             <div class="stat-card stat-card-votos">
                 <div class="stat-card-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -545,7 +693,6 @@
                 </div>
             </div>
 
-            <!-- ENTRARAM -->
             <div class="stat-card stat-card-entraram">
                 <div class="stat-card-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -561,7 +708,6 @@
                 </div>
             </div>
 
-            <!-- NÃO FINALIZARAM -->
             <div class="stat-card stat-card-pendentes">
                 <div class="stat-card-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -576,7 +722,6 @@
                 </div>
             </div>
 
-            <!-- ONLINE AGORA -->
             <div class="stat-card stat-card-online">
                 <div class="stat-card-icon">
                     <span class="online-dot"></span>
@@ -594,7 +739,6 @@
                 </div>
             </div>
 
-            <!-- CANDIDATOS COM FOTO -->
             <div class="stat-card stat-card-fotos">
                 <div class="stat-card-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -623,6 +767,7 @@
             <button class="tab-btn" onclick="abrirAba('aba-sessoes', this)">📡 Sessões</button>
             <button class="tab-btn" onclick="abrirAba('aba-solicitacoes', this)">📩 Solicitações <span class="badge-solicitacoes" id="badge-solicitacoes">0</span></button>
             <button class="tab-btn" onclick="abrirAba('aba-logs', this)">📋 Logs de Auditoria</button>
+            <button class="tab-btn" onclick="abrirAba('aba-fotos', this)">📸 Gerenciar Fotos</button>
         </div>
 
         <div id="aba-candidatos" class="tab-content active">
@@ -668,7 +813,6 @@
             </div>
         </div>
 
-        <!-- ABA SESSÕES -->
         <div id="aba-sessoes" class="tab-content">
             <h2 style="font-size: 18px; margin-bottom: 15px; color: var(--text-dark);">Sessões de Eleitores</h2>
             <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Acompanhamento em tempo real de quem entrou, quem está online e quem não terminou de votar.</p>
@@ -727,6 +871,34 @@
                     </thead>
                     <tbody></tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- 📸 ABA GERENCIAR FOTOS -->
+        <div id="aba-fotos" class="tab-content">
+            <h2 style="font-size: 18px; margin-bottom: 15px; color: var(--text-dark);">Gerenciamento de Fotos</h2>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">
+                Faça upload das fotos diretamente por aqui. As imagens são armazenadas no Supabase Storage e o link fica registrado no banco de dados.
+            </p>
+
+            <div class="fotos-toolbar">
+                <input type="text" id="filtro-fotos"
+                       placeholder="🔍 Buscar por nome..."
+                       class="input-filtro-fotos"
+                       oninput="renderizarGerenciadorFotos(colaboradoresFotosData)">
+                <select id="filtro-fotos-status"
+                        class="select-filtro-fotos"
+                        onchange="renderizarGerenciadorFotos(colaboradoresFotosData)">
+                    <option value="todos">Todos</option>
+                    <option value="com-foto">Com foto</option>
+                    <option value="sem-foto">Sem foto</option>
+                </select>
+            </div>
+
+            <div id="grid-gerenciador-fotos" class="grid-gerenciador-fotos">
+                <p style="color: var(--text-muted); text-align: center; padding: 30px; grid-column: 1/-1;">
+                    Abra esta aba para carregar os colaboradores...
+                </p>
             </div>
         </div>
 
@@ -823,6 +995,11 @@
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         document.getElementById(idAba).classList.add('active');
         if (elBotao) elBotao.classList.add('active');
+
+        // 📸 Carrega gerenciador ao abrir a aba de fotos
+        if (idAba === 'aba-fotos') {
+            carregarGerenciadorFotos();
+        }
     }
 
     document.getElementById('form-admin-login').addEventListener('submit', async function(e) {
@@ -877,7 +1054,6 @@
             }
         }, 15 * 60 * 1000);
 
-        // 🔄 Auto-refresh a cada 30s
         if (window._statsInterval) clearInterval(window._statsInterval);
         window._statsInterval = setInterval(() => {
             if (adminToken) carregarApuracao();
@@ -1007,9 +1183,6 @@
         }
     }
 
-    // ============================================================
-    // 📊 ESTATÍSTICAS DE FOTOS
-    // ============================================================
     async function carregarEstatisticasFotos() {
         try {
             const { data, error } = await clienteSupabase.rpc('admin_estatisticas_fotos', {
@@ -1041,9 +1214,6 @@
         }
     }
 
-    // ============================================================
-    // 📊 ESTATÍSTICAS DE PARTICIPAÇÃO
-    // ============================================================
     async function carregarEstatisticasParticipacao() {
         try {
             const { data, error } = await clienteSupabase.rpc('admin_estatisticas_participacao', {
@@ -1078,9 +1248,6 @@
         }
     }
 
-    // ============================================================
-    // 📡 SESSÕES DE ELEITORES
-    // ============================================================
     async function carregarSessoes() {
         try {
             const { data, error } = await clienteSupabase.rpc('admin_listar_sessoes', {
@@ -1139,9 +1306,6 @@
         });
     }
 
-    // ============================================================
-    // 📩 SOLICITAÇÕES
-    // ============================================================
     async function carregarSolicitacoes() {
         try {
             const { data, error } = await clienteSupabase.rpc('admin_listar_solicitacoes', {
@@ -1222,15 +1386,9 @@
         }
     }
 
-    // ============================================================
-    // RENDERIZAÇÃO
-    // ============================================================
-    
-    // Função auxiliar para buscar a foto do candidato
     function getFotoCandidatoAdmin(nome) {
         const cand = candidatosData.find(c => c.nome === nome);
         if (cand && cand.foto) return cand.foto;
-        // Fallback: gera um avatar com as iniciais caso não tenha foto
         return `https://ui-avatars.com/api/?name=${encodeURIComponent(nome)}&background=8B1E5C&color=fff&bold=true&size=256`;
     }
 
@@ -1249,9 +1407,9 @@
             const contagem = {};
             votos.forEach(v => { if (v[cat.chave]) contagem[v[cat.chave]] = (contagem[v[cat.chave]] || 0) + 1; });
             const ranking = Object.entries(contagem).map(([nome, total]) => ({ nome, total })).sort((a, b) => b.total - a.total);
-            
+
             let html = `<div class="chart-box"><h3>${cat.titulo}</h3>`;
-            
+
             if (ranking.length === 0) {
                 html += `<p style="color: #999; text-align: center;">Nenhum voto.</p>`;
             } else {
@@ -1262,11 +1420,8 @@
                         ? 'font-weight: bold; font-size: 16px; color: var(--text-dark); background: var(--gold-light); padding: 8px; border-radius: 4px;'
                         : 'font-size: 14px; color: var(--text-muted); padding: 4px 8px; border-bottom: 1px solid #eee;';
                     const prefixo = isPrimeiro ? `${ICON.trophy} ` : `${i + 1}º - `;
-                    
-                    // 👇 BUSCA A FOTO DO CANDIDATO AQUI
                     const fotoUrl = getFotoCandidatoAdmin(cand.nome);
 
-                    // 👇 ADICIONA A TAG <img> NO HTML
                     html += `<li style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 5px; ${estiloLinha}">
                         <span style="display:flex; align-items:center; gap:8px;">
                             <img src="${fotoUrl}" alt="${cand.nome}" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color);">
@@ -1363,6 +1518,216 @@
                     <td>${dataForm}</td>
                 </tr>`;
         });
+    }
+
+    // ============================================================
+    // 📸 GERENCIADOR DE FOTOS — Supabase Storage
+    // ============================================================
+    const BUCKET_FOTOS = 'fotos-candidatos';
+    let colaboradoresFotosData = [];
+    let fotosCarregadas = false;
+
+    async function carregarGerenciadorFotos(force = false) {
+        if (fotosCarregadas && !force) return;
+
+        const grid = document.getElementById('grid-gerenciador-fotos');
+        grid.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 30px; grid-column: 1/-1;">Carregando colaboradores...</p>';
+
+        try {
+            const url = `${supabaseUrl}/rest/v1/colaboradores_publico?select=nome,setor,cargo,foto&order=setor.asc,nome.asc`;
+            const resposta = await fetch(url, {
+                headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` }
+            });
+            if (!resposta.ok) throw new Error("Falha ao carregar colaboradores");
+
+            colaboradoresFotosData = await resposta.json();
+            fotosCarregadas = true;
+            renderizarGerenciadorFotos(colaboradoresFotosData);
+        } catch (err) {
+            console.error('Erro ao carregar fotos:', err);
+            grid.innerHTML = '<p style="color: #EF4444; text-align: center; padding: 30px; grid-column: 1/-1;">Erro ao carregar colaboradores. Recarregue a página.</p>';
+        }
+    }
+
+    function renderizarGerenciadorFotos(colaboradores) {
+        const grid = document.getElementById('grid-gerenciador-fotos');
+        if (!colaboradores || colaboradores.length === 0) return;
+
+        const filtroNome   = (document.getElementById('filtro-fotos')?.value || '').toLowerCase().trim();
+        const filtroStatus = document.getElementById('filtro-fotos-status')?.value || 'todos';
+
+        const filtrados = colaboradores.filter(c => {
+            const matchNome = !filtroNome || String(c.nome || '').toLowerCase().includes(filtroNome);
+            const matchStatus =
+                filtroStatus === 'todos' ||
+                (filtroStatus === 'com-foto' && c.foto) ||
+                (filtroStatus === 'sem-foto' && !c.foto);
+            return matchNome && matchStatus;
+        });
+
+        if (filtrados.length === 0) {
+            grid.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 30px; grid-column: 1/-1;">Nenhum candidato encontrado com os filtros atuais.</p>';
+            return;
+        }
+
+        grid.innerHTML = filtrados.map(c => {
+            const nomeSeguro = encodeURIComponent(c.nome || '');
+            const fotoUrl = c.foto
+                ? c.foto
+                : `https://ui-avatars.com/api/?name=${nomeSeguro}&background=8B1E5C&color=fff&bold=true&size=256`;
+            const temFoto = !!c.foto;
+            const key = (c.nome || '').replace(/"/g, '&quot;');
+            const keyJs = (c.nome || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+
+            return `
+                <div class="foto-card">
+                    <div class="foto-card-img-wrapper">
+                        <img src="${fotoUrl}" alt="${key}" loading="lazy">
+                        <span class="foto-card-status ${temFoto ? 'com-foto' : 'sem-foto'}">
+                            ${temFoto ? '✓ Com foto' : '✗ Sem foto'}
+                        </span>
+                    </div>
+                    <div class="foto-card-nome" title="${key}">${key}</div>
+                    <div class="foto-card-meta" title="${key}">${(c.setor || '—')} · ${(c.cargo || '—')}</div>
+
+                    <input type="file"
+                           class="file-input-hidden"
+                           accept="image/png,image/jpeg,image/webp,image/gif"
+                           data-nome="${key}"
+                           id="file-${nomeSeguro}">
+
+                    <button type="button"
+                            class="btn-upload-foto"
+                            onclick="dispararUpload('${keyJs}')">
+                        📤 ${temFoto ? 'Trocar foto' : 'Enviar foto'}
+                    </button>
+
+                    ${temFoto ? `
+                        <button type="button"
+                                class="btn-upload-foto btn-remover-foto"
+                                onclick="removerFotoColaborador('${keyJs}')">
+                            🗑️ Remover foto
+                        </button>
+                    ` : ''}
+
+                    <div class="upload-progress" id="progress-${nomeSeguro}">
+                        <div class="upload-progress-fill" id="progress-fill-${nomeSeguro}"></div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        grid.querySelectorAll('.file-input-hidden').forEach(input => {
+            input.addEventListener('change', (e) => {
+                const nomeColab = e.target.dataset.nome;
+                const file = e.target.files[0];
+                if (file) processarUploadFoto(nomeColab, file);
+            });
+        });
+    }
+
+    function dispararUpload(nomeColab) {
+        // Busca o input correspondente pelo atributo data-nome
+        const inputs = document.querySelectorAll('.file-input-hidden');
+        for (const input of inputs) {
+            if (input.dataset.nome === nomeColab) {
+                input.click();
+                return;
+            }
+        }
+    }
+
+    async function processarUploadFoto(nomeColab, file) {
+        if (!file.type.startsWith('image/')) {
+            alert('Por favor, selecione um arquivo de imagem.');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            alert('A imagem deve ter no máximo 5 MB.');
+            return;
+        }
+
+        const nomeSeguro = encodeURIComponent(nomeColab);
+        const progressEl = document.getElementById(`progress-${nomeSeguro}`);
+        const fillEl     = document.getElementById(`progress-fill-${nomeSeguro}`);
+
+        if (progressEl) { progressEl.classList.add('active'); fillEl.style.width = '10%'; }
+
+        try {
+            const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
+            const slug = nomeColab.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, '')
+                                 .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            const path = `${slug}-${Date.now()}.${ext}`;
+
+            const { error: uploadError } = await clienteSupabase.storage
+                .from(BUCKET_FOTOS)
+                .upload(path, file, { upsert: true, cacheControl: '3600' });
+
+            if (uploadError) throw uploadError;
+            if (fillEl) fillEl.style.width = '60%';
+
+            const { data: urlData } = clienteSupabase.storage
+                .from(BUCKET_FOTOS)
+                .getPublicUrl(path);
+
+            const fotoUrl = urlData.publicUrl;
+            if (fillEl) fillEl.style.width = '85%';
+
+            const { error } = await clienteSupabase.rpc('admin_atualizar_foto_colaborador', {
+                p_token:    adminToken,
+                p_nome:     nomeColab,
+                p_foto_url: fotoUrl
+            });
+
+            if (error) throw error;
+            if (fillEl) fillEl.style.width = '100%';
+
+            const colab = colaboradoresFotosData.find(c => c.nome === nomeColab);
+            if (colab) colab.foto = fotoUrl;
+
+            // Atualiza também o cache de candidatos usado no ranking
+            const candLocal = candidatosData.find(c => c.nome === nomeColab);
+            if (candLocal) candLocal.foto = fotoUrl;
+
+            setTimeout(() => {
+                alert('✅ Foto atualizada com sucesso!');
+                renderizarGerenciadorFotos(colaboradoresFotosData);
+                // Atualiza o card de estatísticas
+                carregarEstatisticasFotos();
+            }, 250);
+
+        } catch (err) {
+            console.error('Erro no upload:', err);
+            alert('❌ Erro ao enviar foto: ' + (err.message || 'Erro desconhecido'));
+            if (progressEl) progressEl.classList.remove('active');
+        }
+    }
+
+    async function removerFotoColaborador(nomeColab) {
+        if (!confirm(`Remover a foto de "${nomeColab}"?`)) return;
+
+        try {
+            const { error } = await clienteSupabase.rpc('admin_atualizar_foto_colaborador', {
+                p_token:    adminToken,
+                p_nome:     nomeColab,
+                p_foto_url: null
+            });
+
+            if (error) throw error;
+
+            const colab = colaboradoresFotosData.find(c => c.nome === nomeColab);
+            if (colab) colab.foto = null;
+
+            const candLocal = candidatosData.find(c => c.nome === nomeColab);
+            if (candLocal) candLocal.foto = null;
+
+            alert('Foto removida.');
+            renderizarGerenciadorFotos(colaboradoresFotosData);
+            carregarEstatisticasFotos();
+        } catch (err) {
+            console.error(err);
+            alert('Erro ao remover foto: ' + (err.message || 'Erro desconhecido'));
+        }
     }
 
     document.getElementById('btn-atualizar').addEventListener('click', carregarApuracao);
